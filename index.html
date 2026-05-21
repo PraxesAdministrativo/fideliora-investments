@@ -1341,75 +1341,93 @@
       <div class="top-bar">
         <div class="page-title">Onshore — Fluxo de Caixa</div>
         <div class="top-bar-right">
-          <select class="period-select"><option>Mai 2025</option><option>Abr 2025</option><option>Mar 2025</option><option>2025 YTD</option></select>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="text" id="fluxo-busca" placeholder="Buscar ativo ou evento…"
+              style="font-family:'DM Sans',sans-serif;font-size:12px;padding:7px 12px;border:1px solid var(--border-strong);border-radius:6px;color:var(--text-secondary);background:var(--surface);width:200px"
+              oninput="filtrarFluxo()">
+            <select id="fluxo-evento-filtro" class="period-select" onchange="filtrarFluxo()">
+              <option value="">Todos os eventos</option>
+              <option value="Compra">Compra</option>
+              <option value="Venda">Venda</option>
+              <option value="Juros">Juros</option>
+              <option value="Amortizacao">Amortização</option>
+              <option value="Dividendo">Dividendo</option>
+            </select>
+          </div>
           <button class="btn-export">Exportar PDF</button>
         </div>
       </div>
       <div class="content-wrapper">
-        <div class="kpi-grid kpi-grid-3 mb-20">
+
+        <!-- KPIs dinâmicos -->
+        <div class="kpi-grid kpi-grid-4 mb-20">
           <div class="kpi-card green">
-            <div class="kpi-label">Total Recebido — Mai/25</div>
-            <div class="kpi-val">R$ 6,40 mi</div>
-            <div class="kpi-change pos">▲ +18% vs. Abr</div>
+            <div class="kpi-label">Total Entradas</div>
+            <div class="kpi-val" id="fluxo-total-entrada">—</div>
+            <div class="kpi-change" id="fluxo-total-entrada-sub" style="color:var(--text-muted)">Compras + Aplicações</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">Juros Totais</div>
-            <div class="kpi-val">R$ 2,82 mi</div>
-            <div class="kpi-change">CRI + Prev + RF</div>
+            <div class="kpi-label">Total Saídas</div>
+            <div class="kpi-val" id="fluxo-total-saida">—</div>
+            <div class="kpi-change" style="color:var(--text-muted)">Vendas + Resgates</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">Amortizações</div>
-            <div class="kpi-val">R$ 1,44 mi</div>
-            <div class="kpi-change">CRI (2 parcelas)</div>
+            <div class="kpi-label">Movimentações</div>
+            <div class="kpi-val" id="fluxo-total-movs">—</div>
+            <div class="kpi-change" style="color:var(--text-muted)" id="fluxo-periodo">Período completo</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Resultado Líquido</div>
+            <div class="kpi-val" id="fluxo-resultado">—</div>
+            <div class="kpi-change" id="fluxo-resultado-cor">Entradas − Saídas</div>
           </div>
         </div>
 
-        <div class="col-2-3 mb-20">
+        <!-- Resumo por tipo de evento -->
+        <div class="two-col mb-20">
           <div class="card">
-            <div class="card-title">Fluxo Detalhado — Mai 2025</div>
-            <ul class="event-list">
-              <li class="event-item">
-                <div class="event-icon ei-juros"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg></div>
-                <div class="event-desc"><div class="event-name">Juros — CRI Kinea II</div><div class="event-detail">15/05 · IPCA+7,2% a.a.</div></div>
-                <div class="event-value pos">+R$ 1.840.000</div>
-              </li>
-              <li class="event-item">
-                <div class="event-icon ei-amort"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7-7 7 7"/></svg></div>
-                <div class="event-desc"><div class="event-name">Amortização — CRI Brookfield</div><div class="event-detail">10/05 · Parcela 18/36</div></div>
-                <div class="event-value pos">+R$ 980.000</div>
-              </li>
-              <li class="event-item">
-                <div class="event-icon ei-div"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg></div>
-                <div class="event-desc"><div class="event-name">Dividendo — FIP Capital III</div><div class="event-detail">05/05 · Distribuição trimestral</div></div>
-                <div class="event-value pos">+R$ 2.150.000</div>
-              </li>
-              <li class="event-item">
-                <div class="event-icon ei-prev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-                <div class="event-desc"><div class="event-name">Rendimento — Prev. PGBL</div><div class="event-detail">20/05 · Cotização mensal</div></div>
-                <div class="event-value pos">+R$ 1.430.000</div>
-              </li>
-              <li class="event-item">
-                <div class="event-icon ei-juros"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg></div>
-                <div class="event-desc"><div class="event-name">Juros — CRI Helbor SFR</div><div class="event-detail">28/05 · IPCA+6,8% a.a.</div></div>
-                <div class="event-value pos">+R$ 462.000</div>
-              </li>
-            </ul>
+            <div class="card-title">Resumo por Tipo de Evento <span class="card-title-label" id="fluxo-resumo-periodo"></span></div>
+            <table class="data-table">
+              <thead><tr><th>Evento</th><th class="td-num">Qtd</th><th class="td-num">Valor Bruto Total</th><th style="width:80px"></th></tr></thead>
+              <tbody id="fluxo-resumo-body">
+                <tr><td colspan="4" style="color:var(--text-muted);text-align:center;padding:20px">Carregando…</td></tr>
+              </tbody>
+            </table>
           </div>
 
           <div class="card">
-            <div class="card-title">Fluxo Histórico <span class="card-title-label">R$ mi / mês</span></div>
-            <div class="chart-container" style="height:190px">
-              <canvas id="chart-fluxo-bar"></canvas>
-            </div>
-            <div class="divider"></div>
-            <div class="card-title" style="margin-bottom:10px">Próximos Eventos Previstos</div>
-            <div style="font-size:12px;color:var(--text-secondary);line-height:2">
-              <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding:5px 0"><span>CRI Kinea II — Juros</span><span style="color:var(--verde)">+R$ 1,84 mi · Jun/25</span></div>
-              <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding:5px 0"><span>FIP Agro — Dividendo</span><span style="color:var(--verde)">+R$ 1,20 mi · Jun/25</span></div>
-              <div style="display:flex;justify-content:space-between;padding:5px 0"><span>CRI Brookfield — Amort.</span><span style="color:var(--verde)">+R$ 980 k · Jul/25</span></div>
+            <div class="card-title">Volume por Evento <span class="card-title-label">R$ absoluto</span></div>
+            <div class="chart-container" style="height:220px">
+              <canvas id="chart-fluxo-eventos"></canvas>
             </div>
           </div>
         </div>
+
+        <!-- Tabela de movimentações completa -->
+        <div class="card">
+          <div class="card-title">
+            Movimentações Detalhadas
+            <span class="card-title-label" id="fluxo-count">— registros</span>
+          </div>
+          <div style="overflow-x:auto;max-height:420px;overflow-y:auto">
+            <table class="data-table" style="min-width:700px">
+              <thead style="position:sticky;top:0;z-index:1">
+                <tr>
+                  <th>Data</th>
+                  <th>Ativo</th>
+                  <th>Evento</th>
+                  <th>Status</th>
+                  <th class="td-num">Quantidade</th>
+                  <th class="td-num">Valor Bruto</th>
+                </tr>
+              </thead>
+              <tbody id="fluxo-tabela-body">
+                <tr><td colspan="6" style="color:var(--text-muted);text-align:center;padding:24px">Carregando dados da planilha…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -1857,10 +1875,207 @@
 </div>
 
 <script>
+
+  // ── FLUXO DE CAIXA ONSHORE ────────────────────────────────────
+  // Dados reais da aba "movimentacoes" via Web App
+
+  let _fluxoTodos = []; // cache para filtro
+
+  function renderFluxoOnshore() {
+    if (!CD || !CD.movimentacoes || CD.movimentacoes.length === 0) {
+      document.getElementById('fluxo-tabela-body').innerHTML =
+        '<tr><td colspan="6" style="color:var(--text-muted);text-align:center;padding:24px">Nenhuma movimentação encontrada. Rode dumpMovimentacoes() na planilha.</td></tr>';
+      return;
+    }
+
+    _fluxoTodos = CD.movimentacoes;
+    filtrarFluxo();
+  }
+
+  function filtrarFluxo() {
+    const movs    = _fluxoTodos;
+    const busca   = (document.getElementById('fluxo-busca')?.value || '').toLowerCase();
+    const filtroEv = (document.getElementById('fluxo-evento-filtro')?.value || '').toLowerCase();
+
+    const filtrados = movs.filter(row => {
+      const ativo   = String(row['Ativo']         || row[Object.keys(row)[2]] || '').toLowerCase();
+      const evento  = String(row['Evento']        || row[Object.keys(row)[3]] || '').toLowerCase();
+      const matchB  = !busca   || ativo.includes(busca)  || evento.includes(busca);
+      const matchE  = !filtroEv || evento.includes(filtroEv);
+      return matchB && matchE;
+    });
+
+    _renderizarFluxoTabela(filtrados);
+    _renderizarFluxoKPIs(filtrados);
+    _renderizarFluxoResumo(filtrados);
+  }
+
+  function _renderizarFluxoTabela(movs) {
+    const NAVY = '#0f3d57', GOLD = '#b8924a', VERDE = '#1a6645', VERMELHO = '#8c2020', MUTED = '#8a9fad';
+
+    // Ícone por tipo de evento
+    const iconeEvento = ev => {
+      const e = String(ev).toLowerCase();
+      if (e.includes('juros'))        return { cls:'ei-juros', svg:'<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>' };
+      if (e.includes('amort'))        return { cls:'ei-amort', svg:'<path d="M12 5v14M5 12l7-7 7 7"/>' };
+      if (e.includes('divid'))        return { cls:'ei-div',   svg:'<circle cx="12" cy="12" r="9"/>' };
+      if (e.includes('compra'))       return { cls:'ei-prev',  svg:'<path d="M12 5v14M19 12l-7 7-7-7"/>' };
+      if (e.includes('venda'))        return { cls:'ei-fip',   svg:'<path d="M12 19V5M5 12l7-7 7 7"/>' };
+      return                                 { cls:'ei-div',   svg:'<circle cx="12" cy="12" r="4"/>' };
+    };
+
+    const cols = movs.length > 0 ? Object.keys(movs[0]) : [];
+    const iData   = cols.findIndex(c => c.toLowerCase().includes('data'));
+    const iAtivo  = cols.findIndex(c => c.toLowerCase().includes('ativo'));
+    const iEvento = cols.findIndex(c => c.toLowerCase().includes('evento'));
+    const iStatus = cols.findIndex(c => c.toLowerCase().includes('status'));
+    const iQuant  = cols.findIndex(c => c.toLowerCase().includes('quant'));
+    const iValor  = cols.findIndex(c => c.toLowerCase().includes('valor'));
+
+    const get = (row, i) => i >= 0 ? (Object.values(row)[i] ?? '') : '';
+
+    let html = '';
+    movs.forEach((row, idx) => {
+      const data   = get(row, iData);
+      const ativo  = get(row, iAtivo);
+      const evento = get(row, iEvento);
+      const status = get(row, iStatus);
+      const quant  = get(row, iQuant);
+      const valor  = parseFloat(String(get(row, iValor)).replace(',','.')) || 0;
+      const ic     = iconeEvento(evento);
+      const vFmt   = 'R$ ' + Math.abs(valor).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+      const vCor   = valor >= 0 ? 'color:var(--verde)' : 'color:var(--vermelho)';
+      const vSinal = valor >= 0 ? '+' : '−';
+      const bg     = idx % 2 === 0 ? '' : 'background:rgba(15,61,87,0.015)';
+
+      html += `<tr style="${bg}">
+        <td style="white-space:nowrap;font-size:12px">${data}</td>
+        <td style="font-size:12px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${ativo}">${ativo}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="event-icon ${ic.cls}" style="width:24px;height:24px;border-radius:5px;flex-shrink:0">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${ic.svg}</svg>
+            </div>
+            <span style="font-size:12px">${evento}</span>
+          </div>
+        </td>
+        <td><span class="badge ${status === 'Realizado' ? 'badge-green' : 'badge-gray'}" style="font-size:10px">${status}</span></td>
+        <td class="td-num" style="font-size:12px">${parseFloat(String(quant).replace(',','.'))||0 ? Number(quant).toLocaleString('pt-BR',{maximumFractionDigits:4}) : '—'}</td>
+        <td class="td-num" style="font-size:12px;font-weight:500;${vCor}">${vSinal}${vFmt}</td>
+      </tr>`;
+    });
+
+    document.getElementById('fluxo-tabela-body').innerHTML = html || '<tr><td colspan="6" style="color:var(--text-muted);text-align:center;padding:20px">Nenhum resultado para o filtro.</td></tr>';
+    const el = document.getElementById('fluxo-count');
+    if (el) el.textContent = movs.length.toLocaleString('pt-BR') + ' registros';
+  }
+
+  function _renderizarFluxoKPIs(movs) {
+    const cols  = movs.length > 0 ? Object.keys(movs[0]) : [];
+    const iValor  = cols.findIndex(c => c.toLowerCase().includes('valor'));
+    const iEvento = cols.findIndex(c => c.toLowerCase().includes('evento'));
+    const iData   = cols.findIndex(c => c.toLowerCase().includes('data'));
+    const get = (row, i) => i >= 0 ? (Object.values(row)[i] ?? '') : '';
+
+    let entradas = 0, saidas = 0;
+    movs.forEach(row => {
+      const v = parseFloat(String(get(row, iValor)).replace(',','.')) || 0;
+      if (v >= 0) entradas += v; else saidas += v;
+    });
+
+    const fmt = v => 'R$ ' + Math.abs(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+    const resultado = entradas + saidas;
+
+    const setText = (id, txt) => { const el=document.getElementById(id); if(el) el.textContent=txt; };
+    setText('fluxo-total-entrada', fmt(entradas));
+    setText('fluxo-total-saida',   fmt(saidas));
+    setText('fluxo-total-movs',    movs.length.toLocaleString('pt-BR'));
+    setText('fluxo-resultado',     (resultado>=0?'+':'-') + fmt(resultado));
+
+    const resEl = document.getElementById('fluxo-resultado');
+    if (resEl) resEl.style.color = resultado >= 0 ? 'var(--verde)' : 'var(--vermelho)';
+
+    // Período
+    if (movs.length > 0 && iData >= 0) {
+      const datas = movs.map(r => get(r, iData)).filter(Boolean).sort();
+      setText('fluxo-periodo', datas[0] + ' → ' + datas[datas.length-1]);
+    }
+  }
+
+  function _renderizarFluxoResumo(movs) {
+    const NAVY = '#0f3d57', GOLD = '#b8924a', VERDE = '#1a6645', VERMELHO = '#8c2020', MUTED = '#8a9fad';
+    const cols   = movs.length > 0 ? Object.keys(movs[0]) : [];
+    const iValor  = cols.findIndex(c => c.toLowerCase().includes('valor'));
+    const iEvento = cols.findIndex(c => c.toLowerCase().includes('evento'));
+    const get = (row, i) => i >= 0 ? (Object.values(row)[i] ?? '') : '';
+
+    // Agrupa por evento
+    const grupos = {};
+    movs.forEach(row => {
+      const ev  = String(get(row, iEvento)).trim() || 'Outros';
+      const val = parseFloat(String(get(row, iValor)).replace(',','.')) || 0;
+      if (!grupos[ev]) grupos[ev] = { qtd:0, total:0 };
+      grupos[ev].qtd++;
+      grupos[ev].total += val;
+    });
+
+    const sorted = Object.entries(grupos).sort((a,b) => Math.abs(b[1].total) - Math.abs(a[1].total));
+    const maxAbs = sorted.length > 0 ? Math.abs(sorted[0][1].total) : 1;
+    const fmt = v => 'R$ ' + Math.abs(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+    let html = '';
+    sorted.forEach(([ev, d]) => {
+      const cor  = d.total >= 0 ? 'var(--verde)' : 'var(--vermelho)';
+      const barW = Math.round((Math.abs(d.total)/maxAbs)*100);
+      html += `<tr>
+        <td>${ev}</td>
+        <td class="td-num">${d.qtd}</td>
+        <td class="td-num" style="color:${cor};font-weight:500">${d.total>=0?'+':'-'}${fmt(d.total)}</td>
+        <td><div class="alloc-bar-wrap"><div class="alloc-bar${d.total<0?' muted':''}" style="width:${barW}%"></div></div></td>
+      </tr>`;
+    });
+    const el = document.getElementById('fluxo-resumo-body');
+    if (el) el.innerHTML = html;
+
+    // Gráfico
+    const ctxEv = document.getElementById('chart-fluxo-eventos');
+    if (ctxEv && sorted.length > 0) {
+      // Destroi chart anterior se existir
+      if (ctxEv._chartInstance) ctxEv._chartInstance.destroy();
+      const labels = sorted.map(([ev]) => ev);
+      const valores = sorted.map(([,d]) => Math.abs(d.total));
+      const cores   = sorted.map(([,d]) => d.total >= 0 ? VERDE : VERMELHO);
+      ctxEv._chartInstance = new Chart(ctxEv, {
+        type:'bar',
+        data:{
+          labels,
+          datasets:[{
+            data: valores,
+            backgroundColor: cores,
+            borderRadius:5,
+            barThickness:20
+          }]
+        },
+        options:{
+          indexAxis:'y',
+          plugins:{ legend:{display:false}, tooltip:{
+            backgroundColor:NAVY, titleColor:'#fff', bodyColor:'rgba(255,255,255,0.75)',
+            padding:10, cornerRadius:6,
+            callbacks:{ label: ctx => 'R$ ' + ctx.raw.toLocaleString('pt-BR',{minimumFractionDigits:2}) }
+          }},
+          scales:{
+            x:{ grid:{color:'rgba(15,61,87,0.05)'}, ticks:{color:MUTED,font:{size:10}, callback: v => 'R$'+Number(v/1000).toFixed(0)+'k'} },
+            y:{ grid:{display:false}, ticks:{color:NAVY,font:{size:11}} }
+          }
+        }
+      });
+    }
+  }
+
   // ═══════════════════════════════════════════════════════════════
   //  CONFIGURAÇÃO — cole aqui a URL do seu Web App após implantar
   // ═══════════════════════════════════════════════════════════════
-  const CD_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbw6zagw8pRYcFZw9OOD88C8kvTc60zzU0WB9hLaMuZ1bQRNIqv3Bh5OHIGoicrWnt-Q/exec";
+  const CD_WEBAPP_URL = "COLE_SUA_URL_AQUI";
 
   // Cache dos dados carregados
   let CD = null;
@@ -1905,6 +2120,7 @@
   function renderizarPagina(id) {
     if (!CD) return; // sem dados ainda
     if (id === 'onshore-total') renderOnshoreTotal();
+    if (id === 'fluxo-onshore')  renderFluxoOnshore();
   }
 
   // helpers
@@ -2394,31 +2610,9 @@
       });
     }
 
-    // FLUXO ONSHORE
+    // FLUXO ONSHORE — dados reais via renderFluxoOnshore()
     if (page === 'fluxo-onshore') {
-      const ctxFB = document.getElementById('chart-fluxo-bar');
-      if (ctxFB) new Chart(ctxFB, {
-        type:'bar',
-        data:{
-          labels:['Jan','Fev','Mar','Abr','Mai'],
-          datasets:[
-            {label:'Juros',data:[2.4,2.5,2.6,2.7,2.82],backgroundColor:VERDE,borderRadius:4,barThickness:14},
-            {label:'Amortização',data:[0.98,0.98,1.0,1.0,1.44],backgroundColor:GOLD,borderRadius:4,barThickness:14},
-            {label:'Dividendos',data:[2.0,2.1,2.0,2.5,2.15],backgroundColor:NAVY_MID,borderRadius:4,barThickness:14}
-          ]
-        },
-        options:{
-          ...defaults,
-          plugins:{
-            ...defaults.plugins,
-            legend:{display:true,position:'bottom',labels:{color:NAVY,font:{size:10},boxWidth:10,padding:12}}
-          },
-          scales:{
-            x:{stacked:true,grid:{display:false},ticks:{color:MUTED,font:{size:10}}},
-            y:{stacked:true,grid:{color:'rgba(15,61,87,0.05)'},ticks:{color:MUTED,font:{size:10},callback:v=>'R$'+v+'mi'}}
-          }
-        }
-      });
+      renderFluxoOnshore();
     }
 
     // OFFSHORE TOTAL
