@@ -1221,6 +1221,14 @@
 
     <!-- ══ PÁGINA: ILÍQUIDOS ══════════════════════════ -->
     <div id="page-iliquidos" class="page">
+      <!-- Aviso quando Web App de ilíquidos não retornou dados -->
+      <div id="il-aviso-vazio" style="display:none;align-items:center;gap:16px;background:#fff8ec;border:1px solid rgba(184,146,74,0.3);border-left:3px solid var(--gold);border-radius:8px;padding:16px 24px;margin:20px 40px 0;font-size:13px;color:var(--text-secondary)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div>
+          <strong style="color:var(--navy)">Web App de Ilíquidos não retornou dados.</strong>
+          <div style="margin-top:4px">Verifique se: <b>1)</b> rodou <code>dumpIliquidos()</code> no Apps Script da planilha de ilíquidos — isso cria as abas <code>IL_tab*</code> · <b>2)</b> o <code>IL_ID</code> no script corresponde ao ID real da planilha no Google Sheets.</div>
+        </div>
+      </div>
       <div class="top-bar">
         <div class="page-title">Onshore — Ilíquidos</div>
         <div class="top-bar-right">
@@ -1886,11 +1894,22 @@
       });
 
       const ilTables = iliquidos.tables || {};
-      if (Object.keys(ilTables).length > 0) {
+      const ilKeys = Object.keys(ilTables);
+      if (ilKeys.length > 0) {
         Object.assign(CD.tables, ilTables);
-        console.log("✅ Ilíquidos carregados:", Object.keys(ilTables));
+        console.log("✅ Ilíquidos carregados:", ilKeys);
+        ilKeys.forEach(k => {
+          const tbl = ilTables[k];
+          if (tbl && tbl[0]) console.log(`  ${k}[0]:`, Object.keys(tbl[0]).slice(0,5));
+        });
       } else {
-        console.warn("⚠️ Ilíquidos vazios:", iliquidos.error || "sem tabelas");
+        // Ilíquidos vazio — pode ser que dumpIliquidos() não foi rodado ainda
+        // ou o ID da planilha no Apps Script está errado
+        console.warn("⚠️ Ilíquidos vazios:", iliquidos.error || "sem abas IL_tab*");
+        console.warn("   Verifique: 1) rodou dumpIliquidos() no Apps Script?");
+        console.warn("              2) o IL_ID no script bate com o ID real da planilha?");
+        // Marca flag para mostrar aviso na página
+        CD._iliquidosVazio = true;
       }
 
       const paginaAtiva = document.querySelector('.page.active');
@@ -1925,6 +1944,12 @@
   function renderIliquidos() {
     if (!CD) return;
     const t = CD.tables;
+
+    // Aviso quando Web App de ilíquidos não retornou dados
+    const avisoEl = document.getElementById('il-aviso-vazio');
+    const temDados = !!(t.il_tab7 && t.il_tab7.length > 0);
+    if (avisoEl) avisoEl.style.display = temDados ? 'none' : 'flex';
+    if (!temDados) return;
 
     const fmtB  = v => { const n=parseFloat(String(v).replace(',','.')); return isNaN(n)?'—':'R$ '+Math.abs(n).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); };
     const fmtN  = v => { const n=parseFloat(String(v).replace(',','.')); return isNaN(n)?'—':n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); };
@@ -1975,13 +2000,18 @@
 
     // tab7: posição por classe
     const tab7 = t.il_tab7 || [];
-    const maxSF7 = Math.max(...tab7.map(r=>Math.abs(parseFloat(Object.values(r)[5])||0)));
+    // Web App remove coluna vazia: cols[0]="Ativo", cols[1]="Saldo Bruto..."
+    const _ilSF7 = r => parseFloat(r['Saldo Bruto 31/03/26'] ?? Object.values(r)[4] ?? 0) || 0;
+    const maxSF7 = tab7.length ? Math.max(...tab7.map(r=>Math.abs(_ilSF7(r)))) : 0;
     let h7='', tot7s=0, tot7r=0;
     tab7.forEach(row=>{
       const v=Object.values(row);
-      // v[0]=espaços, v[1]=nome, v[2]=saldoIni, v[3]=mov, v[4]=rend, v[5]=saldoFim, v[6]=pct
-      const nome=String(v[1]||''). trim(); if(!nome) return;
-      const si=parseFloat(v[2])||0, mov=parseFloat(v[3])||0, rend=parseFloat(v[4])||0, sf=parseFloat(v[5])||0, pct=parseFloat(v[6])||0;
+      const nome=String(row['Ativo'] ?? v[0] ?? ''). trim(); if(!nome) return;
+      const si=parseFloat(row['Saldo Bruto 11/02/20'] ?? row[Object.keys(row)[1]] ?? v[1])||0;
+      const mov=parseFloat(row['Movimentação'] ?? v[2])||0;
+      const rend=parseFloat(row['Rendimento Bruto'] ?? v[3])||0;
+      const sf=parseFloat(row['Saldo Bruto 31/03/26'] ?? v[4])||0;
+      const pct=parseFloat(row['%'] ?? v[5])||0;
       const bw=maxSF7>0?Math.round((Math.abs(sf)/maxSF7)*100):0;
       tot7s+=sf; tot7r+=rend;
       h7+=`<tr><td>${nome}</td><td class="td-num">${fmtB(si)}</td><td class="td-num" style="${corV(mov)}">${mov>=0?'':'-'}${fmtB(Math.abs(mov))}</td><td class="td-num" style="${corV(rend)}">${fmtB(rend)}</td><td class="td-num"><strong>${fmtB(sf)}</strong></td><td class="td-num">${fmtN(pct)}%</td><td><div class="alloc-bar-wrap"><div class="alloc-bar" style="width:${bw}%"></div></div></td></tr>`;
@@ -1995,11 +2025,12 @@
     let h9='';
     tab9.forEach(row=>{
       const v=Object.values(row);
-      // v[0]=espaços, v[1]=nome, v[2]=saldoIni, v[3]=mov, v[4]=rend, v[5]=saldoFim, v[6]=%, v[7]=IR, v[8]=líquido, v[9]=liquidez
-      const nome=String(v[1]||''). trim(); if(!nome) return;
-      const sf=parseFloat(v[5])||0, pct=parseFloat(v[6])||0;
-      const ir=parseFloat(v[7])||0, sl=parseFloat(v[8])||0;
-      const liq=String(v[9]||''). trim();
+      const nome=String(row['Ativo'] ?? v[0] ?? ''). trim(); if(!nome) return;
+      const sf=parseFloat(row['Saldo Bruto 31/03/26'] ?? v[4])||0;
+      const pct=parseFloat(row['%'] ?? v[5])||0;
+      const ir=parseFloat(row['Provisão de IR+IOF'] ?? v[6])||0;
+      const sl=parseFloat(row['Saldo Líquido 31/03/26'] ?? v[7])||0;
+      const liq=String(row['Liquidez'] ?? v[8] ?? ''). trim();
       if(nome==='Total'){ h9+=`<tr style="background:rgba(15,61,87,0.04);font-weight:600"><td>Total</td><td class="td-num">${fmtB(sf)}</td><td class="td-num" style="color:var(--vermelho)">${ir>0?fmtB(ir):'—'}</td><td class="td-num" style="color:var(--verde)">${fmtB(sl)}</td><td class="td-num">${fmtN(pct)}%</td><td>—</td></tr>`; return; }
       const isClasse = sf===0&&pct===0&&liq==='';
       if(isClasse){ h9+=`<tr style="background:rgba(15,61,87,0.03)"><td colspan="6" style="font-weight:600;color:var(--navy);font-size:11px;text-transform:uppercase;padding:8px 0">${nome}</td></tr>`; return; }
@@ -2012,17 +2043,18 @@
     let h10='';
     tab10.forEach(row=>{
       const v=Object.values(row);
-      // v[0]=espaços, v[1]=nome, v[2]=Mês, v[3]=Ano, v[4]=03meses, v[5]=06meses, v[6]=12meses, v[7]=24meses, v[8]=36meses, v[9]=Noperíodo, v[10]=DataCompra
-      const nome=String(v[1]||''). trim(); if(!nome) return;
+      const nome=String(row['Ativo'] ?? v[0] ?? ''). trim(); if(!nome) return;
       const isPct=nome.toLowerCase().includes('% do cdi');
-      const mesV=v[2], anoV=v[3];
+      const mesV=row['Mês'] ?? v[1];
+      const anoV=row['Ano'] ?? v[2];
       // isClasse: nome de classe (não ativo individual): nd em mês e ano e sem data de compra e sem "% do CDI"
       const isClasse=!isPct&&String(mesV||'').toLowerCase()==='nd'&&String(anoV||'').toLowerCase()==='nd'&&(v[10]===null||v[10]===undefined||v[10]==='');
       const fc=val=>{ if(val===''||val===null||val===undefined||String(val).toLowerCase()==='nd') return '<td class="td-num" style="color:var(--text-muted)">nd</td>'; const n=parseFloat(val); if(isNaN(n)) return `<td class="td-num" style="color:var(--text-muted)">${val}</td>`; return `<td class="td-num" style="${n>=0?'color:var(--verde)':'color:var(--vermelho)'}">${n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%'}</td>`; };
       if(isClasse){ h10+=`<tr style="background:rgba(15,61,87,0.04)"><td colspan="10" style="font-weight:600;color:var(--navy);font-size:11px;text-transform:uppercase;padding:8px 0">${nome}</td></tr>`; return; }
       const bg=isPct?'background:rgba(15,61,87,0.02)':'';
       const ns=isPct?'color:var(--text-muted);font-size:11px;padding-left:12px':'font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
-      h10+=`<tr style="${bg}"><td style="${ns}" title="${nome}">${isPct?'% do CDI':nome}</td>${fc(v[2])}${fc(v[3])}${fc(v[4])}${fc(v[5])}${fc(v[6])}${fc(v[7])}${fc(v[8])}${fc(v[9])}<td style="font-size:11px;color:var(--text-muted);white-space:nowrap">${fmtDt(v[10])}</td></tr>`;
+      const _fc = k => fc(row[k] ?? null);
+      h10+=`<tr style="${bg}"><td style="${ns}" title="${nome}">${isPct?'% do CDI':nome}</td>${_fc('Mês')}${_fc('Ano')}${_fc('03meses')}${_fc('06meses')}${_fc('12meses')}${_fc('24meses')}${_fc('36meses')}${_fc('Noperíodo')}<td style="font-size:11px;color:var(--text-muted);white-space:nowrap">${fmtDt(row['Data Compra'] ?? null)}</td></tr>`;
     });
     set('il-tab10-body', h10||'<tr><td colspan="10" style="color:var(--text-muted);text-align:center;padding:20px">Sem dados</td></tr>');
 
@@ -2145,22 +2177,22 @@
     setText('ont-sharpe',     sharpe.carteira !== undefined ? fmtNum(sharpe.carteira) : '—');
     setText('ont-sharpe-sub', volat.carteira  !== undefined ? 'Volatilidade: ' + fmtNum(volat.carteira) + '%' : '');
 
+
     // ── tab7: Alocação por Classe ──────────────────────────────
+    // Web App serializa sem coluna vazia: cols[0]="Ativo" direto
     const tab7 = t.tab7 || [];
-    // NOTA: cols[0] = coluna vazia/espaços; cols[1] = nome do ativo real
-    const _ativoTab = row => { const v = Object.values(row); return String(v[1]||v[0]||'').trim(); };
-    const maxSaldo = Math.max(...tab7.map(r => Math.abs(parseFloat(Object.values(r)[4] || 0))));
+    const _sf7 = r => parseFloat(r['Saldo Bruto 31/03/26'] ?? Object.values(r)[4] ?? 0) || 0;
+    const maxSaldo = tab7.length ? Math.max(...tab7.map(r => Math.abs(_sf7(r)))) : 0;
 
     let htmlTab7 = '';
     let totalSaldo = 0, totalRend = 0;
     tab7.forEach(row => {
-      const vals   = Object.values(row);
-      const ativo  = String(vals[1]||'').trim(); if(!ativo) return;
-      const sldIni = parseFloat(vals[2]) || 0;
-      const movim  = parseFloat(vals[3]) || 0;
-      const rend   = parseFloat(vals[4]) || 0;
-      const sldFim = parseFloat(vals[5]) || 0;
-      const pct    = parseFloat(vals[6]) || 0;
+      const ativo  = String(row['Ativo'] ?? Object.values(row)[0] ?? '').trim(); if(!ativo) return;
+      const sldIni = parseFloat(row['Saldo Bruto 31/12/24'] ?? Object.values(row)[1]) || 0;
+      const movim  = parseFloat(row['Movimentação']         ?? Object.values(row)[2]) || 0;
+      const rend   = parseFloat(row['Rendimento Bruto']     ?? Object.values(row)[3]) || 0;
+      const sldFim = parseFloat(row['Saldo Bruto 31/03/26'] ?? Object.values(row)[4]) || 0;
+      const pct    = parseFloat(row['%']                    ?? Object.values(row)[5]) || 0;
       const barW   = maxSaldo > 0 ? Math.round((Math.abs(sldFim)/maxSaldo)*100) : 0;
       totalSaldo  += sldFim;
       totalRend   += rend;
@@ -2295,11 +2327,10 @@
     const tab8 = t.tab8 || [];
     let htmlTab8 = '';
     tab8.forEach(row => {
-      const vals   = Object.values(row);
-      const ativo  = String(vals[1]||'').trim(); if(!ativo) return;
-      const sldIni = vals[2];
-      const sldFim = vals[5];
-      const pct    = vals[6];
+      const ativo  = String(row['Ativo'] ?? Object.values(row)[0] ?? '').trim(); if(!ativo) return;
+      const sldIni = row['Saldo Bruto 31/12/24'] ?? Object.values(row)[1];
+      const sldFim = row['Saldo Bruto 31/03/26'] ?? Object.values(row)[4];
+      const pct    = row['%']                    ?? Object.values(row)[5];
       htmlTab8 += `<tr>
         <td style="font-weight:500">${ativo}</td>
         <td class="td-num">${fmtBRL(sldIni)}</td>
