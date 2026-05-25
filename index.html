@@ -2178,7 +2178,7 @@
     filtrarFluxo();
   }
 
-  function filtrarFluxo() {
+  window.filtrarFluxo = function() {
     const movs    = _fluxoTodos;
     const busca   = (document.getElementById('fluxo-busca')?.value || '').toLowerCase();
     const filtroEv = (document.getElementById('fluxo-evento-filtro')?.value || '').toLowerCase();
@@ -2361,8 +2361,8 @@
   // ═══════════════════════════════════════════════════════════════
   //  CONFIGURAÇÃO — cole as URLs dos Web Apps após implantar
   // ═══════════════════════════════════════════════════════════════
-  const CD_WEBAPP_URL = https://docs.google.com/spreadsheets/d/1IOBRWeyUMCcq7PjQRPMaYM6ZQ71Uftx59ZWgrYbksEA/edit?gid=0#gid=0";   // planilha principal
-  const IL_WEBAPP_URL = "https://docs.google.com/spreadsheets/d/1KVlpxcC7ILHwlhSr2W2SXvrFdbKvHC5itcIveYAxKuU/edit?gid=0#gid=0";   // planilha de ilíquidos
+  const CD_WEBAPP_URL = "COLE_URL_WEBAPP_PRINCIPAL";   // planilha principal
+  const IL_WEBAPP_URL = "COLE_URL_WEBAPP_ILIQUIDOS";   // planilha de ilíquidos
 
   // Cache dos dados carregados
   let CD = null;
@@ -2697,7 +2697,7 @@
   }
 
   /* ────── NAVEGAÇÃO ────── */
-  function showPage(id, el) {
+  window.showPage = function(id, el) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById('page-' + id).classList.add('active');
@@ -2722,7 +2722,7 @@
     document.querySelectorAll('.page-title').forEach(t => { t.textContent = titles[id] || 'Plataforma'; });
   }
 
-  function toggleGroup(name) {
+  window.toggleGroup = function(name) {
     const header = document.getElementById('grp-' + name);
     const body = document.getElementById('body-' + name);
     if (!body) return;
@@ -2983,7 +2983,7 @@
   }
 
   /* ────── SIMULAÇÃO UPLOAD ────── */
-  function simulateUpload() {
+  window.simulateUpload = function() {
     const log = document.getElementById('import-log');
     const count = document.getElementById('import-count');
     const newItem = document.createElement('div');
