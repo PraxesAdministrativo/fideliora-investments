@@ -2069,7 +2069,7 @@
     try {
       const fetchWA = url => fetch(url, { redirect: 'follow' }).then(r => r.json());
 
-      const IL_URL = "https://script.google.com/macros/s/AKfycbx__8KDLvyl1tPokvAQPV4M3SiMgreoveS4QcaK4CXwazIPbtfR3BSyMZ-dxs4CKX4v/exec";
+      const IL_URL = "https://script.google.com/macros/s/AKfycbwYCcm6uYqViStP32EG7LbeWXDcWkmR6QD2MFEsjoBZjJq-Q40SR407F8h7QG6_f_JV/exec";
 
       const [principal, iliquidos] = await Promise.all([
         fetchWA(CD_WEBAPP_URL),
@@ -2673,14 +2673,23 @@
       if (ctxAcum._ci) ctxAcum._ci.destroy();
 
       // Reconstrói anos a partir da il_tab2 (escopo local)
+      // Linhas podem ser arrays ou objetos dependendo do Web App
       const tab2il = (CD.tables && CD.tables['il_tab2']) || [];
       const anosIL = {};
-      tab2il.forEach(row => {
-        const cols = Object.keys(row);
-        const ano  = String(parseInt(row[cols[0]])).trim();
-        const ind  = String(row[cols[1]]).trim();
+      // Cabeçalho: primeira linha tem os nomes dos meses
+      const _hdr2il = tab2il.length > 0 ? (Array.isArray(tab2il[0]) ? tab2il[0] : Object.values(tab2il[0])) : [];
+      const _mesesIdx = {}; // { 'Jan': 2, 'Fev': 3, ... }
+      _hdr2il.forEach((h,i) => { if(h) _mesesIdx[String(h).trim()] = i; });
+
+      tab2il.slice(1).forEach(row => {
+        const v   = Array.isArray(row) ? row : Object.values(row);
+        const ano = String(parseInt(v[0])||'').trim(); if(!ano || ano==='NaN') return;
+        const ind = String(v[1]||'').trim(); if(!ind) return;
         if (!anosIL[ano]) anosIL[ano] = {};
-        anosIL[ano][ind] = row;
+        // Guarda com chaves de mês nomeadas
+        const obj = {};
+        _hdr2il.forEach((h,i) => { if(h && i>=2) obj[String(h).trim()] = v[i]; });
+        anosIL[ano][ind] = obj;
       });
 
       const anosOrdenados = Object.keys(anosIL).sort();
@@ -2688,11 +2697,12 @@
       const cartAcum   = [];
       const cdiAcum    = [];
       let acCart = 1, acCDI = 1;
+      const _mesesAcum = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez','Ano'];
 
       anosOrdenados.forEach(ano => {
         const rowCart = anosIL[ano]['Carteira'] || {};
         const rowCDI  = anosIL[ano]['CDI']      || {};
-        mesesNomes.forEach(mes => {
+        _mesesAcum.filter(m => m !== 'Ano').forEach(mes => {
           const vc = parseFloat(rowCart[mes]);
           const vd = parseFloat(rowCDI[mes]);
           if (!isNaN(vc) && !isNaN(vd)) {
