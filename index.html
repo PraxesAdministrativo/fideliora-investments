@@ -551,6 +551,58 @@
     .pill-gold { background:var(--gold-pale); color:#7a5c1e; }
     .pill-navy { background:var(--navy-pale); color:var(--navy); }
 
+
+    /* ── MÉTRICAS PE/VC ── */
+    .fund-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(340px,1fr)); gap:20px; margin-bottom:24px; }
+    .fund-card {
+      background:var(--surface-2);
+      border:1px solid var(--border);
+      border-radius:12px;
+      overflow:hidden;
+    }
+    .fund-card-header {
+      background:var(--navy-deep);
+      padding:16px 20px;
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+    }
+    .fund-card-name { font-family:'DM Serif Display',Georgia,serif; font-size:15px; color:#fff; letter-spacing:-0.01em; }
+    .fund-card-classe { font-size:10px; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.1em; margin-top:3px; }
+    .fund-card-status { font-size:10px; padding:3px 10px; border-radius:20px; font-weight:500; letter-spacing:0.03em; }
+    .fund-card-body { padding:16px 20px; }
+    .fund-metrics { display:grid; grid-template-columns:1fr 1fr; gap:0; }
+    .fund-metric {
+      padding:12px 14px;
+      border-bottom:1px solid var(--border);
+      border-right:1px solid var(--border);
+    }
+    .fund-metric:nth-child(even) { border-right:none; }
+    .fund-metric:nth-last-child(-n+2) { border-bottom:none; }
+    .fund-metric-label { font-size:9px; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); margin-bottom:5px; font-weight:500; }
+    .fund-metric-val { font-family:'DM Serif Display',Georgia,serif; font-size:20px; color:var(--navy); letter-spacing:-0.02em; }
+    .fund-metric-val.pos { color:var(--verde); }
+    .fund-metric-val.neg { color:var(--vermelho); }
+    .fund-metric-val.gold { color:var(--gold); }
+    .fund-metric-sub { font-size:10px; color:var(--text-muted); margin-top:2px; }
+    .fund-bar-section { padding:12px 20px 16px; border-top:1px solid var(--border); }
+    .fund-bar-label { display:flex; justify-content:space-between; font-size:11px; color:var(--text-secondary); margin-bottom:5px; }
+    .fund-bar-track { height:6px; background:rgba(15,61,87,0.08); border-radius:3px; position:relative; }
+    .fund-bar-dvpi { height:6px; border-radius:3px; background:var(--verde); position:absolute; left:0; top:0; }
+    .fund-bar-rvpi { height:6px; border-radius:3px; background:var(--gold); position:absolute; top:0; }
+    .fund-bar-legend { display:flex; gap:14px; margin-top:6px; }
+    .fund-bar-leg-item { display:flex; align-items:center; gap:5px; font-size:10px; color:var(--text-muted); }
+    .fund-bar-leg-dot { width:8px; height:8px; border-radius:2px; flex-shrink:0; }
+
+    /* Tabela resumo de métricas */
+    .metricas-resumo { background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:0; overflow:hidden; margin-bottom:20px; }
+    .metricas-resumo-header { background:var(--navy-deep); padding:14px 20px; font-family:'DM Serif Display',Georgia,serif; font-size:15px; color:#fff; display:flex; justify-content:space-between; align-items:center; }
+    .metricas-resumo-sub { font-size:10px; color:rgba(255,255,255,0.35); font-family:'DM Sans',sans-serif; font-weight:400; letter-spacing:0.05em; }
+
+    /* Aviso de sem dados métricas */
+    .metricas-aviso { background:var(--navy-pale); border:1px solid var(--border-strong); border-radius:8px; padding:20px 24px; text-align:center; color:var(--text-secondary); font-size:13px; }
+    .metricas-aviso code { background:rgba(15,61,87,0.08); padding:2px 7px; border-radius:4px; font-size:12px; color:var(--navy); }
+
     /* scrollbar */
     ::-webkit-scrollbar { width:4px; }
     ::-webkit-scrollbar-thumb { background:rgba(15,61,87,0.12); border-radius:2px; }
@@ -1262,6 +1314,59 @@
           </div>
         </div>
 
+        <!-- ── Módulo Métricas PE/VC ── -->
+        <div id="il-metricas-section">
+          <!-- Tabela resumo -->
+          <div class="metricas-resumo" style="margin-bottom:20px">
+            <div class="metricas-resumo-header">
+              Métricas por Fundo / Ativo Ilíquido
+              <span class="metricas-resumo-sub">TIR · MOIC · TVPI · DVPI · RVPI</span>
+            </div>
+            <div style="overflow-x:auto">
+              <table class="data-table" style="min-width:700px">
+                <thead>
+                  <tr>
+                    <th>Ativo / Fundo</th>
+                    <th class="td-num">Capital Chamado</th>
+                    <th class="td-num">Distribuído</th>
+                    <th class="td-num">NAV Atual</th>
+                    <th class="td-num">TIR a.a.</th>
+                    <th class="td-num">MOIC</th>
+                    <th class="td-num">TVPI</th>
+                    <th class="td-num">DVPI</th>
+                    <th class="td-num">RVPI</th>
+                    <th>Holding</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="il-metricas-tabela">
+                  <tr><td colspan="12" style="text-align:center;padding:20px;color:var(--text-muted)">Carregando métricas…</td></tr>
+                </tbody>
+                <tfoot id="il-metricas-total" style="display:none">
+                  <tr style="font-weight:600;background:rgba(15,61,87,0.04);border-top:2px solid var(--border-strong)">
+                    <td>Total / Média Pond.</td>
+                    <td class="td-num" id="il-m-total-chamado">—</td>
+                    <td class="td-num" id="il-m-total-distribuido">—</td>
+                    <td class="td-num" id="il-m-total-nav">—</td>
+                    <td class="td-num" id="il-m-total-tir" style="color:var(--verde)">—</td>
+                    <td class="td-num" id="il-m-total-moic" style="color:var(--verde)">—</td>
+                    <td class="td-num" id="il-m-total-tvpi">—</td>
+                    <td class="td-num" id="il-m-total-dvpi">—</td>
+                    <td class="td-num" id="il-m-total-rvpi">—</td>
+                    <td>—</td>
+                    <td>—</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+
+          <!-- Cards por fundo -->
+          <div class="fund-grid" id="il-fund-cards">
+            <!-- preenchido pelo JS -->
+          </div>
+        </div>
+
         <!-- ── Linha 1: Alocação por Classe + Destaques ── -->
         <div class="col-3-2" style="margin-bottom:20px">
           <div class="card">
@@ -1969,19 +2074,29 @@
       const ilKeys = Object.keys(ilTables);
       if (ilKeys.length > 0) {
         Object.assign(CD.tables, ilTables);
-        console.log("✅ Ilíquidos carregados:", ilKeys);
+        console.log("✅ Ilíquidos (tabelas) carregados:", ilKeys);
         ilKeys.forEach(k => {
           const tbl = ilTables[k];
           if (tbl && tbl[0]) console.log(`  ${k}[0]:`, Object.keys(tbl[0]).slice(0,5));
         });
       } else {
-        // Ilíquidos vazio — pode ser que dumpIliquidos() não foi rodado ainda
-        // ou o ID da planilha no Apps Script está errado
-        console.warn("⚠️ Ilíquidos vazios:", iliquidos.error || "sem abas IL_tab*");
-        console.warn("   Verifique: 1) rodou dumpIliquidos() no Apps Script?");
-        console.warn("              2) o IL_ID no script bate com o ID real da planilha?");
-        // Marca flag para mostrar aviso na página
+        console.warn("⚠️ Ilíquidos (tabelas) vazios:", iliquidos.error || "sem abas IL_tab*");
+        console.warn("   Verifique: 1) rodou dumpTudoIL() no Apps Script? 2) IL_ID correto?");
         CD._iliquidosVazio = true;
+      }
+
+      // Movimentações ilíquidas — base para calcular TIR, MOIC, TVPI, DVPI, RVPI
+      const ilMovs = iliquidos.movimentacoes || [];
+      if (ilMovs.length > 0) {
+        CD.il_movimentacoes = ilMovs;
+        console.log("✅ Movimentações ilíquidas:", ilMovs.length, "registros");
+        console.log("   Colunas:", Object.keys(ilMovs[0]).join(", "));
+        // Ativos únicos presentes nas movimentações
+        const ativos = [...new Set(ilMovs.map(r => r['Ativo'] || r[Object.keys(r)[2]] || '').filter(Boolean))];
+        console.log("   Ativos:", ativos.length, "→", ativos.slice(0,5).join(", "));
+      } else {
+        console.warn("⚠️ Movimentações ilíquidas vazias — rode dumpTudoIL() no Apps Script");
+        CD.il_movimentacoes = [];
       }
 
       const paginaAtiva = document.querySelector('.page.active');
@@ -1989,6 +2104,8 @@
         const id = paginaAtiva.id.replace('page-','');
         renderizarPagina(id);
       }
+      // Pré-renderiza métricas PE/VC mesmo se não estiver na página de ilíquidos
+      if (CD.tables['il_metricas']) renderMetricasIliquidos();
     } catch(e) {
       console.warn("Web App não disponível:", e.message);
     } finally {
@@ -2013,6 +2130,343 @@
 
   // ── ILÍQUIDOS ─────────────────────────────────────────────────
 
+
+
+  // ═══════════════════════════════════════════════════════════════
+  //  MÉTRICAS PE/VC — calcula TIR, MOIC, TVPI, DVPI, RVPI
+  //  direto das movimentações retornadas pelo Web App de ilíquidos.
+  //
+  //  Estrutura esperada em CD.il_movimentacoes:
+  //    Data | Carteira | Ativo | Evento | Status Evento | Quant | Valor Bruto
+  //
+  //  Convenção de sinais (igual ao Comdinheiro):
+  //    Chamada de capital / Compra → Valor Bruto POSITIVO  (saída do investidor)
+  //    Distribuição / Resgate      → Valor Bruto NEGATIVO  (entrada pro investidor)
+  //
+  //  Para TIR usamos Newton-Raphson sobre os fluxos de caixa do investidor:
+  //    - Chamadas: fluxo negativo (dinheiro saindo)
+  //    - Distribuições: fluxo positivo (dinheiro entrando)
+  //    - NAV atual: fluxo positivo terminal (valor residual hoje)
+  // ═══════════════════════════════════════════════════════════════
+
+  // ── Newton-Raphson para TIR ────────────────────────────────────
+  function calcTIR(fluxos) {
+    // fluxos = [{data: Date, valor: number}, ...]
+    // valor negativo = saída, positivo = entrada
+    if (!fluxos || fluxos.length < 2) return null;
+    const temNeg = fluxos.some(f => f.valor < 0);
+    const temPos = fluxos.some(f => f.valor > 0);
+    if (!temNeg || !temPos) return null;
+
+    const t0 = fluxos[0].data.getTime();
+    const anos = fluxos.map(f => (f.data.getTime() - t0) / (365.25 * 24 * 3600 * 1000));
+
+    const npv = r => fluxos.reduce((s, f, i) => s + f.valor / Math.pow(1 + r, anos[i]), 0);
+    const dnpv = r => fluxos.reduce((s, f, i) => s - anos[i] * f.valor / Math.pow(1 + r, anos[i] + 1), 0);
+
+    let r = 0.15; // chute inicial 15% a.a.
+    for (let i = 0; i < 100; i++) {
+      const f  = npv(r);
+      const df = dnpv(r);
+      if (Math.abs(df) < 1e-12) break;
+      const rNovo = r - f / df;
+      if (Math.abs(rNovo - r) < 1e-8) { r = rNovo; break; }
+      r = rNovo;
+      if (r < -0.999) r = -0.999; // guardrail
+    }
+    return isFinite(r) ? r * 100 : null; // retorna em %
+  }
+
+  // ── parseData — aceita "dd/MM/yyyy" e "yyyy-MM-dd" ─────────────
+  function parseDt(s) {
+    if (!s) return null;
+    if (s instanceof Date) return s;
+    const str = String(s).trim();
+    // dd/MM/yyyy
+    const m1 = str.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (m1) return new Date(+m1[3], +m1[2]-1, +m1[1]);
+    // yyyy-MM-dd
+    const m2 = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m2) return new Date(+m2[1], +m2[2]-1, +m2[3]);
+    return null;
+  }
+
+  // ── Eventos que representam entrada de capital (chamada) ────────
+  function isEntrada(evento) {
+    const e = String(evento).toLowerCase();
+    return e.includes('compra') || e.includes('aplica') || e.includes('chamada') ||
+           e.includes('subscri') || e.includes('integraliz');
+  }
+
+  // ── Eventos que representam saída (distribuição/resgate) ────────
+  function isSaida(evento) {
+    const e = String(evento).toLowerCase();
+    return e.includes('venda') || e.includes('resgate') || e.includes('distribui') ||
+           e.includes('amortiza') || e.includes('dividendo') || e.includes('cupom') ||
+           e.includes('juros') || e.includes('rendimento');
+  }
+
+  // ── Função principal ────────────────────────────────────────────
+  function renderMetricasIliquidos() {
+    if (!CD) return;
+
+    const movs = CD.il_movimentacoes || [];
+    const tab9 = (CD.tables && CD.tables['il_tab9']) || [];
+
+    const setEl = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
+    const setH  = (id, h) => { const e = document.getElementById(id); if(e) e.innerHTML  = h; };
+
+    const fmtM = v => {
+      const n = parseFloat(String(v).replace(',','.'));
+      if (isNaN(n) || n === 0) return '—';
+      if (Math.abs(n) >= 1e6)  return 'R$ ' + (n/1e6).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1}) + ' mi';
+      if (Math.abs(n) >= 1e3)  return 'R$ ' + (n/1e3).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0}) + ' mil';
+      return 'R$ ' + n.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0});
+    };
+    const fmtPct = v => { const n = parseFloat(v); return isNaN(n)?'—':(n>=0?'+':'')+n.toFixed(1)+'%'; };
+    const fmtMx  = v => { const n = parseFloat(v); return isNaN(n)?'—':n.toFixed(2)+'×'; };
+    const cor    = v => { const n = parseFloat(v); return isNaN(n)?'':(n>=0?'color:var(--verde)':'color:var(--vermelho)'); };
+
+    const statusCor = s => {
+      const sl = String(s||'').toLowerCase();
+      if (sl.includes('ativo')||sl.includes('mant'))     return 'background:var(--verde-bg);color:var(--verde)';
+      if (sl.includes('saída')||sl.includes('exit'))     return 'background:var(--navy-pale);color:var(--navy)';
+      if (sl.includes('análise')||sl.includes('analise'))return 'background:var(--gold-pale);color:#7a5c1e';
+      if (sl.includes('encerr')||sl.includes('realiz'))  return 'background:#f0f0f0;color:#555';
+      return 'background:var(--navy-pale);color:var(--navy)';
+    };
+
+    // ── Se não há movimentações, mostra instrução ─────────────────
+    if (movs.length === 0) {
+      setH('il-metricas-tabela', `
+        <tr><td colspan="11" style="padding:0">
+          <div class="metricas-aviso" style="margin:0;border-radius:0;border:none">
+            <div style="font-size:24px;margin-bottom:10px">📊</div>
+            <strong style="color:var(--navy);font-size:14px">
+              Movimentações ilíquidas não carregadas ainda
+            </strong>
+            <div style="margin-top:10px;line-height:1.9;text-align:left;max-width:580px;margin:10px auto 0">
+              Para calcular TIR, MOIC, TVPI, DVPI e RVPI automaticamente:<br>
+              <b>1.</b> Abra o Apps Script da planilha de ilíquidos<br>
+              <b>2.</b> Execute a função <code>dumpTudoIL()</code><br>
+              <b>3.</b> Isso cria a aba <code>il_movimentacoes</code> com todas as chamadas de capital e distribuições<br>
+              <b>4.</b> Recarregue esta página — os cálculos aparecem automaticamente
+            </div>
+          </div>
+        </td></tr>`);
+      setH('il-fund-cards', '');
+      return;
+    }
+
+    // ── Agrupa movimentações por ativo ────────────────────────────
+    // Detecta colunas dinamicamente
+    const col0 = movs[0];
+    const keys  = Object.keys(col0);
+    // Tenta achar as colunas por nome, senão por índice
+    const kData   = keys.find(k => k.toLowerCase().includes('data'))   || keys[0];
+    const kAtivo  = keys.find(k => k.toLowerCase().includes('ativo'))  || keys[2];
+    const kEvento = keys.find(k => k.toLowerCase().includes('evento'))  || keys[3];
+    const kStatus = keys.find(k => k.toLowerCase() === 'status evento' || k.toLowerCase().includes('status')) || keys[4];
+    const kValor  = keys.find(k => k.toLowerCase().includes('valor'))   || keys[keys.length-1];
+
+    console.log("Colunas detectadas:", {kData, kAtivo, kEvento, kStatus, kValor});
+
+    // NAV atual por ativo — vem da tab9
+    const navPorAtivo = {};
+    tab9.forEach(row => {
+      const v    = Object.values(row);
+      const nome = String(row['Ativo'] ?? v[0] ?? '').trim();
+      const nav  = parseFloat(row['Saldo Líquido 31/03/26'] ?? v[7]) || 0;
+      if (nome && nome !== 'Total' && nav > 0) navPorAtivo[nome] = nav;
+    });
+
+    const porAtivo = {}; // { nomeAtivo: { fluxos: [], chamado, distribuido, nav } }
+
+    movs.forEach(row => {
+      const ativo  = String(row[kAtivo]  || '').trim(); if (!ativo) return;
+      const evento = String(row[kEvento] || '').trim();
+      const status = String(row[kStatus] || '').trim();
+      const valor  = parseFloat(String(row[kValor] || '0').replace(',', '.'));
+      const data   = parseDt(row[kData]);
+
+      if (!data || isNaN(valor) || valor === 0) return;
+      // Ignora eventos não realizados
+      if (status && status.toLowerCase().includes('previsto')) return;
+
+      if (!porAtivo[ativo]) porAtivo[ativo] = { fluxos: [], chamado: 0, distribuido: 0 };
+
+      const pa = porAtivo[ativo];
+
+      if (isEntrada(evento)) {
+        // Chamada de capital: fluxo negativo (dinheiro saindo do investidor)
+        pa.chamado    += Math.abs(valor);
+        pa.fluxos.push({ data, valor: -Math.abs(valor) });
+      } else if (isSaida(evento)) {
+        // Distribuição: fluxo positivo
+        pa.distribuido += Math.abs(valor);
+        pa.fluxos.push({ data, valor: +Math.abs(valor) });
+      }
+    });
+
+    // ── Calcula métricas por ativo ────────────────────────────────
+    const hoje  = new Date();
+    const ativos = Object.keys(porAtivo);
+
+    let totChamado=0, totDist=0, totNAV=0;
+    let tirPond=0, moicPond=0, pesoPond=0;
+
+    let tabelaHTML = '';
+    let cardsHTML  = '';
+
+    ativos.forEach(nome => {
+      const pa      = porAtivo[nome];
+      const chamado = pa.chamado;
+      const dist    = pa.distribuido;
+
+      // NAV: busca na tab9 por match de nome (parcial)
+      let nav = navPorAtivo[nome] || 0;
+      if (!nav) {
+        // Tenta match parcial — nomes truncados na tab9
+        const chave = Object.keys(navPorAtivo).find(k =>
+          nome.toLowerCase().startsWith(k.substring(0,20).toLowerCase()) ||
+          k.toLowerCase().startsWith(nome.substring(0,20).toLowerCase())
+        );
+        if (chave) nav = navPorAtivo[chave];
+      }
+
+      // Adiciona NAV como fluxo terminal (hoje)
+      const fluxosComNav = [...pa.fluxos];
+      if (nav > 0) fluxosComNav.push({ data: hoje, valor: nav });
+
+      // Métricas
+      const tir  = calcTIR(fluxosComNav);
+      const moic = chamado > 0 ? (dist + nav) / chamado : null;
+      const tvpi = moic; // TVPI = MOIC quando usamos capital chamado como base
+      const dvpi = chamado > 0 ? dist / chamado : null;
+      const rvpi = chamado > 0 ? nav  / chamado : null;
+
+      // Data do primeiro aporte
+      const datas = pa.fluxos.filter(f => f.valor < 0).map(f => f.data);
+      const dtIni = datas.length ? new Date(Math.min(...datas.map(d=>d.getTime()))) : null;
+      const holdingAnos = dtIni ? (hoje - dtIni) / (365.25*24*3600*1000) : null;
+
+      // Status inferido pelo NAV
+      const status = nav > 0 ? 'Ativo' : 'Encerrado';
+
+      // Acumuladores para totais
+      totChamado += chamado;
+      totDist    += dist;
+      totNAV     += nav;
+      if (tir !== null && chamado > 0) { tirPond += tir * chamado; pesoPond += chamado; }
+      if (moic !== null && chamado > 0) moicPond += moic * chamado;
+
+      // DVPI/RVPI para a barra visual
+      const dvpiPct = (tvpi && dvpi !== null) ? Math.min((dvpi/tvpi)*100, 100) : 0;
+      const rvpiPct = (tvpi && rvpi !== null) ? Math.min((rvpi/tvpi)*100, 100) : 0;
+
+      const nomeExib = nome.length > 45 ? nome.substring(0,43)+'…' : nome;
+
+      // Linha da tabela resumo
+      tabelaHTML += `<tr>
+        <td style="font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${nome}">${nomeExib}</td>
+        <td class="td-num">${fmtM(chamado)}</td>
+        <td class="td-num" style="color:var(--verde)">${fmtM(dist)}</td>
+        <td class="td-num">${fmtM(nav)}</td>
+        <td class="td-num" style="${cor(tir)};font-weight:600">${tir!==null?fmtPct(tir):'—'}</td>
+        <td class="td-num" style="${cor(moic!==null?moic-1:null)};font-weight:600">${moic!==null?fmtMx(moic):'—'}</td>
+        <td class="td-num">${tvpi!==null?fmtMx(tvpi):'—'}</td>
+        <td class="td-num" style="color:var(--verde)">${dvpi!==null?fmtMx(dvpi):'—'}</td>
+        <td class="td-num" style="color:var(--gold)">${rvpi!==null?fmtMx(rvpi):'—'}</td>
+        <td style="font-size:11px;color:var(--text-muted)">${holdingAnos!==null?holdingAnos.toFixed(1)+' anos':'—'}</td>
+        <td><span class="badge" style="${statusCor(status)}">${status}</span></td>
+      </tr>`;
+
+      // Card individual
+      cardsHTML += `
+        <div class="fund-card">
+          <div class="fund-card-header">
+            <div>
+              <div class="fund-card-name" title="${nome}">${nomeExib}</div>
+              <div class="fund-card-classe">${holdingAnos!==null?holdingAnos.toFixed(1)+' anos investido':''}</div>
+            </div>
+            <span class="fund-card-status" style="${statusCor(status)}">${status}</span>
+          </div>
+          <div class="fund-card-body">
+            <div class="fund-metrics">
+              <div class="fund-metric">
+                <div class="fund-metric-label">TIR a.a.</div>
+                <div class="fund-metric-val ${tir!==null&&tir>=0?'pos':tir!==null?'neg':''}">${tir!==null?fmtPct(tir):'—'}</div>
+                <div class="fund-metric-sub">calculada sobre fluxos reais</div>
+              </div>
+              <div class="fund-metric">
+                <div class="fund-metric-label">MOIC</div>
+                <div class="fund-metric-val ${moic!==null&&moic>=1?'pos':moic!==null?'neg':''}">${moic!==null?fmtMx(moic):'—'}</div>
+                <div class="fund-metric-sub">(NAV + dist.) ÷ chamado</div>
+              </div>
+              <div class="fund-metric">
+                <div class="fund-metric-label">DVPI</div>
+                <div class="fund-metric-val gold">${dvpi!==null?fmtMx(dvpi):'—'}</div>
+                <div class="fund-metric-sub">distribuído ÷ chamado</div>
+              </div>
+              <div class="fund-metric">
+                <div class="fund-metric-label">RVPI</div>
+                <div class="fund-metric-val">${rvpi!==null?fmtMx(rvpi):'—'}</div>
+                <div class="fund-metric-sub">NAV residual ÷ chamado</div>
+              </div>
+              <div class="fund-metric">
+                <div class="fund-metric-label">Capital Chamado</div>
+                <div class="fund-metric-val" style="font-size:16px">${fmtM(chamado)}</div>
+                <div class="fund-metric-sub">${dist>0?'Distribuído: '+fmtM(dist):'Sem distribuições ainda'}</div>
+              </div>
+              <div class="fund-metric">
+                <div class="fund-metric-label">NAV Atual</div>
+                <div class="fund-metric-val" style="font-size:16px">${fmtM(nav)}</div>
+                <div class="fund-metric-sub">${nav>0?'posição em 31/03/26':'encerrado'}</div>
+              </div>
+            </div>
+          </div>
+          ${(dvpi!==null&&rvpi!==null) ? `
+          <div class="fund-bar-section">
+            <div class="fund-bar-label">
+              <span>TVPI = DVPI + RVPI</span>
+              <span style="font-weight:600">${tvpi!==null?fmtMx(tvpi):'—'}</span>
+            </div>
+            <div class="fund-bar-track">
+              <div class="fund-bar-dvpi" style="width:${dvpiPct.toFixed(1)}%"></div>
+              <div class="fund-bar-rvpi" style="left:${dvpiPct.toFixed(1)}%;width:${rvpiPct.toFixed(1)}%"></div>
+            </div>
+            <div class="fund-bar-legend">
+              <div class="fund-bar-leg-item"><div class="fund-bar-leg-dot" style="background:var(--verde)"></div>DVPI ${dvpi!==null?fmtMx(dvpi):'—'} (realizado)</div>
+              <div class="fund-bar-leg-item"><div class="fund-bar-leg-dot" style="background:var(--gold)"></div>RVPI ${rvpi!==null?fmtMx(rvpi):'—'} (não realizado)</div>
+            </div>
+          </div>` : ''}
+        </div>`;
+    });
+
+    // ── Totais / médias ponderadas ────────────────────────────────
+    const tvpiTot = totChamado > 0 ? (totDist+totNAV)/totChamado : null;
+    const dvpiTot = totChamado > 0 ? totDist/totChamado : null;
+    const rvpiTot = totChamado > 0 ? totNAV/totChamado  : null;
+    const tirMed  = pesoPond  > 0 ? tirPond/pesoPond    : null;
+    const moicMed = pesoPond  > 0 ? moicPond/pesoPond   : null;
+
+    setH('il-metricas-tabela', tabelaHTML || '<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--text-muted)">Nenhum ativo com fluxos identificados</td></tr>');
+    setH('il-fund-cards', cardsHTML);
+
+    setEl('il-m-total-chamado',     fmtM(totChamado));
+    setEl('il-m-total-distribuido', fmtM(totDist));
+    setEl('il-m-total-nav',         fmtM(totNAV));
+    setEl('il-m-total-tir',         tirMed  !== null ? fmtPct(tirMed)  : '—');
+    setEl('il-m-total-moic',        moicMed !== null ? fmtMx(moicMed)  : '—');
+    setEl('il-m-total-tvpi',        tvpiTot !== null ? fmtMx(tvpiTot)  : '—');
+    setEl('il-m-total-dvpi',        dvpiTot !== null ? fmtMx(dvpiTot)  : '—');
+    setEl('il-m-total-rvpi',        rvpiTot !== null ? fmtMx(rvpiTot)  : '—');
+
+    const totEl = document.getElementById('il-metricas-total');
+    if (totEl) totEl.style.display = '';
+  }
+
+
   function renderIliquidos() {
     if (!CD) return;
     const t = CD.tables;
@@ -2021,6 +2475,10 @@
     const avisoEl = document.getElementById('il-aviso-vazio');
     const temDados = !!(t.il_tab7 && t.il_tab7.length > 0);
     if (avisoEl) avisoEl.style.display = temDados ? 'none' : 'flex';
+
+    // Métricas PE/VC — renderiza independentemente (pode existir mesmo sem il_tab7)
+    renderMetricasIliquidos();
+
     if (!temDados) return;
 
     const fmtB  = v => { const n=parseFloat(String(v).replace(',','.')); return isNaN(n)?'—':'R$ '+Math.abs(n).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); };
