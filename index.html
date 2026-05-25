@@ -1307,11 +1307,7 @@
             <div class="kpi-val" id="il-rent-12m">—</div>
             <div class="kpi-change pos" id="il-rent-12m-sub"></div>
           </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Índice de Sharpe</div>
-            <div class="kpi-val" id="il-sharpe">—</div>
-            <div class="kpi-change" id="il-volat"></div>
-          </div>
+
         </div>
 
         <!-- ── Módulo Métricas PE/VC ── -->
@@ -1432,14 +1428,31 @@
           </div>
         </div>
 
-        <!-- ── Linha 3: Rentabilidade Mensal ── -->
+        <!-- ── Linha 3: Rentabilidade Acumulada ── -->
         <div class="card" style="margin-bottom:20px">
           <div class="card-title">
-            Rentabilidade Mensal — Carteira vs CDI
-            <span class="card-title-label">% ao mês</span>
+            Rentabilidade Acumulada — Carteira vs CDI
+            <span class="card-title-label">% acumulado desde o início</span>
           </div>
-          <div class="chart-container" style="height:200px">
-            <canvas id="chart-iliq-mensal"></canvas>
+          <div class="chart-container" style="height:240px">
+            <canvas id="chart-iliq-acum"></canvas>
+          </div>
+        </div>
+
+        <!-- ── Linha 3b: Fluxo de Caixa por Ativo ── -->
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-title">
+            Fluxo de Caixa por Ativo
+            <span class="card-title-label">Integralizações e distribuições por data</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+            <select id="il-fluxo-select" style="padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;color:var(--navy);background:var(--surface-2);cursor:pointer;min-width:280px">
+              <option value="">Selecione um ativo…</option>
+            </select>
+            <span id="il-fluxo-resumo" style="font-size:12px;color:var(--text-muted)"></span>
+          </div>
+          <div class="chart-container" style="height:260px">
+            <canvas id="chart-iliq-fluxo"></canvas>
           </div>
         </div>
 
@@ -2057,25 +2070,11 @@
       const fetchWA = url => fetch(url, { redirect: 'follow' }).then(r => r.json());
 
       const IL_URL = "https://script.google.com/macros/s/AKfycbx__8KDLvyl1tPokvAQPV4M3SiMgreoveS4QcaK4CXwazIPbtfR3BSyMZ-dxs4CKX4v/exec";
-      const fetchRaw = url => fetch(url, { redirect: 'follow' }).then(r => r.text());
 
-      const [principal, iliquidosRaw] = await Promise.all([
+      const [principal, iliquidos] = await Promise.all([
         fetchWA(CD_WEBAPP_URL),
-        fetchRaw(IL_URL)
+        fetchWA(IL_URL)
       ]);
-
-      console.log("🔍 IL RAW (primeiros 500 chars):", iliquidosRaw.substring(0, 500));
-
-      let iliquidos;
-      try {
-        iliquidos = JSON.parse(iliquidosRaw);
-        console.log("🔍 IL keys:", Object.keys(iliquidos));
-        console.log("🔍 IL tables keys:", Object.keys(iliquidos.tables || {}));
-        console.log("🔍 IL movimentacoes length:", (iliquidos.movimentacoes || []).length);
-      } catch(e) {
-        console.error("❌ IL JSON parse error:", e.message, "| Raw:", iliquidosRaw.substring(0,200));
-        iliquidos = { tables: {}, movimentacoes: [] };
-      }
 
       if (principal.error) throw new Error(principal.error);
       CD = principal;
@@ -2566,7 +2565,6 @@
     // tab5: [Retorno período, 6m, 12m, Volatilidade, Sharpe]
     const tab5 = t.il_tab5 || [];
     const lbls5 = ['Retorno no período','Retorno 6m','Retorno 12m','Volatilidade','Sharpe'];
-    setT('il-sharpe', tab5[4]&&tab5[4].Carteira!==undefined ? fmtN(tab5[4].Carteira) : '—');
     setT('il-volat',  tab5[3]&&tab5[3].Carteira!==undefined ? 'Volatilidade: '+fmtN(tab5[3].Carteira)+'%' : '');
     let h5='';
     tab5.forEach((row,i)=>{ h5+=`<tr><td>${lbls5[i]||'—'}</td><td class="td-num" style="${corV(row.Carteira)}">${row.Carteira!==undefined?fmtN(row.Carteira)+'%':'—'}</td><td class="td-num" style="color:var(--text-muted)">${row.CDI!==undefined?fmtN(row.CDI)+'%':'—'}</td></tr>`; });
@@ -2669,15 +2667,242 @@
       ctxD._ci=new Chart(ctxD,{type:'doughnut',data:{labels:tab7.map(r=>String(Object.values(r)[0]).trim()),datasets:[{data:vals,backgroundColor:[NAVY,GOLD,MUTED],borderWidth:2,borderColor:'#fff',hoverOffset:4}]},options:{cutout:'65%',plugins:{legend:{display:true,position:'right',labels:{color:NAVY,font:{size:10},boxWidth:10,padding:6}},tooltip:{backgroundColor:NAVY,titleColor:'#fff',bodyColor:'rgba(255,255,255,0.75)',padding:10,cornerRadius:6}}}});
     }
 
-    // Gráfico barras tab2 mensal
-    const cRows=tab2.filter(r=>r.Ativo==='Carteira'), dRows=tab2.filter(r=>r.Ativo==='CDI');
-    const cRow=cRows[cRows.length-1]||{}, dRow=dRows[dRows.length-1]||{};
-    const ctxM=document.getElementById('chart-iliq-mensal');
-    if(ctxM){
-      if(ctxM._ci) ctxM._ci.destroy();
-      const cVals=mesesNm.map(m=>{const v=cRow[m];return(v!==''&&v!=null)?parseFloat(v)*100:null;});
-      const dVals=mesesNm.map(m=>{const v=dRow[m];return(v!==''&&v!=null)?parseFloat(v)*100:null;});
-      ctxM._ci=new Chart(ctxM,{type:'bar',data:{labels:mesesNm,datasets:[{label:'Carteira (%)',data:cVals,backgroundColor:cVals.map(v=>v===null?'transparent':v>=0?GOLD:'rgba(140,32,32,0.7)'),borderRadius:4,barThickness:14},{label:'CDI (%)',data:dVals,backgroundColor:'rgba(15,61,87,0.18)',borderRadius:4,barThickness:14}]},options:{plugins:{legend:{display:true,position:'bottom',labels:{color:NAVY,font:{size:10},boxWidth:10,padding:10}},tooltip:{backgroundColor:NAVY,titleColor:'#fff',bodyColor:'rgba(255,255,255,0.75)',padding:10,cornerRadius:6}},scales:{x:{grid:{display:false},ticks:{color:MUTED,font:{size:10}}},y:{grid:{color:'rgba(15,61,87,0.05)'},ticks:{color:MUTED,font:{size:10},callback:v=>v.toFixed(2)+'%'}}}}});
+    // ── Gráfico Rentabilidade Acumulada (Carteira vs CDI) ──────────
+    // Usa tab2: cada linha tem Ativo="Carteira" ou "CDI", colunas = meses
+    // Acumula os retornos mensais: (1+r1)*(1+r2)*... - 1
+    const ctxAcum = document.getElementById('chart-iliq-acum');
+    if (ctxAcum) {
+      if (ctxAcum._ci) ctxAcum._ci.destroy();
+
+      // Pega todas as linhas de todos os anos, ordenadas
+      const anosOrdenados = Object.keys(anos).sort();
+      const labelsAcum = [];
+      const cartAcum   = [];
+      const cdiAcum    = [];
+      let acCart = 1, acCDI = 1;
+
+      anosOrdenados.forEach(ano => {
+        const rowCart = anos[ano]['Carteira'] || {};
+        const rowCDI  = anos[ano]['CDI']      || {};
+        mesesNomes.forEach(mes => {
+          const vc = parseFloat(rowCart[mes]);
+          const vd = parseFloat(rowCDI[mes]);
+          if (!isNaN(vc) && !isNaN(vd)) {
+            acCart *= (1 + vc);
+            acCDI  *= (1 + vd);
+            labelsAcum.push(mes.substring(0,3) + "'" + ano.toString().slice(-2));
+            cartAcum.push(+((acCart - 1) * 100).toFixed(2));
+            cdiAcum.push( +((acCDI  - 1) * 100).toFixed(2));
+          }
+        });
+      });
+
+      ctxAcum._ci = new Chart(ctxAcum, {
+        type: 'line',
+        data: {
+          labels: labelsAcum,
+          datasets: [
+            {
+              label: 'Carteira',
+              data: cartAcum,
+              borderColor: GOLD,
+              backgroundColor: 'rgba(184,146,74,0.08)',
+              fill: true,
+              tension: 0.3,
+              pointRadius: 0,
+              pointHoverRadius: 4,
+              borderWidth: 2
+            },
+            {
+              label: 'CDI',
+              data: cdiAcum,
+              borderColor: NAVY_MID,
+              backgroundColor: 'transparent',
+              fill: false,
+              tension: 0.3,
+              pointRadius: 0,
+              pointHoverRadius: 4,
+              borderWidth: 1.5,
+              borderDash: [4, 4]
+            }
+          ]
+        },
+        options: {
+          plugins: {
+            legend: { display: true, position: 'bottom', labels: { color: NAVY, font: { size: 10 }, boxWidth: 10, padding: 12 } },
+            tooltip: {
+              backgroundColor: NAVY,
+              titleColor: '#fff',
+              bodyColor: 'rgba(255,255,255,0.8)',
+              padding: 10,
+              cornerRadius: 6,
+              callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(2) + '%' }
+            }
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: MUTED, font: { size: 9 }, maxTicksLimit: 24, maxRotation: 0 } },
+            y: { grid: { color: 'rgba(15,61,87,0.05)' }, ticks: { color: MUTED, font: { size: 10 }, callback: v => v.toFixed(0) + '%' } }
+          },
+          interaction: { mode: 'index', intersect: false }
+        }
+      });
+    }
+
+    // ── Gráfico Fluxo de Caixa por Ativo ───────────────────────────
+    const movs = CD.il_movimentacoes || [];
+
+    // Detectar colunas
+    const _km = movs[0] ? Object.keys(movs[0]) : [];
+    const kAtivo  = _km.find(k=>k.toLowerCase().includes('ativo'))  || _km[2];
+    const kEvento = _km.find(k=>k.toLowerCase().includes('evento'))  || _km[3];
+    const kData   = _km.find(k=>k.toLowerCase().includes('data'))   || _km[0];
+    const kValor  = _km.find(k=>k.toLowerCase().includes('valor'))   || _km[_km.length-1];
+
+    // Agrupar por ativo
+    const ativosMov = {};
+    movs.forEach(row => {
+      const a = String(row[kAtivo]||'').trim(); if(!a) return;
+      if (!ativosMov[a]) ativosMov[a] = [];
+      ativosMov[a].push(row);
+    });
+
+    // Popula o select
+    const selEl = document.getElementById('il-fluxo-select');
+    if (selEl && Object.keys(ativosMov).length > 0) {
+      // Limpa opções antigas
+      selEl.innerHTML = '<option value="">Selecione um ativo…</option>';
+      Object.keys(ativosMov).sort().forEach(nome => {
+        const opt = document.createElement('option');
+        opt.value = nome;
+        opt.textContent = nome.length > 60 ? nome.substring(0,58)+'…' : nome;
+        selEl.appendChild(opt);
+      });
+
+      // Função que renderiza o gráfico para um ativo selecionado
+      let chartFluxo = null;
+      const renderFluxo = (nomeAtivo) => {
+        const ctxF = document.getElementById('chart-iliq-fluxo');
+        const resumoEl = document.getElementById('il-fluxo-resumo');
+        if (!ctxF || !nomeAtivo) return;
+        if (chartFluxo) { chartFluxo.destroy(); chartFluxo = null; }
+
+        const rows = ativosMov[nomeAtivo] || [];
+        // Agrupa por data — soma entradas (distribuições) e saídas (integralizações)
+        const porData = {};
+        let totalInt = 0, totalDist = 0;
+
+        rows.forEach(row => {
+          const dtStr = String(row[kData]||'').trim();
+          const val   = parseFloat(String(row[kValor]||'0').replace(',','.'));
+          const ev    = String(row[kEvento]||'').toLowerCase();
+          if (!dtStr || isNaN(val) || val === 0) return;
+
+          if (!porData[dtStr]) porData[dtStr] = { integralizado: 0, distribuido: 0 };
+
+          // Integralizações: negativas no gráfico (saída do investidor)
+          if (ev.includes('compra')||ev.includes('aplica')||ev.includes('chamada')||ev.includes('subscri')||ev.includes('integraliz')) {
+            porData[dtStr].integralizado -= Math.abs(val);
+            totalInt += Math.abs(val);
+          } else {
+            porData[dtStr].distribuido += Math.abs(val);
+            totalDist += Math.abs(val);
+          }
+        });
+
+        const datas  = Object.keys(porData).sort((a,b) => {
+          const pa = a.split('/').reverse().join(''), pb = b.split('/').reverse().join('');
+          return pa.localeCompare(pb);
+        });
+        const intVals  = datas.map(d => porData[d].integralizado);
+        const distVals = datas.map(d => porData[d].distribuido);
+        // Acumulado integralizado (linha laranja)
+        let acum = 0;
+        const acumVals = datas.map(d => {
+          acum += porData[d].integralizado;
+          return +acum.toFixed(2);
+        });
+
+        if (resumoEl) resumoEl.textContent =
+          `Integralizado: R$ ${(totalInt/1000).toFixed(0)} mil  ·  Distribuído: R$ ${(totalDist/1000).toFixed(0)} mil`;
+
+        chartFluxo = new Chart(ctxF, {
+          type: 'bar',
+          data: {
+            labels: datas,
+            datasets: [
+              {
+                label: 'Integralizado',
+                data: intVals,
+                backgroundColor: NAVY,
+                borderRadius: 3,
+                barThickness: 'flex',
+                order: 2
+              },
+              {
+                label: 'Distribuído',
+                data: distVals,
+                backgroundColor: VERDE,
+                borderRadius: 3,
+                barThickness: 'flex',
+                order: 2
+              },
+              {
+                label: 'Integralizado Acumul.',
+                data: acumVals,
+                type: 'line',
+                borderColor: GOLD,
+                backgroundColor: 'transparent',
+                borderWidth: 2,
+                pointRadius: 2,
+                pointBackgroundColor: GOLD,
+                tension: 0.3,
+                yAxisID: 'y2',
+                order: 1
+              }
+            ]
+          },
+          options: {
+            plugins: {
+              legend: { display: true, position: 'bottom', labels: { color: NAVY, font: { size: 10 }, boxWidth: 10, padding: 12 } },
+              tooltip: {
+                backgroundColor: NAVY,
+                titleColor: '#fff',
+                bodyColor: 'rgba(255,255,255,0.8)',
+                padding: 10,
+                cornerRadius: 6,
+                callbacks: {
+                  label: ctx => {
+                    const v = ctx.parsed.y;
+                    return ctx.dataset.label + ': R$ ' + Math.abs(v).toLocaleString('pt-BR', {minimumFractionDigits:2,maximumFractionDigits:2});
+                  }
+                }
+              }
+            },
+            scales: {
+              x: { grid: { display: false }, ticks: { color: MUTED, font: { size: 9 }, maxTicksLimit: 30, maxRotation: 45 } },
+              y: {
+                position: 'left',
+                grid: { color: 'rgba(15,61,87,0.05)' },
+                ticks: { color: MUTED, font: { size: 9 }, callback: v => 'R$ ' + (Math.abs(v)/1000).toFixed(0) + 'k' }
+              },
+              y2: {
+                position: 'right',
+                grid: { display: false },
+                ticks: { color: GOLD, font: { size: 9 }, callback: v => 'R$ ' + (Math.abs(v)/1000).toFixed(0) + 'k' }
+              }
+            },
+            interaction: { mode: 'index', intersect: false }
+          }
+        });
+      };
+
+      selEl.addEventListener('change', e => renderFluxo(e.target.value));
+      // Renderiza o primeiro ativo automaticamente
+      if (Object.keys(ativosMov).length > 0) {
+        const primeiro = Object.keys(ativosMov).sort()[0];
+        selEl.value = primeiro;
+        renderFluxo(primeiro);
+      }
     }
   }
 
