@@ -2056,7 +2056,7 @@
     try {
       const fetchWA = url => fetch(url, { redirect: 'follow' }).then(r => r.json());
 
-      const IL_URL = "https://script.google.com/macros/s/AKfycbx__8KDLvyl1tPokvAQPV4M3SiMgreoveS4QcaK4CXwazIPbtfR3BSyMZ-dxs4CKX4v/exec";
+      const IL_URL = "https://script.google.com/macros/s/AKfycbwYCcm6uYqViStP32EG7LbeWXDcWkmR6QD2MFEsjoBZjJq-Q40SR407F8h7QG6_f_JV/exec";
       const fetchRaw = url => fetch(url, { redirect: 'follow' }).then(r => r.text());
 
       const [principal, iliquidosRaw] = await Promise.all([
@@ -2227,7 +2227,46 @@
     if (!CD) return;
 
     const movs = CD.il_movimentacoes || [];
-    const tab9 = (CD.tables && CD.tables['il_tab9']) || [];
+    const tab9  = (CD.tables && CD.tables['il_tab9'])  || [];
+    const tab10 = (CD.tables && CD.tables['il_tab10']) || [];
+
+    // ── TIR por ativo via IL_tab10 (Noperíodo + Data Compra) ──
+    // Mais confiável que Newton-Raphson sobre fluxos agregados
+    const tirPorAtivo = {};
+    const hoje = new Date();
+
+    tab10.forEach(row => {
+      const v     = Object.values(row);
+      const nome  = String(row['Ativo'] ?? v[0] ?? '').trim();
+      if (!nome || nome === 'Total') return;
+
+      // Noperíodo = retorno acumulado desde o aporte (%)
+      const noper = parseFloat(row['Noperíodo'] ?? row['Noperiodo'] ?? v[8] ?? v[9]);
+      // Data Compra — coluna K (índice 9 ou 10 dependendo do layout)
+      const dtRaw = row['Data Compra'] ?? row['DataCompra'] ?? v[9] ?? v[10];
+      const dtCompra = parseDt(dtRaw);
+
+      if (isNaN(noper) || !dtCompra) return;
+
+      // Anos entre compra e hoje
+      const anos = (hoje - dtCompra) / (365.25 * 24 * 3600 * 1000);
+      if (anos <= 0) return;
+
+      // Anualiza: TIR a.a. = (1 + noper/100)^(1/anos) - 1
+      const tir = (Math.pow(1 + noper / 100, 1 / anos) - 1) * 100;
+
+      // Guarda só a TIR do ativo principal (não do "% do CDI")
+      if (!nome.toLowerCase().includes('% do cdi')) {
+        // Se já tem esse ativo (ex: mesmo ativo com dois aportes), usa média simples
+        if (tirPorAtivo[nome] !== undefined) {
+          tirPorAtivo[nome] = (tirPorAtivo[nome] + tir) / 2;
+        } else {
+          tirPorAtivo[nome] = tir;
+        }
+      }
+    });
+
+    console.log("TIR por ativo (tab10):", tirPorAtivo);
 
     const setEl = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
     const setH  = (id, h) => { const e = document.getElementById(id); if(e) e.innerHTML  = h; };
@@ -2325,7 +2364,6 @@
     });
 
     // ── Calcula métricas por ativo ────────────────────────────────
-    const hoje  = new Date();
     const ativos = Object.keys(porAtivo);
 
     let totChamado=0, totDist=0, totNAV=0;
@@ -2350,12 +2388,18 @@
         if (chave) nav = navPorAtivo[chave];
       }
 
-      // Adiciona NAV como fluxo terminal (hoje)
-      const fluxosComNav = [...pa.fluxos];
-      if (nav > 0) fluxosComNav.push({ data: hoje, valor: nav });
 
-      // Métricas
-      const tir  = calcTIR(fluxosComNav);
+          // TIR via Noperíodo anualizado (IL_tab10) — match por nome exato ou parcial
+      let tir = tirPorAtivo[nome];
+      if (tir === undefined) {
+        // Tenta match parcial (nomes truncados)
+        const chave = Object.keys(tirPorAtivo).find(k =>
+          nome.toLowerCase().startsWith(k.substring(0,25).toLowerCase()) ||
+          k.toLowerCase().startsWith(nome.substring(0,25).toLowerCase())
+        );
+        if (chave) tir = tirPorAtivo[chave];
+      }
+      if (tir === undefined) tir = null;
       const moic = chamado > 0 ? (dist + nav) / chamado : null;
       const tvpi = moic; // TVPI = MOIC quando usamos capital chamado como base
       const dvpi = chamado > 0 ? dist / chamado : null;
