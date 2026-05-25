@@ -2805,7 +2805,10 @@
         const ctxF = document.getElementById('chart-iliq-fluxo');
         const resumoEl = document.getElementById('il-fluxo-resumo');
         if (!ctxF || !nomeAtivo) return;
-        if (chartFluxo) { chartFluxo.destroy(); chartFluxo = null; }
+        // Destroi qualquer chart existente no canvas (pelo registro do Chart.js)
+        if (chartFluxo) { try { chartFluxo.destroy(); } catch(e){} chartFluxo = null; }
+        const _existente = Chart.getChart('chart-iliq-fluxo');
+        if (_existente) { try { _existente.destroy(); } catch(e){} }
 
         const rows = ativosMov[nomeAtivo] || [];
         // Agrupa por data — soma entradas (distribuições) e saídas (integralizações)
