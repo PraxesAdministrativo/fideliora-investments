@@ -3250,9 +3250,15 @@
   }
 
   // Init: open both groups + carrega dados da planilha
-  // Expõe funções usadas no HTML (onclick) para o escopo global
-  window.showPage      = showPage;
-  window.toggleGroup   = toggleGroup;
+  // Expõe todas as funções usadas fora do IIFE
+  window.showPage             = showPage;
+  window.toggleGroup          = toggleGroup;
+  window.renderIliquidos      = renderIliquidos;
+  window.renderOnshoreTotal   = renderOnshoreTotal;
+  window.renderMetricasIliquidos = renderMetricasIliquidos;
+  window.renderizarPagina     = renderizarPagina;
+  window.initChartsForPage    = initChartsForPage;
+  window.carregarDados        = carregarDados;
 
   window.addEventListener('DOMContentLoaded', () => {
     ['onshore','offshore'].forEach(g => {
