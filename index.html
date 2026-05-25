@@ -1858,10 +1858,9 @@
 
 <script>
   // ═══════════════════════════════════════════════════════════════
-  //  CONFIGURAÇÃO — URLs dos Web Apps
+  //  CONFIGURAÇÃO — cole aqui a URL do seu Web App após implantar
   // ═══════════════════════════════════════════════════════════════
   const CD_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbw6zagw8pRYcFZw9OOD88C8kvTc60zzU0WB9hLaMuZ1bQRNIqv3Bh5OHIGoicrWnt-Q/exec";
-  const IL_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwYCcm6uYqViStP32EG7LbeWXDcWkmR6QD2MFEsjoBZjJq-Q40SR407F8h7QG6_f_JV/exec";
 
   // Cache dos dados carregados
   let CD = null;
@@ -1874,20 +1873,19 @@
 
       const [principal, iliquidos] = await Promise.all([
         fetchWA(CD_WEBAPP_URL),
-        fetchWA(IL_WEBAPP_URL)
+        fetchWA("https://script.google.com/macros/s/AKfycbwYCcm6uYqViStP32EG7LbeWXDcWkmR6QD2MFEsjoBZjJq-Q40SR407F8h7QG6_f_JV/exec")
       ]);
 
       if (principal.error) throw new Error(principal.error);
       CD = principal;
       console.log("✅ Principal carregado:", Object.keys(CD.tables));
 
-      // Suporta tanto { tables } quanto { abas, tables }
       const ilTables = iliquidos.tables || {};
       if (Object.keys(ilTables).length > 0) {
         Object.assign(CD.tables, ilTables);
         console.log("✅ Ilíquidos carregados:", Object.keys(ilTables));
       } else {
-        console.warn("⚠️ Ilíquidos vazios ou erro:", iliquidos.error || "sem tabelas");
+        console.warn("⚠️ Ilíquidos vazios:", iliquidos.error || "sem tabelas");
       }
 
       const paginaAtiva = document.querySelector('.page.active');
@@ -1916,9 +1914,143 @@
 
   // ── RENDERIZADORES POR PÁGINA ─────────────────────────────────
 
+
+  // ── ILÍQUIDOS ─────────────────────────────────────────────────
+
+  function renderIliquidos() {
+    if (!CD) return;
+    const t = CD.tables;
+
+    const fmtB  = v => { const n=parseFloat(String(v).replace(',','.')); return isNaN(n)?'—':'R$ '+Math.abs(n).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); };
+    const fmtN  = v => { const n=parseFloat(String(v).replace(',','.')); return isNaN(n)?'—':n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); };
+    const fmtP  = v => { const n=parseFloat(String(v).replace(',','.')); if(isNaN(n)) return '—'; return (n>=0?'+':'')+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%'; };
+    const corV  = v => { const n=parseFloat(String(v).replace(',','.')); return isNaN(n)?'':(n>=0?'color:var(--verde)':'color:var(--vermelho)'); };
+    const fmtDt = v => { if(!v) return '—'; try{ const d=new Date(v); return isNaN(d.getTime())?String(v):d.toLocaleDateString('pt-BR'); }catch(e){ return String(v); } };
+    const set   = (id,h) => { const el=document.getElementById(id); if(el) el.innerHTML=h; };
+    const setT  = (id,tv) => { const el=document.getElementById(id); if(el) el.textContent=tv; };
+    const NAVY='#0f3d57',GOLD='#b8924a',VERDE='#1a6645',MUTED='#8a9fad';
+
+    // tab0: [Rend.Nominal, Var.Nominal%, CDI%, IPCAdp%] x [Mês,Ano,12meses,24meses,Noperíodo]
+    const tab0 = t.il_tab0 || [];
+    const varNom = tab0[1] || {};
+    const cdi0   = tab0[2] || {};
+    const colsN  = Object.keys(varNom);
+    const perK   = colsN.find(k=>k.toLowerCase().includes('per')||k.toLowerCase().includes('nop')) || colsN[colsN.length-1];
+    const m12K   = colsN.find(k=>k.includes('12')) || '';
+    setT('il-pl',            tab0[0] ? fmtB(tab0[0][perK]) : '—');
+    setT('il-rent-periodo',  fmtP(varNom[perK]));
+    setT('il-rent-cdi',      cdi0[perK]!==undefined ? 'CDI: '+fmtP(cdi0[perK]) : '');
+    setT('il-rent-12m',      fmtP(varNom[m12K]));
+    setT('il-rent-12m-sub',  cdi0[m12K]!==undefined ? 'CDI 12m: '+fmtP(cdi0[m12K]) : '');
+
+    // tab5: [Retorno período, 6m, 12m, Volatilidade, Sharpe]
+    const tab5 = t.il_tab5 || [];
+    const lbls5 = ['Retorno no período','Retorno 6m','Retorno 12m','Volatilidade','Sharpe'];
+    setT('il-sharpe', tab5[4]&&tab5[4].Carteira!==undefined ? fmtN(tab5[4].Carteira) : '—');
+    setT('il-volat',  tab5[3]&&tab5[3].Carteira!==undefined ? 'Volatilidade: '+fmtN(tab5[3].Carteira)+'%' : '');
+    let h5='';
+    tab5.forEach((row,i)=>{ h5+=`<tr><td>${lbls5[i]||'—'}</td><td class="td-num" style="${corV(row.Carteira)}">${row.Carteira!==undefined?fmtN(row.Carteira)+'%':'—'}</td><td class="td-num" style="color:var(--text-muted)">${row.CDI!==undefined?fmtN(row.CDI)+'%':'—'}</td></tr>`; });
+    set('il-tab5-body', h5);
+
+    // tab6: vem vazio — calcula a partir do tab2
+    const tab2 = t.il_tab2 || [];
+    const mesesNm = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    const cartRows2 = tab2.filter(r=>r.Ativo==='Carteira');
+    const allVals = cartRows2.flatMap(r=>mesesNm.map(m=>r[m]!==''&&r[m]!=null?parseFloat(r[m]):null).filter(v=>v!==null));
+    const maiorM = allVals.length?Math.max(...allVals):null;
+    const menorM = allVals.length?Math.min(...allVals):null;
+    const mPos   = allVals.filter(v=>v>0).length;
+    const mNeg   = allVals.filter(v=>v<0).length;
+    set('il-tab6-body', `
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span>Maior rentab. mensal</span><span style="font-weight:600;color:var(--verde)">${maiorM!==null?fmtP(maiorM*100):'—'}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span>Menor rentab. mensal</span><span style="font-weight:600;color:var(--vermelho)">${menorM!==null?fmtP(menorM*100):'—'}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span>Meses positivos</span><span style="font-weight:600;color:var(--navy)">${mPos} de ${mPos+mNeg}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0"><span>PL em 31/03/2026</span><span style="font-weight:600;color:var(--navy)">${tab0[0]?fmtB(tab0[0][perK]):'—'}</span></div>
+    `);
+
+    // tab7: posição por classe
+    const tab7 = t.il_tab7 || [];
+    const maxSF7 = Math.max(...tab7.map(r=>Math.abs(parseFloat(Object.values(r)[4])||0)));
+    let h7='', tot7s=0, tot7r=0;
+    tab7.forEach(row=>{
+      const v=Object.values(row);
+      const nome=String(v[0]||''). trim(); if(!nome) return;
+      const si=parseFloat(v[1])||0, mov=parseFloat(v[2])||0, rend=parseFloat(v[3])||0, sf=parseFloat(v[4])||0, pct=parseFloat(v[5])||0;
+      const bw=maxSF7>0?Math.round((Math.abs(sf)/maxSF7)*100):0;
+      tot7s+=sf; tot7r+=rend;
+      h7+=`<tr><td>${nome}</td><td class="td-num">${fmtB(si)}</td><td class="td-num" style="${corV(mov)}">${mov>=0?'':'-'}${fmtB(Math.abs(mov))}</td><td class="td-num" style="${corV(rend)}">${fmtB(rend)}</td><td class="td-num"><strong>${fmtB(sf)}</strong></td><td class="td-num">${fmtN(pct)}%</td><td><div class="alloc-bar-wrap"><div class="alloc-bar" style="width:${bw}%"></div></div></td></tr>`;
+    });
+    set('il-tab7-body', h7||'<tr><td colspan="7" style="color:var(--text-muted);text-align:center">Sem dados</td></tr>');
+    setT('il-total-saldo', fmtB(tot7s));
+    setT('il-total-rend',  'Rend. Total: '+fmtB(tot7r));
+
+    // tab9: posição por ativo
+    const tab9 = t.il_tab9 || [];
+    let h9='';
+    tab9.forEach(row=>{
+      const nome=String(row.Ativo||''). trim(); if(!nome) return;
+      const sf=parseFloat(row['Saldo Bruto 31/03/26'])||0, pct=parseFloat(row['%'])||0;
+      const ir=parseFloat(row['Provisão de IR+IOF'])||0, sl=parseFloat(row['Saldo Líquido 31/03/26'])||0;
+      const liq=String(row.Liquidez||''). trim();
+      if(nome==='Total'){ h9+=`<tr style="background:rgba(15,61,87,0.04);font-weight:600"><td>Total</td><td class="td-num">${fmtB(sf)}</td><td class="td-num" style="color:var(--vermelho)">${ir>0?fmtB(ir):'—'}</td><td class="td-num" style="color:var(--verde)">${fmtB(sl)}</td><td class="td-num">${fmtN(pct)}%</td><td>—</td></tr>`; return; }
+      const isClasse = sf===0&&pct===0&&liq==='';
+      if(isClasse){ h9+=`<tr style="background:rgba(15,61,87,0.03)"><td colspan="6" style="font-weight:600;color:var(--navy);font-size:11px;text-transform:uppercase;padding:8px 0">${nome}</td></tr>`; return; }
+      h9+=`<tr><td style="padding-left:12px;font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${nome}">${nome}</td><td class="td-num">${fmtB(sf)}</td><td class="td-num" style="color:var(--vermelho)">${ir>0?fmtB(ir):'—'}</td><td class="td-num" style="color:var(--verde)">${fmtB(sl)}</td><td class="td-num">${fmtN(pct)}%</td><td style="font-size:11px;color:var(--text-muted)">${liq||'—'}</td></tr>`;
+    });
+    set('il-tab9-body', h9||'<tr><td colspan="6" style="color:var(--text-muted);text-align:center;padding:20px">Sem dados</td></tr>');
+
+    // tab10: rentabilidade por ativo
+    const tab10 = t.il_tab10 || [];
+    let h10='';
+    tab10.forEach(row=>{
+      const nome=String(row.Ativo||''). trim(); if(!nome) return;
+      const isPct=nome.toLowerCase().includes('% do cdi');
+      const isClasse=!isPct&&row.Mês==='nd'&&row.Ano==='nd'&&!row['Data Compra'];
+      const fc=v=>{ if(v===''||v===null||v===undefined||String(v).toLowerCase()==='nd') return '<td class="td-num" style="color:var(--text-muted)">nd</td>'; const n=parseFloat(v); if(isNaN(n)) return `<td class="td-num" style="color:var(--text-muted)">${v}</td>`; return `<td class="td-num" style="${n>=0?'color:var(--verde)':'color:var(--vermelho)'}">${n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%'}</td>`; };
+      if(isClasse){ h10+=`<tr style="background:rgba(15,61,87,0.04)"><td colspan="10" style="font-weight:600;color:var(--navy);font-size:11px;text-transform:uppercase;padding:8px 0">${nome}</td></tr>`; return; }
+      const bg=isPct?'background:rgba(15,61,87,0.02)':'';
+      const ns=isPct?'color:var(--text-muted);font-size:11px;padding-left:12px':'font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+      h10+=`<tr style="${bg}"><td style="${ns}" title="${nome}">${isPct?'% do CDI':nome}</td>${fc(row.Mês)}${fc(row.Ano)}${fc(row['03meses'])}${fc(row['06meses'])}${fc(row['12meses'])}${fc(row['24meses'])}${fc(row['36meses'])}${fc(row.Noperíodo)}<td style="font-size:11px;color:var(--text-muted);white-space:nowrap">${fmtDt(row['Data Compra'])}</td></tr>`;
+    });
+    set('il-tab10-body', h10||'<tr><td colspan="10" style="color:var(--text-muted);text-align:center;padding:20px">Sem dados</td></tr>');
+
+    // tab3: fluxo de caixa
+    const tab3 = t.il_tab3 || [];
+    let h3='';
+    tab3.forEach((row,i)=>{
+      const per=fmtDt(row['Mês/Ano']);
+      const si=parseFloat(row['Saldo Inicial'])||0, ap=parseFloat(row['Aplicações'])||0;
+      const re=parseFloat(row['Resgates'])||0, rend=parseFloat(row['Rendimento Nominal'])||0, sf=parseFloat(row['Saldo Final'])||0;
+      const bg=i===tab3.length-1?'background:rgba(15,61,87,0.04);font-weight:600':(i===0?'background:rgba(15,61,87,0.02)':'');
+      h3+=`<tr style="${bg}"><td style="font-weight:500;font-size:12px">${per}</td><td class="td-num">${fmtB(si)}</td><td class="td-num" style="${corV(ap)}">${fmtB(ap)}</td><td class="td-num" style="color:var(--vermelho)">${re?fmtB(re):'—'}</td><td class="td-num" style="${corV(rend)}">${fmtB(rend)}</td><td class="td-num"><strong>${fmtB(sf)}</strong></td></tr>`;
+    });
+    set('il-tab3-body', h3||'<tr><td colspan="6" style="color:var(--text-muted);text-align:center;padding:20px">Sem dados</td></tr>');
+
+    // Gráfico donut tab7
+    const ctxD = document.getElementById('chart-iliq-donut');
+    if(ctxD&&tab7.length>0){
+      if(ctxD._ci) ctxD._ci.destroy();
+      const labels=tab7.map(r=>String(Object.values(r)[0]).trim()).filter(n=>n&&parseFloat(Object.values(tab7[0]||{})[4]||0)>=0);
+      const vals=tab7.map(r=>Math.abs(parseFloat(Object.values(r)[5])||0));
+      ctxD._ci=new Chart(ctxD,{type:'doughnut',data:{labels:tab7.map(r=>String(Object.values(r)[0]).trim()),datasets:[{data:vals,backgroundColor:[NAVY,GOLD,MUTED],borderWidth:2,borderColor:'#fff',hoverOffset:4}]},options:{cutout:'65%',plugins:{legend:{display:true,position:'right',labels:{color:NAVY,font:{size:10},boxWidth:10,padding:6}},tooltip:{backgroundColor:NAVY,titleColor:'#fff',bodyColor:'rgba(255,255,255,0.75)',padding:10,cornerRadius:6}}}});
+    }
+
+    // Gráfico barras tab2 mensal
+    const cRows=tab2.filter(r=>r.Ativo==='Carteira'), dRows=tab2.filter(r=>r.Ativo==='CDI');
+    const cRow=cRows[cRows.length-1]||{}, dRow=dRows[dRows.length-1]||{};
+    const ctxM=document.getElementById('chart-iliq-mensal');
+    if(ctxM){
+      if(ctxM._ci) ctxM._ci.destroy();
+      const cVals=mesesNm.map(m=>{const v=cRow[m];return(v!==''&&v!=null)?parseFloat(v)*100:null;});
+      const dVals=mesesNm.map(m=>{const v=dRow[m];return(v!==''&&v!=null)?parseFloat(v)*100:null;});
+      ctxM._ci=new Chart(ctxM,{type:'bar',data:{labels:mesesNm,datasets:[{label:'Carteira (%)',data:cVals,backgroundColor:cVals.map(v=>v===null?'transparent':v>=0?GOLD:'rgba(140,32,32,0.7)'),borderRadius:4,barThickness:14},{label:'CDI (%)',data:dVals,backgroundColor:'rgba(15,61,87,0.18)',borderRadius:4,barThickness:14}]},options:{plugins:{legend:{display:true,position:'bottom',labels:{color:NAVY,font:{size:10},boxWidth:10,padding:10}},tooltip:{backgroundColor:NAVY,titleColor:'#fff',bodyColor:'rgba(255,255,255,0.75)',padding:10,cornerRadius:6}},scales:{x:{grid:{display:false},ticks:{color:MUTED,font:{size:10}}},y:{grid:{color:'rgba(15,61,87,0.05)'},ticks:{color:MUTED,font:{size:10},callback:v=>v.toFixed(2)+'%'}}}}});
+    }
+  }
+
   function renderizarPagina(id) {
     if (!CD) return; // sem dados ainda
     if (id === 'onshore-total') renderOnshoreTotal();
+    if (id === 'iliquidos')       renderIliquidos();
   }
 
   // helpers
@@ -2383,30 +2515,7 @@
     }
 
     // ILÍQUIDOS
-    if (page === 'iliquidos') {
-      const ctxIL = document.getElementById('chart-iliq-line');
-      if (ctxIL) new Chart(ctxIL, {
-        type:'line',
-        data:{
-          labels:['2022','2023 Q1','2023 Q2','2023 Q3','2023 Q4','2024 Q1','2024 Q2','2024 Q3','2024 Q4','2025 Q1','mai/25'],
-          datasets:[
-            {label:'Valor Atual',data:[38,42,45,49,53,56,59,63,66,69,72],borderColor:VERDE,backgroundColor:'rgba(26,102,69,0.08)',fill:true,tension:0.4,pointRadius:3,borderWidth:2},
-            {label:'Custo Histórico',data:[38,38,39,39,39,39,39,39.2,39.2,39.2,39.2],borderColor:MUTED,backgroundColor:'transparent',fill:false,tension:0,pointRadius:0,borderWidth:1.5,borderDash:[4,4]}
-          ]
-        },
-        options:{
-          ...defaults,
-          plugins:{
-            ...defaults.plugins,
-            legend:{display:true,position:'top',labels:{color:NAVY,font:{size:10},boxWidth:10,padding:12}}
-          },
-          scales:{
-            x:{ grid:{display:false}, ticks:{color:MUTED,font:{size:10}} },
-            y:{ grid:{color:'rgba(15,61,87,0.05)'}, ticks:{color:MUTED,font:{size:10},callback:v=>'R$'+v+'mi'} }
-          }
-        }
-      });
-    }
+    if (page === 'iliquidos') { renderIliquidos(); }
 
     // FLUXO ONSHORE
     if (page === 'fluxo-onshore') {
