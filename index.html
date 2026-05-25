@@ -2369,9 +2369,9 @@
 
   // Carrega os dois Web Apps em paralelo
   async function carregarDados() {
-    const urlsOk = CD_WEBAPP_URL !== "https://script.google.com/macros/s/AKfycbw6zagw8pRYcFZw9OOD88C8kvTc60zzU0WB9hLaMuZ1bQRNIqv3Bh5OHIGoicrWnt-Q/exec";
-    const ilOk   = IL_WEBAPP_URL !== "https://script.google.com/macros/s/AKfycbwEIc7QRazHzm5Xq3zX_dwtgwfFy_ajBn4UA_LcUIWyEcuKEcnRlqX3G1PLqbaSbWbt/exec";
-    if (!urlsOk && !ilOk) return;
+    const urlsOk = !!CD_WEBAPP_URL;
+    const ilOk   = !!IL_WEBAPP_URL;
+    if (!urlsOk && !ilOk) { console.warn("Nenhuma URL configurada."); return; }
 
     mostrarLoading(true);
     try {
