@@ -2530,6 +2530,13 @@
     if (!CD) return;
     const t = CD.tables;
 
+    // Cores — definidas aqui para estarem disponíveis nos gráficos deste escopo
+    const NAVY     = '#0f3d57';
+    const NAVY_MID = '#2e6b8e';
+    const GOLD     = '#b8924a';
+    const VERDE    = '#1a6645';
+    const MUTED    = '#8a9fad';
+
     // Aviso quando Web App de ilíquidos não retornou dados
     const avisoEl = document.getElementById('il-aviso-vazio');
     const temDados = !!(t.il_tab7 && t.il_tab7.length > 0);
