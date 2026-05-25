@@ -1226,7 +1226,7 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         <div>
           <strong style="color:var(--navy)">Web App de Ilíquidos não retornou dados.</strong>
-          <div style="margin-top:4px">Verifique se: <b>1)</b> rodou <code>dumpIliquidos()</code> no Apps Script da planilha de ilíquidos — isso cria as abas <code>IL_tab*</code> · <b>2)</b> o <code>IL_ID</code> no script corresponde ao ID real da planilha no Google Sheets.</div>
+          <div style="margin-top:4px">Verifique: <b>1)</b> rodou <code>dumpIliquidos()</code> no Apps Script? &nbsp;<b>2)</b> o <code>IL_ID</code> no script bate com o ID real da planilha?</div>
         </div>
       </div>
       <div class="top-bar">
@@ -1237,110 +1237,182 @@
         </div>
       </div>
       <div class="content-wrapper">
+
+        <!-- ── KPIs ── -->
         <div class="kpi-grid kpi-grid-4 mb-20">
           <div class="kpi-card">
-            <div class="kpi-label">Patrimônio Ilíquidos</div>
-            <div class="kpi-val">R$ 72 mi</div>
-            <div class="kpi-change">4 ativos · 3 setores</div>
+            <div class="kpi-label">PL Ilíquidos</div>
+            <div class="kpi-val" id="il-pl">—</div>
+            <div class="kpi-change" id="il-pl-sub"></div>
           </div>
           <div class="kpi-card green">
-            <div class="kpi-label">TIR Média Ponderada</div>
-            <div class="kpi-val">+22,4%</div>
-            <div class="kpi-change pos">a.a. · desde início</div>
+            <div class="kpi-label">Rentab. no Período</div>
+            <div class="kpi-val" id="il-rent-periodo">—</div>
+            <div class="kpi-change pos" id="il-rent-cdi"></div>
+          </div>
+          <div class="kpi-card accent">
+            <div class="kpi-label">Rentab. 12 Meses</div>
+            <div class="kpi-val" id="il-rent-12m">—</div>
+            <div class="kpi-change pos" id="il-rent-12m-sub"></div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">Mult. MOIC Médio</div>
-            <div class="kpi-val">1,84×</div>
-            <div class="kpi-change pos">▲ vs. entrada</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Ganho Não Realizado</div>
-            <div class="kpi-val">R$ 32,8 mi</div>
-            <div class="kpi-change pos">vs. custo histórico</div>
+            <div class="kpi-label">Índice de Sharpe</div>
+            <div class="kpi-val" id="il-sharpe">—</div>
+            <div class="kpi-change" id="il-volat"></div>
           </div>
         </div>
 
-        <div class="two-col mb-20">
+        <!-- ── Linha 1: Alocação por Classe + Destaques ── -->
+        <div class="col-3-2" style="margin-bottom:20px">
           <div class="card">
-            <div class="card-title">Ativos Ilíquidos — Detalhamento</div>
+            <div class="card-title">
+              Alocação por Classe
+              <span class="card-title-label">Saldo Bruto desde início → 31/03/26</span>
+            </div>
             <table class="data-table">
               <thead>
-                <tr><th>Ativo</th><th>Setor</th><th>Valor Atual</th><th>Custo</th><th>MOIC</th><th>TIR</th><th>Status</th></tr>
+                <tr>
+                  <th>Classe</th>
+                  <th class="td-num">Saldo Inicial</th>
+                  <th class="td-num">Movimentação</th>
+                  <th class="td-num">Rendimento</th>
+                  <th class="td-num">Saldo Final</th>
+                  <th class="td-num">%</th>
+                  <th style="width:80px">Alocação</th>
+                </tr>
               </thead>
-              <tbody>
-                <tr>
-                  <td>Fazenda São Lucas</td>
-                  <td>Agro</td>
-                  <td class="td-num">R$ 28,4 mi</td>
-                  <td class="td-num">R$ 14,2 mi</td>
-                  <td class="td-num" style="color:var(--verde)">2,00×</td>
-                  <td class="td-num" style="color:var(--verde)">27,3%</td>
-                  <td><span class="badge badge-green">Mantendo</span></td>
-                </tr>
-                <tr>
-                  <td>SPE Logística Norte</td>
-                  <td>Log.</td>
-                  <td class="td-num">R$ 18,6 mi</td>
-                  <td class="td-num">R$ 11,0 mi</td>
-                  <td class="td-num" style="color:var(--verde)">1,69×</td>
-                  <td class="td-num" style="color:var(--verde)">19,8%</td>
-                  <td><span class="badge badge-navy">Saída 2026</span></td>
-                </tr>
-                <tr>
-                  <td>Participação Saúde Sul</td>
-                  <td>Saúde</td>
-                  <td class="td-num">R$ 15,0 mi</td>
-                  <td class="td-num">R$ 9,4 mi</td>
-                  <td class="td-num" style="color:var(--verde)">1,60×</td>
-                  <td class="td-num" style="color:var(--verde)">18,4%</td>
-                  <td><span class="badge badge-gold">M&A em análise</span></td>
-                </tr>
-                <tr>
-                  <td>Startup FinTech B2B</td>
-                  <td>Tech</td>
-                  <td class="td-num">R$ 10,0 mi</td>
-                  <td class="td-num">R$ 4,6 mi</td>
-                  <td class="td-num" style="color:var(--verde)">2,17×</td>
-                  <td class="td-num" style="color:var(--verde)">38,2%</td>
-                  <td><span class="badge badge-green">Série B</span></td>
-                </tr>
+              <tbody id="il-tab7-body">
+                <tr><td colspan="7" style="color:var(--text-muted);text-align:center;padding:20px">Carregando…</td></tr>
               </tbody>
+              <tfoot>
+                <tr style="font-weight:600;border-top:2px solid var(--border-strong)">
+                  <td>Total</td>
+                  <td colspan="3"></td>
+                  <td class="td-num" id="il-total-saldo">—</td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr><td colspan="7" style="font-size:11px;color:var(--text-muted);padding-top:4px" id="il-total-rend"></td></tr>
+              </tfoot>
             </table>
           </div>
 
           <div class="card">
-            <div class="card-title">TIR por Ativo <span class="card-title-label">% a.a.</span></div>
-            <div style="margin-top:4px">
-              <div class="tir-item">
-                <div class="tir-header"><span class="tir-name">Fazenda São Lucas</span><span class="tir-val">27,3%</span></div>
-                <div class="tir-bar-wrap"><div class="tir-bar" style="width:71%"></div></div>
-              </div>
-              <div class="tir-item">
-                <div class="tir-header"><span class="tir-name">SPE Logística Norte</span><span class="tir-val">19,8%</span></div>
-                <div class="tir-bar-wrap"><div class="tir-bar" style="width:52%"></div></div>
-              </div>
-              <div class="tir-item">
-                <div class="tir-header"><span class="tir-name">Participação Saúde Sul</span><span class="tir-val">18,4%</span></div>
-                <div class="tir-bar-wrap"><div class="tir-bar" style="width:48%"></div></div>
-              </div>
-              <div class="tir-item">
-                <div class="tir-header"><span class="tir-name">Startup FinTech B2B</span><span class="tir-val">38,2%</span></div>
-                <div class="tir-bar-wrap"><div class="tir-bar" style="width:100%"></div></div>
-              </div>
-            </div>
-            <div class="divider"></div>
-            <div style="font-size:11px;color:var(--text-muted);line-height:1.6">
-              TIR calculada desde o aporte inicial com base em fluxos realizados e valor atual da posição (NAV estimado + laudos periódicos).
+            <div class="card-title">Destaques do Período</div>
+            <div id="il-tab6-body">
+              <div style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px">Carregando…</div>
             </div>
           </div>
         </div>
 
-        <div class="card">
-          <div class="card-title">Curva de Valor — Carteira Ilíquidos <span class="card-title-label">R$ milhões · desde o primeiro aporte</span></div>
-          <div class="chart-container" style="height:200px">
-            <canvas id="chart-iliq-line"></canvas>
+        <!-- ── Linha 2: Gráfico donut + Performance ── -->
+        <div class="two-col" style="margin-bottom:20px">
+          <div class="card">
+            <div class="card-title">Distribuição por Classe</div>
+            <div class="chart-container" style="height:220px">
+              <canvas id="chart-iliq-donut"></canvas>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Performance Comparativa</div>
+            <table class="data-table">
+              <thead>
+                <tr><th>Métrica</th><th class="td-num">Carteira</th><th class="td-num">CDI</th></tr>
+              </thead>
+              <tbody id="il-tab5-body">
+                <tr><td colspan="3" style="color:var(--text-muted);text-align:center;padding:20px">Carregando…</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
+
+        <!-- ── Linha 3: Rentabilidade Mensal ── -->
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-title">
+            Rentabilidade Mensal — Carteira vs CDI
+            <span class="card-title-label">% ao mês</span>
+          </div>
+          <div class="chart-container" style="height:200px">
+            <canvas id="chart-iliq-mensal"></canvas>
+          </div>
+        </div>
+
+        <!-- ── Linha 4: Posição por Ativo ── -->
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-title">
+            Posição por Ativo
+            <span class="card-title-label">Saldo Bruto · Provisão IR · Saldo Líquido · 31/03/26</span>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Ativo</th>
+                <th class="td-num">Saldo Bruto</th>
+                <th class="td-num">Prov. IR+IOF</th>
+                <th class="td-num">Saldo Líquido</th>
+                <th class="td-num">%</th>
+                <th>Liquidez</th>
+              </tr>
+            </thead>
+            <tbody id="il-tab9-body">
+              <tr><td colspan="6" style="color:var(--text-muted);text-align:center;padding:20px">Carregando…</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ── Linha 5: Rentabilidade por Ativo ── -->
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-title">
+            Rentabilidade por Ativo
+            <span class="card-title-label">% · desde compra</span>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="data-table" style="min-width:800px">
+              <thead>
+                <tr>
+                  <th>Ativo</th>
+                  <th class="td-num">Mês</th>
+                  <th class="td-num">Ano</th>
+                  <th class="td-num">3m</th>
+                  <th class="td-num">6m</th>
+                  <th class="td-num">12m</th>
+                  <th class="td-num">24m</th>
+                  <th class="td-num">36m</th>
+                  <th class="td-num">Período</th>
+                  <th>Data Compra</th>
+                </tr>
+              </thead>
+              <tbody id="il-tab10-body">
+                <tr><td colspan="10" style="color:var(--text-muted);text-align:center;padding:20px">Carregando…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ── Linha 6: Fluxo de Caixa ── -->
+        <div class="card">
+          <div class="card-title">
+            Fluxo de Caixa Histórico
+            <span class="card-title-label">Aplicações, Resgates e Rendimentos por período</span>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Período</th>
+                <th class="td-num">Saldo Inicial</th>
+                <th class="td-num">Aplicações</th>
+                <th class="td-num">Resgates</th>
+                <th class="td-num">Rendimento</th>
+                <th class="td-num">Saldo Final</th>
+              </tr>
+            </thead>
+            <tbody id="il-tab3-body">
+              <tr><td colspan="6" style="color:var(--text-muted);text-align:center;padding:20px">Carregando…</td></tr>
+            </tbody>
+          </table>
+        </div>
+
       </div>
     </div>
 
