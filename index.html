@@ -2055,6 +2055,7 @@
 </div>
 
 <script>
+(function() { // IIFE — isola escopo e evita conflitos de redeclaração
   // ═══════════════════════════════════════════════════════════════
   //  CONFIGURAÇÃO — cole aqui a URL do seu Web App após implantar
   // ═══════════════════════════════════════════════════════════════
@@ -2530,12 +2531,7 @@
     if (!CD) return;
     const t = CD.tables;
 
-    // Cores — definidas aqui para estarem disponíveis nos gráficos deste escopo
-    const NAVY     = '#0f3d57';
-    const NAVY_MID = '#2e6b8e';
-    const GOLD     = '#b8924a';
-    const VERDE    = '#1a6645';
-    const MUTED    = '#8a9fad';
+    // Cores inline nos gráficos
 
     // Aviso quando Web App de ilíquidos não retornou dados
     const avisoEl = document.getElementById('il-aviso-vazio');
@@ -2554,7 +2550,7 @@
     const fmtDt = v => { if(!v) return '—'; try{ const d=new Date(v); return isNaN(d.getTime())?String(v):d.toLocaleDateString('pt-BR'); }catch(e){ return String(v); } };
     const set   = (id,h) => { const el=document.getElementById(id); if(el) el.innerHTML=h; };
     const setT  = (id,tv) => { const el=document.getElementById(id); if(el) el.textContent=tv; };
-    const NAVY='#0f3d57',GOLD='#b8924a',VERDE='#1a6645',MUTED='#8a9fad';
+    /* cores inline no escopo de renderMetricasIliquidos */
 
     // tab0: [Rend.Nominal, Var.Nominal%, CDI%, IPCAdp%] x [Mês,Ano,12meses,24meses,Noperíodo]
     const tab0 = t.il_tab0 || [];
@@ -2671,7 +2667,7 @@
       if(ctxD._ci) ctxD._ci.destroy();
       const labels=tab7.map(r=>String(Object.values(r)[0]).trim()).filter(n=>n&&parseFloat(Object.values(tab7[0]||{})[4]||0)>=0);
       const vals=tab7.map(r=>Math.abs(parseFloat(Object.values(r)[5])||0));
-      ctxD._ci=new Chart(ctxD,{type:'doughnut',data:{labels:tab7.map(r=>String(Object.values(r)[0]).trim()),datasets:[{data:vals,backgroundColor:[NAVY,GOLD,MUTED],borderWidth:2,borderColor:'#fff',hoverOffset:4}]},options:{cutout:'65%',plugins:{legend:{display:true,position:'right',labels:{color:NAVY,font:{size:10},boxWidth:10,padding:6}},tooltip:{backgroundColor:NAVY,titleColor:'#fff',bodyColor:'rgba(255,255,255,0.75)',padding:10,cornerRadius:6}}}});
+      ctxD._ci=new Chart(ctxD,{type:'doughnut',data:{labels:tab7.map(r=>String(Object.values(r)[0]).trim()),datasets:[{data:vals,backgroundColor:['#0f3d57','#b8924a','#8a9fad'],borderWidth:2,borderColor:'#fff',hoverOffset:4}]},options:{cutout:'65%',plugins:{legend:{display:true,position:'right',labels:{color:'#0f3d57',font:{size:10},boxWidth:10,padding:6}},tooltip:{backgroundColor:'#0f3d57',titleColor:'#fff',bodyColor:'rgba(255,255,255,0.75)',padding:10,cornerRadius:6}}}});
     }
 
     // ── Gráfico Rentabilidade Acumulada (Carteira vs CDI) ──────────
@@ -2730,7 +2726,7 @@
             {
               label: 'Carteira',
               data: cartAcum,
-              borderColor: GOLD,
+              borderColor: '#b8924a',
               backgroundColor: 'rgba(184,146,74,0.08)',
               fill: true,
               tension: 0.3,
@@ -2741,7 +2737,7 @@
             {
               label: 'CDI',
               data: cdiAcum,
-              borderColor: NAVY_MID,
+              borderColor: '#2e6b8e',
               backgroundColor: 'transparent',
               fill: false,
               tension: 0.3,
@@ -2754,9 +2750,9 @@
         },
         options: {
           plugins: {
-            legend: { display: true, position: 'bottom', labels: { color: NAVY, font: { size: 10 }, boxWidth: 10, padding: 12 } },
+            legend: { display: true, position: 'bottom', labels: { color: '#0f3d57', font: { size: 10 }, boxWidth: 10, padding: 12 } },
             tooltip: {
-              backgroundColor: NAVY,
+              backgroundColor: '#0f3d57',
               titleColor: '#fff',
               bodyColor: 'rgba(255,255,255,0.8)',
               padding: 10,
@@ -2765,8 +2761,8 @@
             }
           },
           scales: {
-            x: { grid: { display: false }, ticks: { color: MUTED, font: { size: 9 }, maxTicksLimit: 24, maxRotation: 0 } },
-            y: { grid: { color: 'rgba(15,61,87,0.05)' }, ticks: { color: MUTED, font: { size: 10 }, callback: v => v.toFixed(0) + '%' } }
+            x: { grid: { display: false }, ticks: { color: '#8a9fad', font: { size: 9 }, maxTicksLimit: 24, maxRotation: 0 } },
+            y: { grid: { color: 'rgba(15,61,87,0.05)' }, ticks: { color: '#8a9fad', font: { size: 10 }, callback: v => v.toFixed(0) + '%' } }
           },
           interaction: { mode: 'index', intersect: false }
         }
@@ -2858,7 +2854,7 @@
               {
                 label: 'Integralizado',
                 data: intVals,
-                backgroundColor: NAVY,
+                backgroundColor: '#0f3d57',
                 borderRadius: 3,
                 barThickness: 'flex',
                 order: 2
@@ -2866,7 +2862,7 @@
               {
                 label: 'Distribuído',
                 data: distVals,
-                backgroundColor: VERDE,
+                backgroundColor: '#1a6645',
                 borderRadius: 3,
                 barThickness: 'flex',
                 order: 2
@@ -2875,11 +2871,11 @@
                 label: 'Integralizado Acumul.',
                 data: acumVals,
                 type: 'line',
-                borderColor: GOLD,
+                borderColor: '#b8924a',
                 backgroundColor: 'transparent',
                 borderWidth: 2,
                 pointRadius: 2,
-                pointBackgroundColor: GOLD,
+                pointBackgroundColor: '#b8924a',
                 tension: 0.3,
                 yAxisID: 'y2',
                 order: 1
@@ -2888,9 +2884,9 @@
           },
           options: {
             plugins: {
-              legend: { display: true, position: 'bottom', labels: { color: NAVY, font: { size: 10 }, boxWidth: 10, padding: 12 } },
+              legend: { display: true, position: 'bottom', labels: { color: '#0f3d57', font: { size: 10 }, boxWidth: 10, padding: 12 } },
               tooltip: {
-                backgroundColor: NAVY,
+                backgroundColor: '#0f3d57',
                 titleColor: '#fff',
                 bodyColor: 'rgba(255,255,255,0.8)',
                 padding: 10,
@@ -2904,16 +2900,16 @@
               }
             },
             scales: {
-              x: { grid: { display: false }, ticks: { color: MUTED, font: { size: 9 }, maxTicksLimit: 30, maxRotation: 45 } },
+              x: { grid: { display: false }, ticks: { color: '#8a9fad', font: { size: 9 }, maxTicksLimit: 30, maxRotation: 45 } },
               y: {
                 position: 'left',
                 grid: { color: 'rgba(15,61,87,0.05)' },
-                ticks: { color: MUTED, font: { size: 9 }, callback: v => 'R$ ' + (Math.abs(v)/1000).toFixed(0) + 'k' }
+                ticks: { color: '#8a9fad', font: { size: 9 }, callback: v => 'R$ ' + (Math.abs(v)/1000).toFixed(0) + 'k' }
               },
               y2: {
                 position: 'right',
                 grid: { display: false },
-                ticks: { color: GOLD, font: { size: 9 }, callback: v => 'R$ ' + (Math.abs(v)/1000).toFixed(0) + 'k' }
+                ticks: { color: '#b8924a', font: { size: 9 }, callback: v => 'R$ ' + (Math.abs(v)/1000).toFixed(0) + 'k' }
               }
             },
             interaction: { mode: 'index', intersect: false }
@@ -3254,6 +3250,10 @@
   }
 
   // Init: open both groups + carrega dados da planilha
+  // Expõe funções usadas no HTML (onclick) para o escopo global
+  window.showPage      = showPage;
+  window.toggleGroup   = toggleGroup;
+
   window.addEventListener('DOMContentLoaded', () => {
     ['onshore','offshore'].forEach(g => {
       const b = document.getElementById('body-' + g);
@@ -3262,6 +3262,7 @@
     initChartsForPage('home');
     carregarDados();
   });
+})(); // fim IIFE
 
   /* ────── CHARTS ────── */
   const chartsInit = {};
@@ -3284,7 +3285,7 @@
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: NAVY,
+          backgroundColor: '#0f3d57',
           titleColor: '#fff',
           bodyColor: 'rgba(255,255,255,0.75)',
           padding: 10,
@@ -3307,7 +3308,7 @@
           labels,
           datasets:[{
             data,
-            borderColor: GOLD,
+            borderColor: '#b8924a',
             backgroundColor: 'rgba(184,146,74,0.07)',
             fill:true,
             tension:0.4,
