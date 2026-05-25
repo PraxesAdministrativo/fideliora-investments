@@ -2668,22 +2668,30 @@
     }
 
     // ── Gráfico Rentabilidade Acumulada (Carteira vs CDI) ──────────
-    // Usa tab2: cada linha tem Ativo="Carteira" ou "CDI", colunas = meses
-    // Acumula os retornos mensais: (1+r1)*(1+r2)*... - 1
     const ctxAcum = document.getElementById('chart-iliq-acum');
     if (ctxAcum) {
       if (ctxAcum._ci) ctxAcum._ci.destroy();
 
-      // Pega todas as linhas de todos os anos, ordenadas
-      const anosOrdenados = Object.keys(anos).sort();
+      // Reconstrói anos a partir da il_tab2 (escopo local)
+      const tab2il = (CD.tables && CD.tables['il_tab2']) || [];
+      const anosIL = {};
+      tab2il.forEach(row => {
+        const cols = Object.keys(row);
+        const ano  = String(parseInt(row[cols[0]])).trim();
+        const ind  = String(row[cols[1]]).trim();
+        if (!anosIL[ano]) anosIL[ano] = {};
+        anosIL[ano][ind] = row;
+      });
+
+      const anosOrdenados = Object.keys(anosIL).sort();
       const labelsAcum = [];
       const cartAcum   = [];
       const cdiAcum    = [];
       let acCart = 1, acCDI = 1;
 
       anosOrdenados.forEach(ano => {
-        const rowCart = anos[ano]['Carteira'] || {};
-        const rowCDI  = anos[ano]['CDI']      || {};
+        const rowCart = anosIL[ano]['Carteira'] || {};
+        const rowCDI  = anosIL[ano]['CDI']      || {};
         mesesNomes.forEach(mes => {
           const vc = parseFloat(rowCart[mes]);
           const vd = parseFloat(rowCDI[mes]);
