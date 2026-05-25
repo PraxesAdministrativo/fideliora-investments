@@ -1224,119 +1224,174 @@
       <div class="top-bar">
         <div class="page-title">Onshore — Ilíquidos</div>
         <div class="top-bar-right">
-          <select class="period-select"><option>Posição atual</option><option>YTD</option><option>Desde início</option></select>
+          <span style="font-size:11px;color:var(--text-muted)" id="il-periodo-label"></span>
           <button class="btn-export">Exportar PDF</button>
         </div>
       </div>
       <div class="content-wrapper">
+
+        <!-- KPIs tab0 + tab6 + tab7 -->
         <div class="kpi-grid kpi-grid-4 mb-20">
           <div class="kpi-card">
-            <div class="kpi-label">Patrimônio Ilíquidos</div>
-            <div class="kpi-val">R$ 72 mi</div>
-            <div class="kpi-change">4 ativos · 3 setores</div>
-          </div>
-          <div class="kpi-card green">
-            <div class="kpi-label">TIR Média Ponderada</div>
-            <div class="kpi-val">+22,4%</div>
-            <div class="kpi-change pos">a.a. · desde início</div>
+            <div class="kpi-label">PL Final (Ilíquidos)</div>
+            <div class="kpi-val" id="il-pl">—</div>
+            <div class="kpi-change" id="il-pl-sub" style="color:var(--text-muted)">31/03/2026</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">Mult. MOIC Médio</div>
-            <div class="kpi-val">1,84×</div>
-            <div class="kpi-change pos">▲ vs. entrada</div>
+            <div class="kpi-label">Rentab. no Período</div>
+            <div class="kpi-val" id="il-rent-periodo">—</div>
+            <div class="kpi-change" id="il-rent-cdi" style="color:var(--text-muted)">vs. CDI</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">Ganho Não Realizado</div>
-            <div class="kpi-val">R$ 32,8 mi</div>
-            <div class="kpi-change pos">vs. custo histórico</div>
+            <div class="kpi-label">Rentab. 12 meses</div>
+            <div class="kpi-val" id="il-rent-12m">—</div>
+            <div class="kpi-change" id="il-rent-12m-sub" style="color:var(--text-muted)">CDI 12m</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Sharpe no Período</div>
+            <div class="kpi-val" id="il-sharpe">—</div>
+            <div class="kpi-change" id="il-volat" style="color:var(--text-muted)">Volatilidade</div>
           </div>
         </div>
 
-        <div class="two-col mb-20">
+        <!-- tab7: posição por classe + tab5: performance -->
+        <div class="col-3-2 mb-20">
           <div class="card">
-            <div class="card-title">Ativos Ilíquidos — Detalhamento</div>
+            <div class="card-title">Posição por Classe <span class="card-title-label" id="il-tab7-periodo">Saldo Bruto</span></div>
             <table class="data-table">
               <thead>
-                <tr><th>Ativo</th><th>Setor</th><th>Valor Atual</th><th>Custo</th><th>MOIC</th><th>TIR</th><th>Status</th></tr>
+                <tr>
+                  <th>Classe</th>
+                  <th class="td-num">Saldo Inicial</th>
+                  <th class="td-num">Movimentação</th>
+                  <th class="td-num">Rendimento</th>
+                  <th class="td-num">Saldo Final</th>
+                  <th class="td-num">%</th>
+                  <th style="width:80px"></th>
+                </tr>
               </thead>
-              <tbody>
+              <tbody id="il-tab7-body">
+                <tr><td colspan="7" style="color:var(--text-muted);text-align:center;padding:20px">Carregando…</td></tr>
+              </tbody>
+            </table>
+            <div style="display:flex;justify-content:flex-end;gap:32px;padding:12px 0 0;border-top:1px solid var(--border);margin-top:8px;font-size:12px">
+              <span style="color:var(--text-muted)">Saldo Final Total</span>
+              <span style="font-weight:600;color:var(--navy)" id="il-total-saldo">—</span>
+              <span style="font-weight:600;color:var(--verde)" id="il-total-rend">—</span>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <!-- tab5: performance comparativa -->
+            <div class="card">
+              <div class="card-title">Performance <span class="card-title-label">Carteira vs CDI</span></div>
+              <table class="data-table" style="font-size:12px">
+                <thead><tr><th>Indicador</th><th class="td-num">Carteira</th><th class="td-num">CDI</th></tr></thead>
+                <tbody id="il-tab5-body">
+                  <tr><td colspan="3" style="color:var(--text-muted);text-align:center">Carregando…</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- tab6: destaques -->
+            <div class="card">
+              <div class="card-title">Destaques do Período</div>
+              <div id="il-tab6-body" style="font-size:12px;color:var(--text-secondary);line-height:1">
+                <div style="padding:20px;color:var(--text-muted);text-align:center">Carregando…</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- tab10: rentabilidade por ativo + tab9: posição detalhada -->
+        <div class="card mb-20">
+          <div class="card-title">Rentabilidade por Ativo <span class="card-title-label">tab10 · Mês / Ano / 03m / 06m / 12m / 24m / 36m / Desde início</span></div>
+          <div style="overflow-x:auto">
+            <table class="data-table" style="min-width:800px">
+              <thead>
                 <tr>
-                  <td>Fazenda São Lucas</td>
-                  <td>Agro</td>
-                  <td class="td-num">R$ 28,4 mi</td>
-                  <td class="td-num">R$ 14,2 mi</td>
-                  <td class="td-num" style="color:var(--verde)">2,00×</td>
-                  <td class="td-num" style="color:var(--verde)">27,3%</td>
-                  <td><span class="badge badge-green">Mantendo</span></td>
+                  <th>Ativo</th>
+                  <th class="td-num">Mês</th>
+                  <th class="td-num">Ano</th>
+                  <th class="td-num">3m</th>
+                  <th class="td-num">6m</th>
+                  <th class="td-num">12m</th>
+                  <th class="td-num">24m</th>
+                  <th class="td-num">36m</th>
+                  <th class="td-num">No Período</th>
+                  <th class="td-num">Data Compra</th>
                 </tr>
-                <tr>
-                  <td>SPE Logística Norte</td>
-                  <td>Log.</td>
-                  <td class="td-num">R$ 18,6 mi</td>
-                  <td class="td-num">R$ 11,0 mi</td>
-                  <td class="td-num" style="color:var(--verde)">1,69×</td>
-                  <td class="td-num" style="color:var(--verde)">19,8%</td>
-                  <td><span class="badge badge-navy">Saída 2026</span></td>
-                </tr>
-                <tr>
-                  <td>Participação Saúde Sul</td>
-                  <td>Saúde</td>
-                  <td class="td-num">R$ 15,0 mi</td>
-                  <td class="td-num">R$ 9,4 mi</td>
-                  <td class="td-num" style="color:var(--verde)">1,60×</td>
-                  <td class="td-num" style="color:var(--verde)">18,4%</td>
-                  <td><span class="badge badge-gold">M&A em análise</span></td>
-                </tr>
-                <tr>
-                  <td>Startup FinTech B2B</td>
-                  <td>Tech</td>
-                  <td class="td-num">R$ 10,0 mi</td>
-                  <td class="td-num">R$ 4,6 mi</td>
-                  <td class="td-num" style="color:var(--verde)">2,17×</td>
-                  <td class="td-num" style="color:var(--verde)">38,2%</td>
-                  <td><span class="badge badge-green">Série B</span></td>
-                </tr>
+              </thead>
+              <tbody id="il-tab10-body">
+                <tr><td colspan="10" style="color:var(--text-muted);text-align:center;padding:20px">Carregando…</td></tr>
               </tbody>
             </table>
           </div>
+        </div>
+
+        <!-- tab9: posição detalhada por ativo + tab3: fluxo -->
+        <div class="two-col mb-20">
+          <div class="card">
+            <div class="card-title">Posição Detalhada por Ativo <span class="card-title-label">tab9 · Saldo + Liquidez</span></div>
+            <div style="overflow-x:auto">
+              <table class="data-table" style="font-size:12px">
+                <thead>
+                  <tr>
+                    <th>Ativo</th>
+                    <th class="td-num">Saldo Bruto</th>
+                    <th class="td-num">Provisão IR</th>
+                    <th class="td-num">Saldo Líquido</th>
+                    <th class="td-num">%</th>
+                    <th>Liquidez</th>
+                  </tr>
+                </thead>
+                <tbody id="il-tab9-body">
+                  <tr><td colspan="6" style="color:var(--text-muted);text-align:center;padding:20px">Carregando…</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
 
           <div class="card">
-            <div class="card-title">TIR por Ativo <span class="card-title-label">% a.a.</span></div>
-            <div style="margin-top:4px">
-              <div class="tir-item">
-                <div class="tir-header"><span class="tir-name">Fazenda São Lucas</span><span class="tir-val">27,3%</span></div>
-                <div class="tir-bar-wrap"><div class="tir-bar" style="width:71%"></div></div>
-              </div>
-              <div class="tir-item">
-                <div class="tir-header"><span class="tir-name">SPE Logística Norte</span><span class="tir-val">19,8%</span></div>
-                <div class="tir-bar-wrap"><div class="tir-bar" style="width:52%"></div></div>
-              </div>
-              <div class="tir-item">
-                <div class="tir-header"><span class="tir-name">Participação Saúde Sul</span><span class="tir-val">18,4%</span></div>
-                <div class="tir-bar-wrap"><div class="tir-bar" style="width:48%"></div></div>
-              </div>
-              <div class="tir-item">
-                <div class="tir-header"><span class="tir-name">Startup FinTech B2B</span><span class="tir-val">38,2%</span></div>
-                <div class="tir-bar-wrap"><div class="tir-bar" style="width:100%"></div></div>
-              </div>
+            <div class="card-title">Fluxo de Caixa <span class="card-title-label">tab3 · Período</span></div>
+            <table class="data-table" style="font-size:12px">
+              <thead>
+                <tr>
+                  <th>Período</th>
+                  <th class="td-num">Saldo Inicial</th>
+                  <th class="td-num">Aplicações</th>
+                  <th class="td-num">Resgates</th>
+                  <th class="td-num">Rendimento</th>
+                  <th class="td-num">Saldo Final</th>
+                </tr>
+              </thead>
+              <tbody id="il-tab3-body">
+                <tr><td colspan="6" style="color:var(--text-muted);text-align:center;padding:20px">Carregando…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Gráficos: rentabilidade mensal + alocação por classe -->
+        <div class="two-col">
+          <div class="card">
+            <div class="card-title">Rentabilidade Mensal <span class="card-title-label">Carteira vs CDI</span></div>
+            <div class="chart-container" style="height:200px">
+              <canvas id="chart-iliq-mensal"></canvas>
             </div>
-            <div class="divider"></div>
-            <div style="font-size:11px;color:var(--text-muted);line-height:1.6">
-              TIR calculada desde o aporte inicial com base em fluxos realizados e valor atual da posição (NAV estimado + laudos periódicos).
+          </div>
+          <div class="card">
+            <div class="card-title">Alocação por Classe <span class="card-title-label">% Saldo Final</span></div>
+            <div class="chart-container" style="height:200px">
+              <canvas id="chart-iliq-donut"></canvas>
             </div>
           </div>
         </div>
 
-        <div class="card">
-          <div class="card-title">Curva de Valor — Carteira Ilíquidos <span class="card-title-label">R$ milhões · desde o primeiro aporte</span></div>
-          <div class="chart-container" style="height:200px">
-            <canvas id="chart-iliq-line"></canvas>
-          </div>
-        </div>
       </div>
     </div>
 
-    <!-- ══ PÁGINA: FLUXO ONSHORE ══════════════════════ -->
+        <!-- ══ PÁGINA: FLUXO ONSHORE ══════════════════════ -->
     <div id="page-fluxo-onshore" class="page">
       <div class="top-bar">
         <div class="page-title">Onshore — Fluxo de Caixa</div>
@@ -1876,6 +1931,237 @@
 
 <script>
 
+
+  // ── ILÍQUIDOS ─────────────────────────────────────────────────
+
+  function renderIliquidos() {
+    if (!CD) return;
+    const t = CD.tables;
+
+    // helpers locais
+    const fmtN  = v => { const n=parseFloat(String(v).replace(',','.')); return isNaN(n)?v:n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); };
+    const fmtB  = v => { const n=parseFloat(String(v).replace(',','.')); return isNaN(n)?'—':'R$ '+Math.abs(n).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); };
+    const fmtP  = v => { const n=parseFloat(String(v).replace(',','.')); return isNaN(n)?'—':(n>=0?'+':'')+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%'; };
+    const corV  = v => { const n=parseFloat(String(v).replace(',','.')); return isNaN(n)?'':'color:'+(n>=0?'var(--verde)':'var(--vermelho)'); };
+    const set   = (id,h) => { const el=document.getElementById(id); if(el) el.innerHTML=h; };
+    const setT  = (id,t) => { const el=document.getElementById(id); if(el) el.textContent=t; };
+    const NAVY='#0f3d57',GOLD='#b8924a',VERDE='#1a6645',MUTED='#8a9fad',NAVY_MID='#2e6b8e';
+
+    // ── tab0: KPIs ────────────────────────────────────────────
+    const tab0 = t.il_tab0 || [];
+    const r0 = {};
+    tab0.forEach(row => { r0[Object.values(row)[0]] = row; });
+    const varNom = r0['Var. Nominal (%)'] || {};
+    const cdi0   = r0['CDI (%)'] || {};
+    const cols0  = Object.keys(varNom);
+    // mapeia colunas pelo cabeçalho (headers vêm como chaves do objeto)
+    const periodoKey = cols0.find(k=>k.toLowerCase().includes('per')||k.toLowerCase().includes('nop')) || cols0[cols0.length-1];
+    const m12Key     = cols0.find(k=>k.toLowerCase().includes('12')) || '';
+    setT('il-rent-periodo', varNom[periodoKey] !== undefined ? fmtP(varNom[periodoKey]) : '—');
+    setT('il-rent-cdi',     cdi0[periodoKey]   !== undefined ? 'CDI: '+fmtP(cdi0[periodoKey]) : '');
+    setT('il-rent-12m',     varNom[m12Key]     !== undefined ? fmtP(varNom[m12Key]) : '—');
+    setT('il-rent-12m-sub', cdi0[m12Key]       !== undefined ? 'CDI 12m: '+fmtP(cdi0[m12Key]) : '');
+
+    // ── tab5: Sharpe + Volatilidade ───────────────────────────
+    const tab5 = t.il_tab5 || [];
+    const r5 = {};
+    tab5.forEach(row => {
+      const vals = Object.values(row);
+      r5[String(vals[0]).trim()] = { carteira: vals[1], cdi: vals[2] };
+    });
+    const sharpeKey = Object.keys(r5).find(k=>k.toLowerCase().includes('sharpe')) || '';
+    const volatKey  = Object.keys(r5).find(k=>k.toLowerCase().includes('volat'))  || '';
+    setT('il-sharpe', sharpeKey && r5[sharpeKey] ? fmtN(r5[sharpeKey].carteira) : '—');
+    setT('il-volat',  volatKey  && r5[volatKey]  ? 'Volatilidade: '+fmtN(r5[volatKey].carteira)+'%' : '');
+
+    // tab5: tabela performance
+    const labels5 = [
+      ['Retorno no período','Retorno no período'],
+      ['Retorno nos últimos 6 meses','Retorno 6m'],
+      ['Retorno nos últimos 12 meses','Retorno 12m'],
+      ['Volatilidade no período','Volatilidade'],
+      ['Índice de Sharpe','Sharpe']
+    ];
+    let h5 = '';
+    labels5.forEach(([k, lbl]) => {
+      const found = r5[k] || r5[Object.keys(r5).find(rk=>rk.includes(k.substring(0,14)))||''] || {};
+      h5 += `<tr><td>${lbl}</td>
+        <td class="td-num" style="${corV(found.carteira)}">${found.carteira!==undefined?fmtN(found.carteira)+'%':'—'}</td>
+        <td class="td-num" style="color:var(--text-muted)">${found.cdi!==undefined?fmtN(found.cdi)+'%':'—'}</td></tr>`;
+    });
+    set('il-tab5-body', h5);
+
+    // ── tab6: Destaques ───────────────────────────────────────
+    const tab6 = t.il_tab6 || [];
+    const r6 = {};
+    tab6.forEach(row => { const v=Object.values(row); r6[String(v[0]).trim()] = v[1]; });
+    const maiorMes = r6['Maior rentabilidade mensal']             || r6[Object.keys(r6).find(k=>k.includes('Maior'))||''] || '—';
+    const menorMes = r6['Menor rentabilidade mensal']             || r6[Object.keys(r6).find(k=>k.includes('Menor'))||''] || '—';
+    const mesesPos = r6['Número de meses com retorno positivo']   || r6[Object.keys(r6).find(k=>k.includes('positivo'))||''] || '—';
+    const mesesNeg = r6['Número de meses com retorno negativo']   || r6[Object.keys(r6).find(k=>k.includes('negativo'))||''] || '—';
+    const pl6      = r6[Object.keys(r6).find(k=>k.includes('PL em'))||'']    || '—';
+    const plMed    = r6[Object.keys(r6).find(k=>k.includes('médio'))||'']    || '—';
+    setT('il-pl', pl6 !== '—' ? fmtB(pl6) : '—');
+    setT('il-pl-sub', '31/03/2026');
+    set('il-tab6-body', `
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span>Maior rentab. mensal</span><span style="font-weight:600;color:var(--verde)">${maiorMes}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span>Menor rentab. mensal</span><span style="font-weight:600;color:var(--vermelho)">${menorMes}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span>Meses positivos</span><span style="font-weight:600;color:var(--navy)">${mesesPos} de ${parseInt(mesesPos||0)+parseInt(mesesNeg||0)||'—'}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span>PL em 31/03/2026</span><span style="font-weight:600;color:var(--navy)">${pl6!=='—'?fmtB(pl6):pl6}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0"><span>PL médio no período</span><span style="font-weight:600;color:var(--navy)">${plMed!=='—'?fmtB(plMed):plMed}</span></div>
+    `);
+
+    // ── tab7: posição por classe ───────────────────────────────
+    const tab7 = t.il_tab7 || [];
+    const maxSaldo7 = Math.max(...tab7.map(r => Math.abs(parseFloat(Object.values(r)[5]||0))||0));
+    let h7='', tot7s=0, tot7r=0;
+    tab7.forEach(row => {
+      const v    = Object.values(row);
+      const nome = String(v[1]||'').trim();
+      if (!nome || nome.length < 2) return;
+      const si   = parseFloat(v[2])||0;
+      const mov  = parseFloat(v[3])||0;
+      const rend = parseFloat(v[4])||0;
+      const sf   = parseFloat(v[5])||0;
+      const pct  = parseFloat(v[6])||0;
+      const bw   = maxSaldo7>0 ? Math.round((Math.abs(sf)/maxSaldo7)*100) : 0;
+      tot7s += sf; tot7r += rend;
+      h7 += `<tr>
+        <td>${nome}</td>
+        <td class="td-num">${fmtB(si)}</td>
+        <td class="td-num" style="${corV(mov)}">${mov>=0?'':'-'}${fmtB(Math.abs(mov))}</td>
+        <td class="td-num" style="${corV(rend)}">${fmtB(rend)}</td>
+        <td class="td-num"><strong>${fmtB(sf)}</strong></td>
+        <td class="td-num">${fmtN(pct)}%</td>
+        <td><div class="alloc-bar-wrap"><div class="alloc-bar" style="width:${bw}%"></div></div></td>
+      </tr>`;
+    });
+    set('il-tab7-body', h7 || '<tr><td colspan="7" style="color:var(--text-muted);text-align:center">Sem dados</td></tr>');
+    setT('il-total-saldo', fmtB(tot7s));
+    setT('il-total-rend', 'Rend. Total: '+fmtB(tot7r));
+
+    // ── tab9: posição por ativo individual ────────────────────
+    const tab9 = t.il_tab9 || [];
+    let h9 = '';
+    tab9.forEach(row => {
+      const v    = Object.values(row);
+      const nome = String(v[1]||'').trim();
+      if (!nome || nome.length < 3) return;
+      const sf   = parseFloat(v[5])||0;
+      const pct  = parseFloat(v[6])||0;
+      const ir   = parseFloat(v[7])||0;
+      const sl   = parseFloat(v[8])||0;
+      const liq  = String(v[9]||'').trim();
+      const isClasse = sf === 0 && pct === 0 && liq === '';
+      if (isClasse) {
+        h9 += `<tr style="background:rgba(15,61,87,0.04)"><td colspan="6" style="font-weight:600;color:var(--navy);font-size:11px;text-transform:uppercase;letter-spacing:0.06em;padding:8px 0">${nome}</td></tr>`;
+      } else {
+        h9 += `<tr>
+          <td style="padding-left:12px;font-size:12px">${nome}</td>
+          <td class="td-num">${fmtB(sf)}</td>
+          <td class="td-num" style="color:var(--vermelho)">${ir>0?fmtB(ir):'—'}</td>
+          <td class="td-num" style="color:var(--verde)">${fmtB(sl)}</td>
+          <td class="td-num">${fmtN(pct)}%</td>
+          <td style="font-size:11px;color:var(--text-muted)">${liq||'—'}</td>
+        </tr>`;
+      }
+    });
+    set('il-tab9-body', h9 || '<tr><td colspan="6" style="color:var(--text-muted);text-align:center;padding:20px">Sem dados</td></tr>');
+
+    // ── tab10: rentabilidade por ativo ────────────────────────
+    const tab10 = t.il_tab10 || [];
+    let h10 = '';
+    tab10.forEach(row => {
+      const v    = Object.values(row);
+      const nome = String(v[1]||'').trim();
+      if (!nome || nome.length < 3) return;
+      const isClasse = String(v[2]||'').toLowerCase().includes('nd') && String(v[3]||'').toLowerCase().includes('nd');
+      const isPct    = nome.toLowerCase().includes('% do cdi') || nome.toLowerCase().includes('%cdi');
+      if (isClasse && !isPct) {
+        h10 += `<tr style="background:rgba(15,61,87,0.04)"><td colspan="10" style="font-weight:600;color:var(--navy);font-size:11px;text-transform:uppercase;letter-spacing:0.06em;padding:8px 0">${nome}</td></tr>`;
+        return;
+      }
+      const fmtCell = (val) => {
+        if (!val || String(val).toLowerCase()==='nd') return `<td class="td-num" style="color:var(--text-muted)">nd</td>`;
+        const n = parseFloat(String(val).replace(',','.'));
+        if (isNaN(n)) return `<td class="td-num" style="color:var(--text-muted)">${val}</td>`;
+        const pctVal = n > 10 ? n : n*100; // já vem em % ou decimal
+        const display = pctVal.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
+        return `<td class="td-num" style="${pctVal>=0?'color:var(--verde)':'color:var(--vermelho)'}">${display}</td>`;
+      };
+      const bg = isPct ? 'background:rgba(15,61,87,0.02)' : '';
+      const nameStyle = isPct ? 'color:var(--text-muted);font-size:11px;padding-left:12px' : 'font-size:12px';
+      h10 += `<tr style="${bg}">
+        <td style="${nameStyle}">${isPct?'% do CDI':nome}</td>
+        ${fmtCell(v[2])}${fmtCell(v[3])}${fmtCell(v[4])}${fmtCell(v[5])}${fmtCell(v[6])}${fmtCell(v[7])}${fmtCell(v[8])}${fmtCell(v[9])}
+        <td style="font-size:11px;color:var(--text-muted);white-space:nowrap">${v[10]||'—'}</td>
+      </tr>`;
+    });
+    set('il-tab10-body', h10 || '<tr><td colspan="10" style="color:var(--text-muted);text-align:center;padding:20px">Sem dados</td></tr>');
+
+    // ── tab3: fluxo de caixa ──────────────────────────────────
+    const tab3 = t.il_tab3 || [];
+    let h3 = '';
+    tab3.forEach((row,i) => {
+      const v    = Object.values(row);
+      const per  = v[0]; const si=parseFloat(v[1])||0; const ap=parseFloat(v[2])||0;
+      const re   = parseFloat(v[3])||0; const rend=parseFloat(v[6])||0; const sf=parseFloat(v[7])||0;
+      const bg   = i===tab3.length-1 ? 'background:rgba(15,61,87,0.04);font-weight:600' : '';
+      h3 += `<tr style="${bg}">
+        <td style="font-weight:500">${per}</td>
+        <td class="td-num">${fmtB(si)}</td>
+        <td class="td-num" style="${corV(ap)}">${fmtB(ap)}</td>
+        <td class="td-num" style="color:var(--vermelho)">${re?fmtB(re):'—'}</td>
+        <td class="td-num" style="${corV(rend)}">${fmtB(rend)}</td>
+        <td class="td-num"><strong>${fmtB(sf)}</strong></td>
+      </tr>`;
+    });
+    set('il-tab3-body', h3 || '<tr><td colspan="6" style="color:var(--text-muted);text-align:center;padding:20px">Sem dados</td></tr>');
+
+    // ── Gráficos ──────────────────────────────────────────────
+    // Donut tab7
+    const ctxD = document.getElementById('chart-iliq-donut');
+    if (ctxD && tab7.length > 0) {
+      if (ctxD._ci) ctxD._ci.destroy();
+      const labels = tab7.map(r=>String(Object.values(r)[1]||'').trim()).filter(n=>n.length>1);
+      const vals   = tab7.map(r=>Math.abs(parseFloat(Object.values(r)[6])||0)).filter((_,i)=>labels[i]);
+      const cores  = [NAVY, GOLD, NAVY_MID, '#5e3a7e', MUTED];
+      ctxD._ci = new Chart(ctxD, {
+        type:'doughnut',
+        data:{ labels, datasets:[{ data:vals, backgroundColor:cores.slice(0,vals.length), borderWidth:2, borderColor:'#fff', hoverOffset:4 }] },
+        options:{ cutout:'65%', plugins:{ legend:{display:true,position:'right',labels:{color:NAVY,font:{size:10},boxWidth:10,padding:6}}, tooltip:{backgroundColor:NAVY,titleColor:'#fff',bodyColor:'rgba(255,255,255,0.75)',padding:10,cornerRadius:6} } }
+      });
+    }
+
+    // Barras tab2: rentabilidade mensal
+    const tab2 = t.il_tab2 || [];
+    const cartRow2 = tab2.find(r => String(Object.values(r)[1]||'').includes('Carteira')) || {};
+    const cdiRow2  = tab2.find(r => String(Object.values(r)[1]||'') === 'CDI') || {};
+    const ctxM = document.getElementById('chart-iliq-mensal');
+    if (ctxM) {
+      if (ctxM._ci) ctxM._ci.destroy();
+      const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+      const colsC = Object.keys(cartRow2);
+      const colsD = Object.keys(cdiRow2);
+      const cartVals = meses.map((_,i)=>{ const v=cartRow2[colsC[i+2]]; return v?parseFloat(String(v).replace(',','.'))*100:null; });
+      const cdiVals  = meses.map((_,i)=>{ const v=cdiRow2[colsD[i+2]];  return v?parseFloat(String(v).replace(',','.'))*100:null; });
+      ctxM._ci = new Chart(ctxM, {
+        type:'bar',
+        data:{ labels:meses, datasets:[
+          { label:'Carteira (%)', data:cartVals, backgroundColor: cartVals.map(v=>v===null?'transparent':v>=0?GOLD:'rgba(140,32,32,0.7)'), borderRadius:4, barThickness:14 },
+          { label:'CDI (%)',      data:cdiVals,  backgroundColor:'rgba(15,61,87,0.18)', borderRadius:4, barThickness:14 }
+        ]},
+        options:{
+          plugins:{ legend:{display:true,position:'bottom',labels:{color:NAVY,font:{size:10},boxWidth:10,padding:10}}, tooltip:{backgroundColor:NAVY,titleColor:'#fff',bodyColor:'rgba(255,255,255,0.75)',padding:10,cornerRadius:6} },
+          scales:{
+            x:{ grid:{display:false}, ticks:{color:MUTED,font:{size:10}} },
+            y:{ grid:{color:'rgba(15,61,87,0.05)'}, ticks:{color:MUTED,font:{size:10},callback:v=>v.toFixed(2)+'%'} }
+          }
+        }
+      });
+    }
+  }
+
   // ── FLUXO DE CAIXA ONSHORE ────────────────────────────────────
   // Dados reais da aba "movimentacoes" via Web App
 
@@ -2073,31 +2359,56 @@
   }
 
   // ═══════════════════════════════════════════════════════════════
-  //  CONFIGURAÇÃO — cole aqui a URL do seu Web App após implantar
+  //  CONFIGURAÇÃO — cole as URLs dos Web Apps após implantar
   // ═══════════════════════════════════════════════════════════════
-  const CD_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbw6zagw8pRYcFZw9OOD88C8kvTc60zzU0WB9hLaMuZ1bQRNIqv3Bh5OHIGoicrWnt-Q/exec";
+  const CD_WEBAPP_URL = "COLE_URL_WEBAPP_PRINCIPAL";   // planilha principal
+  const IL_WEBAPP_URL = "COLE_URL_WEBAPP_ILIQUIDOS";   // planilha de ilíquidos
 
   // Cache dos dados carregados
   let CD = null;
 
-  // Carrega dados do Web App ao abrir a página
+  // Carrega os dois Web Apps em paralelo
   async function carregarDados() {
-    if (CD_WEBAPP_URL === "COLE_SUA_URL_AQUI") return; // ainda não configurado
+    const urlsOk = CD_WEBAPP_URL !== "COLE_URL_WEBAPP_PRINCIPAL";
+    const ilOk   = IL_WEBAPP_URL !== "COLE_URL_WEBAPP_ILIQUIDOS";
+    if (!urlsOk && !ilOk) return;
+
+    mostrarLoading(true);
     try {
-      mostrarLoading(true);
-      const res  = await fetch(CD_WEBAPP_URL);
-      const json = await res.json();
-      if (json.error) throw new Error(json.error);
-      CD = json;
-      console.log("✅ Dados carregados:", Object.keys(CD.tables));
-      // Re-renderiza a página ativa com dados reais
+      const promises = [];
+      if (urlsOk) promises.push(fetch(CD_WEBAPP_URL).then(r => r.json()));
+      if (ilOk)   promises.push(fetch(IL_WEBAPP_URL).then(r => r.json()));
+
+      const resultados = await Promise.all(promises);
+
+      // Inicializa CD com o primeiro resultado (planilha principal)
+      if (urlsOk) {
+        const principal = resultados[0];
+        if (principal.error) throw new Error(principal.error);
+        CD = principal;
+        console.log("✅ Principal carregado:", Object.keys(CD.tables).filter(k=>!k.startsWith('il_')));
+      }
+
+      // Mescla tabelas de ilíquidos no mesmo objeto CD
+      if (ilOk) {
+        const ilRes = resultados[urlsOk ? 1 : 0];
+        if (!ilRes.error && CD) {
+          Object.assign(CD.tables, ilRes.tables);
+          console.log("✅ Ilíquidos carregados:", Object.keys(ilRes.tables));
+        } else if (!CD) {
+          // Só ilíquidos disponível (caso raro)
+          CD = ilRes;
+        }
+      }
+
+      // Re-renderiza a página ativa
       const paginaAtiva = document.querySelector('.page.active');
       if (paginaAtiva) {
         const id = paginaAtiva.id.replace('page-','');
         renderizarPagina(id);
       }
     } catch(e) {
-      console.warn("Comdinheiro Web App não disponível:", e.message);
+      console.warn("Web App não disponível:", e.message);
     } finally {
       mostrarLoading(false);
     }
@@ -2121,6 +2432,7 @@
     if (!CD) return; // sem dados ainda
     if (id === 'onshore-total') renderOnshoreTotal();
     if (id === 'fluxo-onshore')  renderFluxoOnshore();
+    if (id === 'iliquidos')       renderIliquidos();
   }
 
   // helpers
@@ -2584,31 +2896,9 @@
       });
     }
 
-    // ILÍQUIDOS
-    if (page === 'iliquidos') {
-      const ctxIL = document.getElementById('chart-iliq-line');
-      if (ctxIL) new Chart(ctxIL, {
-        type:'line',
-        data:{
-          labels:['2022','2023 Q1','2023 Q2','2023 Q3','2023 Q4','2024 Q1','2024 Q2','2024 Q3','2024 Q4','2025 Q1','mai/25'],
-          datasets:[
-            {label:'Valor Atual',data:[38,42,45,49,53,56,59,63,66,69,72],borderColor:VERDE,backgroundColor:'rgba(26,102,69,0.08)',fill:true,tension:0.4,pointRadius:3,borderWidth:2},
-            {label:'Custo Histórico',data:[38,38,39,39,39,39,39,39.2,39.2,39.2,39.2],borderColor:MUTED,backgroundColor:'transparent',fill:false,tension:0,pointRadius:0,borderWidth:1.5,borderDash:[4,4]}
-          ]
-        },
-        options:{
-          ...defaults,
-          plugins:{
-            ...defaults.plugins,
-            legend:{display:true,position:'top',labels:{color:NAVY,font:{size:10},boxWidth:10,padding:12}}
-          },
-          scales:{
-            x:{ grid:{display:false}, ticks:{color:MUTED,font:{size:10}} },
-            y:{ grid:{color:'rgba(15,61,87,0.05)'}, ticks:{color:MUTED,font:{size:10},callback:v=>'R$'+v+'mi'} }
-          }
-        }
-      });
-    }
+
+    // ILÍQUIDOS — renderizado por renderIliquidos()
+    if (page === 'iliquidos') { renderIliquidos(); }
 
     // FLUXO ONSHORE — dados reais via renderFluxoOnshore()
     if (page === 'fluxo-onshore') {
