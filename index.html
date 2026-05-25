@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Praxes — Ultra HNW · Família DCS</title>
+  <title>Praxes — Ultra HNW · Família Azevedo</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
@@ -622,7 +622,7 @@
 
     <div class="sidebar-client-badge">
       <div class="scb-label">Cliente</div>
-      <div class="scb-name">Família DCS</div>
+      <div class="scb-name">Família Azevedo</div>
       <div class="scb-pat">R$ 1,23 bi · Atualizado mai/25</div>
     </div>
 
@@ -698,7 +698,7 @@
     <div class="sidebar-footer">
       <div class="user-info">
         <div class="user-avatar">RA</div>
-        <div class="user-name">Alexandre Amorim<br><span style="font-size:10px;color:rgba(255,255,255,0.35);">Gestor responsável</span></div>
+        <div class="user-name">Rafael Andrade<br><span style="font-size:10px;color:rgba(255,255,255,0.35);">Gestor responsável</span></div>
       </div>
       <button class="btn-signout">Sair da conta</button>
     </div>
@@ -730,7 +730,7 @@
         <!-- Hero -->
         <div class="dash-welcome">
           <div class="dw-eyebrow">Posição consolidada · Mai 2025</div>
-          <div class="dw-name">Família DCS</div>
+          <div class="dw-name">Família Azevedo</div>
           <div class="dw-date">Atualizado em 20 de maio de 2025</div>
           <div class="dw-kpis">
             <div class="dw-kpi">
@@ -1640,7 +1640,7 @@
               </thead>
               <tbody>
                 <tr>
-                  <td>Cayman Fund — DCS LLC</td>
+                  <td>Cayman Fund — Azevedo LLC</td>
                   <td><span class="badge badge-gold">Cart. Adm.</span></td>
                   <td class="td-num">US$ 42,8 mi</td>
                   <td class="td-num">49,7%</td>
@@ -1716,7 +1716,7 @@
           <div class="kpi-card">
             <div class="kpi-label">AUM — Cayman Fund</div>
             <div class="kpi-val">US$ 42,8 mi</div>
-            <div class="kpi-change">DCS Family LLC</div>
+            <div class="kpi-change">Azevedo Family LLC</div>
           </div>
           <div class="kpi-card green">
             <div class="kpi-label">Rentabilidade mês</div>
@@ -2056,10 +2056,26 @@
     try {
       const fetchWA = url => fetch(url, { redirect: 'follow' }).then(r => r.json());
 
-      const [principal, iliquidos] = await Promise.all([
+      const IL_URL = "https://script.google.com/macros/s/AKfycbwYCcm6uYqViStP32EG7LbeWXDcWkmR6QD2MFEsjoBZjJq-Q40SR407F8h7QG6_f_JV/exec";
+      const fetchRaw = url => fetch(url, { redirect: 'follow' }).then(r => r.text());
+
+      const [principal, iliquidosRaw] = await Promise.all([
         fetchWA(CD_WEBAPP_URL),
-        fetchWA("https://script.google.com/macros/s/AKfycbwYCcm6uYqViStP32EG7LbeWXDcWkmR6QD2MFEsjoBZjJq-Q40SR407F8h7QG6_f_JV/exec")
+        fetchRaw(IL_URL)
       ]);
+
+      console.log("🔍 IL RAW (primeiros 500 chars):", iliquidosRaw.substring(0, 500));
+
+      let iliquidos;
+      try {
+        iliquidos = JSON.parse(iliquidosRaw);
+        console.log("🔍 IL keys:", Object.keys(iliquidos));
+        console.log("🔍 IL tables keys:", Object.keys(iliquidos.tables || {}));
+        console.log("🔍 IL movimentacoes length:", (iliquidos.movimentacoes || []).length);
+      } catch(e) {
+        console.error("❌ IL JSON parse error:", e.message, "| Raw:", iliquidosRaw.substring(0,200));
+        iliquidos = { tables: {}, movimentacoes: [] };
+      }
 
       if (principal.error) throw new Error(principal.error);
       CD = principal;
