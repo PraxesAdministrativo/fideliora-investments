@@ -3584,6 +3584,365 @@
     initChartsForPage('home');
     carregarDados();
   });
+
+  // ══════════════════════════════════════════════════════════════════
+  //  PREVIDÊNCIA — Itaú Flexprev Rio Bonito
+  //  Dentro do IIFE → acessa CD, prevMode sem problema de escopo
+  // ══════════════════════════════════════════════════════════════════
+
+  let prevMode = 'mv';
+
+  function setPrevMode(mode) {
+    prevMode = mode;
+    document.getElementById('btn-mv').classList.toggle('active', mode === 'mv');
+    document.getElementById('btn-curva').classList.toggle('active', mode === 'curva');
+
+    const banner = document.getElementById('prev-mode-banner');
+    if (banner) {
+      if (mode === 'mv') {
+        banner.className = 'mode-banner mercado';
+        banner.innerHTML = '<span class="mode-banner-icon">📊</span><span><strong>Visão a Mercado (MV)</strong> — rentabilidade reflete marcação a mercado das NTN-Bs. Mais volátil, impacta o resultado mensal.</span>';
+      } else {
+        banner.className = 'mode-banner curva';
+        banner.innerHTML = '<span class="mode-banner-icon">📈</span><span><strong>Visão na Curva</strong> — rentabilidade pela taxa de contratação de cada título. Estável, sem efeito de marcação a mercado.</span>';
+      }
+    }
+
+    const pc = document.getElementById('prev-content');
+    if (pc) pc.classList.toggle('mode-curva', mode === 'curva');
+
+    const durCard   = document.getElementById('prev-duration-card');
+    const yieldCard = document.getElementById('prev-yield-card');
+    if (durCard)   durCard.style.display   = mode === 'mv'    ? '' : 'none';
+    if (yieldCard) yieldCard.style.display = mode === 'curva' ? '' : 'none';
+
+    document.querySelectorAll('.prev-mode-mv').forEach(el => {
+      el.style.display = mode === 'mv' ? '' : 'none';
+    });
+    document.querySelectorAll('.prev-mode-curva').forEach(el => {
+      el.style.display = mode === 'curva' ? '' : 'none';
+    });
+
+    renderPrevidencia();
+  }
+
+  // Expõe ao escopo global para os onclick do HTML
+  window.setPrevMode = setPrevMode;
+
+  function renderPrevidencia() {
+    if (!CD) return;
+    const t   = CD.tables || {};
+    const pfx = prevMode === 'mv' ? 'MV' : 'CURVA';
+
+    const fmtM = v => {
+      const n = parseFloat(String(v||'').replace(',','.'));
+      if (isNaN(n)) return '—';
+      const a = Math.abs(n);
+      const s = n < 0 ? '−' : '';
+      if (a >= 1e6) return s + 'R$ ' + (a/1e6).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' mi';
+      if (a >= 1e3) return s + 'R$ ' + Math.round(a/1e3).toLocaleString('pt-BR') + ' mil';
+      return s + 'R$ ' + Math.round(a).toLocaleString('pt-BR');
+    };
+    const fmtPx = v => {
+      const n = parseFloat(String(v||'').replace(',','.'));
+      if (isNaN(n) || v === 'nd') return '—';
+      return n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) + '%';
+    };
+    const corP = v => { const n = parseFloat(v); return isNaN(n) ? '' : n >= 0 ? 'color:var(--verde)' : 'color:var(--vermelho)'; };
+    const setEl  = (id, h) => { const e = document.getElementById(id); if(e) e.innerHTML  = h; };
+    const setTxt = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
+
+    // ── KPIs (tab0) ──────────────────────────────────────────────
+    const tab0 = t[pfx + '_tab0'] || [];
+    if (tab0.length >= 3) {
+      const varRow = tab0[1] || {};
+      const cdiRow = tab0[2] || {};
+      const keys   = Object.keys(varRow);
+      const mesK   = keys.find(k => /^m[eê]s$/i.test(k)) || keys[0];
+      const m12K   = keys.find(k => k.includes('12'))     || keys[2];
+      const perK   = keys.find(k => /per|nop/i.test(k))  || keys[keys.length-1];
+
+      // PL from tab6
+      const tab6 = t[pfx + '_tab6'] || [];
+      const plRow = tab6.find(r => /pl em/i.test(String(Object.values(r)[0]||''))) || {};
+      const plVal = Object.values(plRow)[1] || 0;
+      setTxt('prev-pl', fmtM(plVal));
+
+      const setKpi = (valId, subId, val, cdiVal, label) => {
+        const el = document.getElementById(valId);
+        if (el) { el.textContent = fmtPx(val); el.style.color = parseFloat(val) >= 0 ? 'var(--verde)' : 'var(--vermelho)'; }
+        setTxt(subId, label + fmtPx(cdiVal));
+      };
+      setKpi('prev-rent-mes',     'prev-cdi-mes',     varRow[mesK], cdiRow[mesK], 'CDI: ');
+      setKpi('prev-rent-12m',     'prev-cdi-12m',     varRow[m12K], cdiRow[m12K], 'CDI 12m: ');
+      setKpi('prev-rent-periodo', 'prev-cdi-periodo', varRow[perK], cdiRow[perK], 'CDI período: ');
+      setTxt('prev-pl-sub', 'Posição em 31/03/2026');
+    }
+
+    // ── tab5: performance comparativa ────────────────────────────
+    const tab5 = t[pfx + '_tab5'] || [];
+    const tab0r = t[pfx + '_tab0'] || [];
+    let h5 = '';
+    const lbls5 = ['Retorno no período','Retorno 6 meses','Retorno 12 meses','Volatilidade','Sharpe (CDI)'];
+    tab5.forEach((row, i) => {
+      const vals   = Object.values(row);
+      const label  = lbls5[i] || String(vals[0]||'');
+      const cartV  = vals[1], cdiV = vals[2];
+      const tab0rr = tab0r[i] || {};
+      const ipcaV  = tab0rr['IPCAdp (%)'] ?? Object.values(tab0rr)[4] ?? null;
+      const isMeta = /volat|sharpe/i.test(label);
+      h5 += `<tr>
+        <td>${label}</td>
+        <td class="td-num" style="${isMeta?'':corP(cartV)}">${fmtPx(cartV)}</td>
+        <td class="td-num" style="color:var(--text-muted)">${fmtPx(cdiV)}</td>
+        <td class="td-num" style="color:var(--text-muted)">${ipcaV!=null?fmtPx(ipcaV):'—'}</td>
+      </tr>`;
+      if (/sharpe/i.test(label)) {
+        const el = document.getElementById('prev-sharpe');
+        if (el) { const n=parseFloat(cartV); el.textContent=isNaN(n)?'—':n.toFixed(2); el.style.color=n>=0?'var(--verde)':'var(--vermelho)'; }
+      }
+    });
+    setEl('prev-tab5-body', h5 || '<tr><td colspan="4" style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
+
+    // ── tab6: destaques ──────────────────────────────────────────
+    const tab6d = t[pfx + '_tab6'] || [];
+    let h6 = '';
+    tab6d.forEach(row => {
+      const vals = Object.values(row);
+      const lbl  = String(vals[0]||'').trim();
+      const val  = vals[1];
+      if (!lbl || val == null) return;
+      let vs = 'font-weight:600;color:var(--navy)';
+      let vt = String(val);
+      if (/maior/i.test(lbl))   vs = 'color:var(--verde);font-weight:600';
+      if (/menor/i.test(lbl))   vs = 'color:var(--vermelho);font-weight:600';
+      if (/pl em|médio/i.test(lbl)) { const n=parseFloat(val); vt=isNaN(n)?vt:fmtM(n); }
+      h6 += `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+        <span>${lbl}</span><span style="${vs}">${vt}</span></div>`;
+    });
+    setEl('prev-tab6-body', h6 || '<div style="color:var(--text-muted);padding:14px;text-align:center">Dados não disponíveis</div>');
+
+    // ── tab2: rentabilidade mensal ────────────────────────────────
+    const tab2 = t[pfx + '_tab2'] || [];
+    const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    const byYear = {};
+    tab2.forEach(row => {
+      const vals = Object.values(row);
+      const ano  = parseInt(vals[0]); const ativo = String(vals[1]||'').trim();
+      if (!ano || !ativo) return;
+      if (!byYear[ano]) byYear[ano] = {};
+      byYear[ano][ativo] = vals.slice(2);
+    });
+    let h2 = '';
+    const anos = Object.keys(byYear).sort();
+    anos.forEach((ano, yi) => {
+      const d = byYear[ano];
+      const cR=d['Carteira']||[], cdR=d['CDI']||[], pcR=d['%CDI']||[];
+      const anoV = cR[12]; const anoN = parseFloat(anoV);
+      const anoS = !isNaN(anoN)&&anoN>=0?'color:var(--verde)':'color:var(--vermelho)';
+      const bb   = yi<anos.length-1?'border-bottom:2px solid var(--border-strong)':'';
+      const cellC = (v,pct=false) => {
+        if(v==null) return `<td class="td-num" style="color:var(--text-muted)">—</td>`;
+        const n=parseFloat(v); if(isNaN(n)) return `<td class="td-num" style="color:var(--text-muted)">—</td>`;
+        const disp = pct ? (n*100).toFixed(2)+'%' : (n>=1?(n>=0?'+':'')+n.toFixed(1)+'%':(n*100).toFixed(2)+'%');
+        const s = pct ? (n>=1?'color:var(--verde)':'color:var(--vermelho)') : (n>=0?'color:var(--verde)':'color:var(--vermelho)');
+        return `<td class="td-num" style="${s}">${disp}</td>`;
+      };
+      h2 += `<tr>
+        <td rowspan="3" style="font-weight:700;color:var(--navy);vertical-align:middle;border-right:1px solid var(--border)">${ano}</td>
+        <td style="font-weight:500;color:var(--navy)">Carteira</td>
+        ${meses.map((_,i)=>cellC(cR[i])).join('')}
+        <td class="td-num" style="${anoS};font-weight:700">${!isNaN(anoN)?(anoN*100).toFixed(2)+'%':'—'}</td>
+      </tr><tr>
+        <td style="color:var(--text-muted)">CDI</td>
+        ${meses.map((_,i)=>{ const n=parseFloat(cdR[i]); return `<td class="td-num" style="color:var(--text-muted)">${!isNaN(n)?(n*100).toFixed(2)+'%':'—'}</td>`; }).join('')}
+        <td class="td-num" style="color:var(--text-muted);font-weight:600">${!isNaN(parseFloat(cdR[12]))?(parseFloat(cdR[12])*100).toFixed(2)+'%':'—'}</td>
+      </tr><tr style="${bb}">
+        <td style="color:var(--text-muted)">%CDI</td>
+        ${meses.map((_,i)=>cellC(pcR[i],true)).join('')}
+        <td class="td-num" style="font-weight:600">${!isNaN(parseFloat(pcR[12]))?(parseFloat(pcR[12]*100)).toFixed(1)+'%':'—'}</td>
+      </tr>`;
+    });
+    setEl('prev-tab2-body', h2 || '<tr><td colspan="14" style="text-align:center;padding:16px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
+
+    // ── tab7: posição por classe ─────────────────────────────────
+    const tab7 = t[pfx + '_tab7'] || [];
+    let h7 = '';
+    tab7.forEach(row => {
+      const v = Object.values(row);
+      const nome = String(v[1]||v[0]||'').trim(); if (!nome) return;
+      const sIni=parseFloat(v[2]||0), rend=parseFloat(v[3]||0), sFim=parseFloat(v[4]||0), pct=parseFloat(v[5]||0);
+      const cls = /inflação|soberano/i.test(nome)?'badge-navy':/pós|bancário/i.test(nome)?'badge-gold':'badge-gray';
+      h7 += `<tr>
+        <td><span class="badge ${cls}">${nome}</span></td>
+        <td class="td-num">${fmtM(sIni)}</td>
+        <td class="td-num" style="${corP(rend)}">${fmtM(rend)}</td>
+        <td class="td-num" style="font-weight:600">${fmtM(sFim)}</td>
+        <td class="td-num">
+          ${isNaN(pct)?'—':pct.toFixed(1)+'%'}
+          <div class="alloc-bar-wrap"><div class="alloc-bar ${/pós/i.test(nome)?'':'navy'}" style="width:${Math.min(Math.abs(pct||0),100).toFixed(1)}%"></div></div>
+        </td>
+      </tr>`;
+    });
+    setEl('prev-tab7-body', h7 || '<tr><td colspan="5" style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
+
+    // ── tab3: extrato anual ──────────────────────────────────────
+    const tab3 = t[pfx + '_tab3'] || [];
+    let h3 = '';
+    tab3.forEach(row => {
+      const v=Object.values(row); const ano=v[0]; if(!ano) return;
+      const anoStr=typeof ano==='number'?parseInt(ano):String(ano);
+      h3 += `<tr>
+        <td style="font-weight:600">${anoStr}</td>
+        <td class="td-num" style="color:var(--verde)">${fmtM(v[2]||0)}</td>
+        <td class="td-num" style="color:var(--vermelho)">${fmtM(v[3]||0)}</td>
+        <td class="td-num" style="${corP(v[6]||0)}">${fmtM(v[6]||0)}</td>
+        <td class="td-num" style="font-weight:600">${fmtM(v[7]||0)}</td>
+      </tr>`;
+    });
+    setEl('prev-tab3-body', h3 || '<tr><td colspan="5" style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
+
+    // ── Posição detalhada + duration/yield ───────────────────────
+    if (prevMode === 'mv') {
+      renderPrevTab9MV(t, fmtM, corP);
+      renderPrevDuration(t, fmtM);
+    } else {
+      renderPrevCurvaYield(t, fmtM);
+    }
+  }
+
+  function renderPrevTab9MV(t, fmtM, corP) {
+    const tab9  = t['MV_tab9']     || [];
+    const durTab= t['mv_duration'] || [];
+    const setEl = (id,h) => { const e=document.getElementById(id); if(e) e.innerHTML=h; };
+    const fmtP  = v => { const n=parseFloat(v); return isNaN(n)?'—':n.toFixed(1)+'%'; };
+
+    const durMap = {};
+    durTab.forEach(row => {
+      const v=Object.values(row);
+      const a=String(v[1]||'').trim(), d=parseFloat(v[4]);
+      if(a&&!isNaN(d)) durMap[a]=d;
+    });
+
+    let h9='';
+    tab9.forEach(row => {
+      const v=Object.values(row);
+      const nome=String(v[1]||v[0]||'').trim(); if(!nome) return;
+      const saldo=parseFloat(v[7]??v[6]??v[5]??0)||0;
+      const pct  =parseFloat(v[6]??v[5]??0)||0;
+      const dur  =durMap[nome];
+      const isNeg=saldo<0;
+      const cls  =/ntn-b|inflação/i.test(nome)?'badge-navy':/pós|fif|flexprev/i.test(nome)?'badge-gold':'badge-gray';
+      const tipo =/ntn-b/i.test(nome)?'Título Público':/fif|flexprev/i.test(nome)?'Crédito Bancário':/taxa/i.test(nome)?'Taxas':'Outro';
+      const durCell= dur!=null
+        ? `<div style="font-size:12px;font-weight:600">${dur.toFixed(2)} a</div><div class="dur-bar-wrap"><div class="dur-bar ${dur>7?'long':''}" style="width:${Math.min(dur/12*100,100).toFixed(0)}%"></div></div>`
+        : '<span style="color:var(--text-muted)">—</span>';
+      h9+=`<tr>
+        <td>${nome}</td>
+        <td><span class="badge ${cls}" style="font-size:9px">${tipo}</span></td>
+        <td class="td-num prev-mode-mv">${durCell}</td>
+        <td class="td-num" style="${isNeg?'color:var(--vermelho)':'font-weight:500'}">${fmtM(saldo)}</td>
+        <td class="td-num">${fmtP(pct)}</td>
+      </tr>`;
+    });
+    setEl('prev-tab9-body', h9||'<tr><td colspan="5" style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
+  }
+
+  function renderPrevCurvaYield(t, fmtM) {
+    const tab9c   = t['CURVA_tab9']  || [];
+    const yieldTab= t['curva_yield'] || [];
+    const setEl   = (id,h) => { const e=document.getElementById(id); if(e) e.innerHTML=h; };
+
+    let totY=0;
+    yieldTab.forEach(r => { const s=parseFloat(Object.values(r)[4]||0); if(s>0) totY+=s; });
+
+    // Tab9 curva
+    let h9c='';
+    tab9c.forEach(row => {
+      const v=Object.values(row);
+      const nome=String(v[1]||v[0]||'').trim(); if(!nome) return;
+      const saldo=parseFloat(v[7]??v[6]??v[5]??0)||0;
+      const pct  =parseFloat(v[6]??v[5]??0)||0;
+      const match=yieldTab.find(r => String(Object.values(r)[2]||'').trim()===nome || String(Object.values(r)[3]||'').includes(nome.substring(0,15)));
+      const taxa =match?parseFloat(Object.values(match)[5]):null;
+      const cls  =/ntn-b|inflação/i.test(nome)?'badge-navy':/fif|flexprev|pós/i.test(nome)?'badge-gold':'badge-gray';
+      const tipo =/ntn-b/i.test(nome)?'Título Público':/fif|flexprev/i.test(nome)?'Crédito Bancário':/taxa/i.test(nome)?'Taxas':'Outro';
+      h9c+=`<tr>
+        <td>${nome}</td>
+        <td><span class="badge ${cls}" style="font-size:9px">${tipo}</span></td>
+        <td class="td-num prev-mode-curva">${taxa!=null?`<span class="yield-pill">IPCA+${taxa.toFixed(2)}%</span>`:'—'}</td>
+        <td class="td-num" style="font-weight:500">${fmtM(saldo)}</td>
+        <td class="td-num">${isNaN(pct)?'—':pct.toFixed(1)+'%'}</td>
+      </tr>`;
+    });
+    setEl('prev-tab9-body', h9c||'<tr><td colspan="5" style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
+
+    // Yield table
+    let hY='';
+    yieldTab.forEach(row => {
+      const v=Object.values(row);
+      const ativo=String(v[2]||'').trim(), desc=String(v[3]||'').trim();
+      const saldo=parseFloat(v[4]||0), taxa=parseFloat(v[5]||0), classe=String(v[6]||'').trim();
+      if(!ativo||saldo===0) return;
+      const pctC=totY>0?(saldo/totY*100):0;
+      const isPosFix=/fif|pós/i.test(desc);
+      const vtMatch=ativo.match(/(\d{2}\/\d{2}\/\d{4})/);
+      hY+=`<tr>
+        <td style="font-size:12px">${ativo}</td>
+        <td style="font-size:11px;color:var(--text-muted)">${vtMatch?vtMatch[1]:'—'}</td>
+        <td><span class="badge ${isPosFix?'badge-gold':'badge-navy'}" style="font-size:9px">${classe||(isPosFix?'Crédito Bancário':'Inflação Soberano')}</span></td>
+        <td class="td-num" style="font-weight:500">${fmtM(saldo)}</td>
+        <td class="td-num"><span class="yield-pill">${!isNaN(taxa)&&taxa>0?'IPCA+'+taxa.toFixed(2)+'%':'—'}</span></td>
+        <td class="td-num" style="font-size:11px;color:var(--text-muted)">${pctC.toFixed(1)}%</td>
+      </tr>`;
+    });
+    setEl('prev-yield-body', hY||'<tr><td colspan="6" style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
+  }
+
+  function renderPrevDuration(t, fmtM) {
+    const durTab=t['mv_duration']||[];
+    const setEl=(id,h)=>{ const e=document.getElementById(id); if(e) e.innerHTML=h; };
+    const byClasse={};
+    let maxDur=0;
+    durTab.forEach(row=>{
+      const v=Object.values(row);
+      const ativo=String(v[1]||'').trim(); if(!ativo) return;
+      const saldo=parseFloat(v[3]||0), dur=parseFloat(v[4]), classe=String(v[5]||'Outro').trim();
+      if(!byClasse[classe]) byClasse[classe]=[];
+      if(!isNaN(dur)&&dur>maxDur) maxDur=dur;
+      byClasse[classe].push({ativo,saldo,dur});
+    });
+    let hD='';
+    Object.entries(byClasse).forEach(([classe,ativos])=>{
+      if(classe==='nd') return;
+      const cb=/inflação/i.test(classe)?'badge-navy':/pós/i.test(classe)?'badge-gold':'badge-gray';
+      hD+=`<div style="margin-bottom:18px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span class="badge ${cb}">${classe}</span>
+          <span style="font-size:11px;color:var(--text-muted)">${ativos.length} título${ativos.length>1?'s':''}</span>
+        </div>`;
+      ativos.forEach(({ativo,saldo,dur})=>{
+        if(/taxa/i.test(ativo)) return;
+        const durStr=!isNaN(dur)?dur.toFixed(2)+' anos':'—';
+        const pct=maxDur>0&&!isNaN(dur)?(dur/maxDur)*100:0;
+        const isLong=dur>7;
+        hD+=`<div class="tir-item" style="margin-bottom:10px">
+          <div class="tir-header">
+            <span class="tir-name" style="font-size:11.5px">${ativo}</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:11px;color:var(--text-muted)">${fmtM(saldo)}</span>
+              <span style="font-size:12px;font-weight:600;color:${isLong?'var(--gold)':'var(--verde)'}">${durStr}</span>
+            </div>
+          </div>
+          <div class="dur-bar-wrap"><div class="dur-bar ${isLong?'long':''}" style="width:${pct.toFixed(1)}%"></div></div>
+        </div>`;
+      });
+      hD+='</div>';
+    });
+    setEl('prev-duration-body', hD||'<div style="text-align:center;padding:20px;color:var(--text-muted)">Dados de duration não disponíveis</div>');
+  }
+
+
 })(); // fim IIFE
 
   /* ────── CHARTS ────── */
@@ -3871,482 +4230,6 @@
       if (count) count.textContent = '4 arquivos processados';
     }, 2200);
   }
-
-
-  // ══════════════════════════════════════════════════════════════════
-  //  PREVIDÊNCIA — Itaú Flexprev Rio Bonito
-  //  Dual-mode: MV (marcação a mercado) ↔ CURVA (taxa contratada)
-  //  Dados vêm das abas MV_tab* e CURVA_tab* da planilha xlsx
-  // ══════════════════════════════════════════════════════════════════
-
-  let prevMode = 'mv'; // 'mv' | 'curva'
-
-  function setPrevMode(mode) {
-    prevMode = mode;
-
-    // Toggle button states
-    document.getElementById('btn-mv').classList.toggle('active', mode === 'mv');
-    document.getElementById('btn-curva').classList.toggle('active', mode === 'curva');
-
-    // Banner
-    const banner = document.getElementById('prev-mode-banner');
-    if (mode === 'mv') {
-      banner.className = 'mode-banner mercado';
-      banner.innerHTML = '<span class="mode-banner-icon">📊</span><span><strong>Visão a Mercado (MV)</strong> — rentabilidade reflete marcação a mercado das NTN-Bs. Mais volátil, impacta o resultado mensal.</span>';
-    } else {
-      banner.className = 'mode-banner curva';
-      banner.innerHTML = '<span class="mode-banner-icon">📈</span><span><strong>Visão na Curva</strong> — rentabilidade pela taxa de contratação de cada título. Estável, sem efeito de marcação a mercado.</span>';
-    }
-
-    // Toggle visibility for mode-specific elements
-    const content = document.getElementById('prev-content');
-    if (content) content.classList.toggle('mode-curva', mode === 'curva');
-
-    // Duration (MV only) / Yield (Curva only)
-    const durCard   = document.getElementById('prev-duration-card');
-    const yieldCard = document.getElementById('prev-yield-card');
-    if (durCard)   durCard.style.display   = mode === 'mv'    ? '' : 'none';
-    if (yieldCard) yieldCard.style.display = mode === 'curva' ? '' : 'none';
-
-    // Posição detalhada — toggle coluna Taxa vs Duration
-    document.querySelectorAll('.prev-mode-mv').forEach(el => {
-      el.style.display = mode === 'mv' ? '' : 'none';
-    });
-    document.querySelectorAll('.prev-mode-curva').forEach(el => {
-      el.style.display = mode === 'curva' ? '' : 'none';
-    });
-
-    // Re-render with current mode
-    renderPrevidencia();
-  }
-
-  function renderPrevidencia() {
-    if (!CD) return;
-    const t   = CD.tables || {};
-    const pfx = prevMode === 'mv' ? 'mv' : 'curva'; // prefix for sheet names
-
-    const fmtR  = v => { const n = parseFloat(String(v).replace(',','.')); return isNaN(n) ? '—' : 'R$ ' + Math.abs(n).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); };
-    const fmtM  = v => { const n = parseFloat(String(v).replace(',','.')); if(isNaN(n)) return '—'; const a=Math.abs(n); return (n<0?'−':'')+'R$ '+(a>=1e6?(a/1e6).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+' mi':a>=1e3?(a/1e3).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0})+' mil':a.toLocaleString('pt-BR',{minimumFractionDigits:0})); };
-    const fmtP  = v => { const n = parseFloat(String(v).replace(',','.')); if(isNaN(n)||v==='nd') return '—'; return (n>=0?'+':'')+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%'; };
-    const fmtPx = v => { const n = parseFloat(String(v).replace(',','.')); if(isNaN(n)||v==='nd') return '—'; return n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%'; };
-    const corP  = v => { const n = parseFloat(v); return isNaN(n) ? '' : n >= 0 ? 'color:var(--verde)' : 'color:var(--vermelho)'; };
-    const set   = (id, h) => { const e = document.getElementById(id); if(e) e.innerHTML = h; };
-    const setT  = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
-    const classCol = s => {
-      const sl = String(s||'').toLowerCase();
-      if (sl.includes('inflação')||sl.includes('soberano')) return 'badge-navy';
-      if (sl.includes('pós')||sl.includes('bancário'))      return 'badge-gold';
-      return 'badge-gray';
-    };
-
-    // ── tab0: KPIs principais ────────────────────────────────────
-    const tab0key = pfx === 'mv' ? 'MV_tab0' : 'CURVA_tab0';
-    const tab0 = t[tab0key] || [];
-
-    if (tab0.length >= 3) {
-      // Row structure: [label, mes, ano, 12m, 24m, periodo]
-      const rendRow = tab0[0] || {}; // Rend. Nominal (R$) — object keyed by column header or index
-      const varRow  = tab0[1] || {}; // Var. Nominal (%)
-      const cdiRow  = tab0[2] || {}; // CDI (%)
-
-      // Detect column keys
-      const allKeys = Object.keys(varRow);
-      const mesK    = allKeys.find(k => k === 'Mês' || k.toLowerCase() === 'mês' || k.toLowerCase() === 'mes') || allKeys[0];
-      const anoK    = allKeys.find(k => k === 'Ano') || allKeys[1];
-      const m12K    = allKeys.find(k => k.includes('12')) || allKeys[2];
-      const perK    = allKeys.find(k => k.toLowerCase().includes('per') || k.toLowerCase().includes('nop')) || allKeys[allKeys.length-1];
-
-      // PL from tab6
-      const tab6key = pfx === 'mv' ? 'MV_tab6' : 'CURVA_tab6';
-      const tab6 = t[tab6key] || [];
-      const plRow  = tab6.find(r => String(Object.values(r)[0]||'').toLowerCase().includes('pl em')) || {};
-      const plVal  = Object.values(plRow)[1] || 0;
-      setT('prev-pl', fmtM(plVal));
-
-      // Rentab mês
-      const rentMes = varRow[mesK];
-      const cdiMes  = cdiRow[mesK];
-      const el = document.getElementById('prev-rent-mes');
-      if (el) {
-        el.textContent = fmtPx(rentMes);
-        el.style.color = parseFloat(rentMes) >= 0 ? 'var(--verde)' : 'var(--vermelho)';
-      }
-      setT('prev-cdi-mes', 'CDI: ' + fmtPx(cdiMes));
-
-      // Rentab 12m
-      const rent12 = varRow[m12K];
-      const cdi12  = cdiRow[m12K];
-      const el12 = document.getElementById('prev-rent-12m');
-      if (el12) {
-        el12.textContent = fmtPx(rent12);
-        el12.style.color = parseFloat(rent12) >= 0 ? 'var(--verde)' : 'var(--vermelho)';
-      }
-      setT('prev-cdi-12m', 'CDI 12m: ' + fmtPx(cdi12));
-
-      // Rentab período
-      const rentPer = varRow[perK];
-      const cdiPer  = cdiRow[perK];
-      const elPer = document.getElementById('prev-rent-periodo');
-      if (elPer) {
-        elPer.textContent = fmtPx(rentPer);
-        elPer.style.color = parseFloat(rentPer) >= 0 ? 'var(--verde)' : 'var(--vermelho)';
-      }
-      setT('prev-cdi-periodo', 'CDI período: ' + fmtPx(cdiPer));
-      setT('prev-pl-sub', 'Posição em 31/03/2026');
-    }
-
-    // ── tab5: performance comparativa ────────────────────────────
-    const tab5key = pfx === 'mv' ? 'MV_tab5' : 'CURVA_tab5';
-    const tab5 = t[tab5key] || [];
-    const tab0ref = t[pfx === 'mv' ? 'MV_tab0' : 'CURVA_tab0'] || [];
-    let h5 = '';
-    const lbls5 = ['Retorno no período','Retorno 6 meses','Retorno 12 meses','Volatilidade','Sharpe (CDI)'];
-    tab5.forEach((row, i) => {
-      const vals = Object.values(row);
-      const label = String(vals[0]||'').replace('Índice de Sharpe no período (CDI)','Sharpe (CDI)');
-      const cartV = vals[1];
-      const cdiV  = vals[2];
-      // IPCA from tab0
-      const tab0r = tab0ref[i] || {};
-      const ipcaV = tab0r['IPCAdp (%)'] ?? Object.values(tab0r)[4] ?? null;
-      const isVol = label.toLowerCase().includes('volat');
-      const isSh  = label.toLowerCase().includes('sharpe');
-
-      let cartStyle = '';
-      if (!isVol && !isSh) cartStyle = corP(cartV);
-
-      h5 += `<tr>
-        <td>${label}</td>
-        <td class="td-num" style="${cartStyle}">${fmtPx(cartV)}</td>
-        <td class="td-num" style="color:var(--text-muted)">${fmtPx(cdiV)}</td>
-        <td class="td-num" style="color:var(--text-muted)">${ipcaV != null ? fmtPx(ipcaV) : '—'}</td>
-      </tr>`;
-
-      if (isSh) {
-        const el = document.getElementById('prev-sharpe');
-        if (el) {
-          const n = parseFloat(cartV);
-          el.textContent = isNaN(n) ? '—' : n.toFixed(2);
-          el.style.color = n >= 0 ? 'var(--verde)' : 'var(--vermelho)';
-        }
-      }
-    });
-    set('prev-tab5-body', h5 || '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:14px">Dados não disponíveis</td></tr>');
-
-    // ── tab6: destaques ──────────────────────────────────────────
-    const tab6key = pfx === 'mv' ? 'MV_tab6' : 'CURVA_tab6';
-    const tab6 = t[tab6key] || [];
-    let h6 = '';
-    tab6.forEach(row => {
-      const vals = Object.values(row);
-      const label = String(vals[0]||'');
-      const valor = String(vals[1]||'');
-      if (!label || (!valor && valor !== 0)) return;
-
-      let valStyle = '';
-      let valText  = valor;
-      if (label.toLowerCase().includes('maior')) valStyle = 'color:var(--verde);font-weight:600';
-      else if (label.toLowerCase().includes('menor')) valStyle = 'color:var(--vermelho);font-weight:600';
-      else if (label.toLowerCase().includes('pl em')) {
-        const n = parseFloat(valor);
-        valText = isNaN(n) ? valor : fmtM(n);
-        valStyle = 'font-weight:600;color:var(--navy)';
-      } else if (label.toLowerCase().includes('médio')) {
-        const n = parseFloat(valor);
-        valText = isNaN(n) ? valor : fmtM(n);
-        valStyle = 'font-weight:600;color:var(--navy)';
-      } else {
-        valStyle = 'font-weight:600;color:var(--navy)';
-      }
-
-      h6 += `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
-        <span>${label}</span>
-        <span style="${valStyle}">${valText}</span>
-      </div>`;
-    });
-    set('prev-tab6-body', h6 || '<div style="color:var(--text-muted);padding:14px;text-align:center">Dados não disponíveis</div>');
-
-    // ── tab2: rentabilidade mensal ────────────────────────────────
-    const tab2key = pfx === 'mv' ? 'MV_tab2' : 'CURVA_tab2';
-    const tab2 = t[tab2key] || [];
-    const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-    // Group by year
-    const byYear = {};
-    tab2.forEach(row => {
-      const vals = Object.values(row);
-      const ano  = parseInt(vals[0]);
-      const ativo = String(vals[1]||'').trim();
-      if (!ano || !ativo) return;
-      if (!byYear[ano]) byYear[ano] = {};
-      byYear[ano][ativo] = vals.slice(2); // Jan..Dez + Ano
-    });
-    let h2 = '';
-    Object.keys(byYear).sort().forEach((ano, yi) => {
-      const d = byYear[ano];
-      const cartR = d['Carteira'] || [];
-      const cdiR  = d['CDI'] || [];
-      const pctR  = d['%CDI'] || [];
-      const anoRent = cartR[12]; // last element = Ano
-      const anoStyle = !isNaN(parseFloat(anoRent)) && parseFloat(anoRent) >= 0 ? 'color:var(--verde)' : 'color:var(--vermelho)';
-      const borderB = yi < Object.keys(byYear).length - 1 ? '2px solid var(--border-strong)' : '';
-
-      h2 += `<tr>
-        <td rowspan="3" style="font-weight:700;color:var(--navy);vertical-align:middle;border-right:1px solid var(--border)">${ano}</td>
-        <td style="font-weight:500;color:var(--navy)">Carteira</td>
-        ${meses.map((_,i) => {
-          const v = cartR[i]; const n = parseFloat(v);
-          const s = isNaN(n)||v==null?'color:var(--text-muted)': n>=0?'color:var(--verde)':'color:var(--vermelho)';
-          return `<td class="td-num" style="${s}">${v!=null&&!isNaN(n)?(n*100).toFixed(2)+'%':'—'}</td>`;
-        }).join('')}
-        <td class="td-num" style="${anoStyle};font-weight:700">${anoRent!=null&&!isNaN(parseFloat(anoRent))?(parseFloat(anoRent)*100).toFixed(2)+'%':'—'}</td>
-      </tr>
-      <tr>
-        <td style="color:var(--text-muted)">CDI</td>
-        ${meses.map((_,i) => {
-          const v = cdiR[i]; const n = parseFloat(v);
-          return `<td class="td-num" style="color:var(--text-muted)">${v!=null&&!isNaN(n)?(n*100).toFixed(2)+'%':'—'}</td>`;
-        }).join('')}
-        <td class="td-num" style="color:var(--text-muted);font-weight:600">${cdiR[12]!=null&&!isNaN(parseFloat(cdiR[12]))?(parseFloat(cdiR[12])*100).toFixed(2)+'%':'—'}</td>
-      </tr>
-      <tr style="border-bottom:${borderB}">
-        <td style="color:var(--text-muted)">%CDI</td>
-        ${meses.map((_,i) => {
-          const v = pctR[i]; const n = parseFloat(v);
-          const s = isNaN(n)||v==null?'color:var(--text-muted)': n>=1?'color:var(--verde)':'color:var(--vermelho)';
-          return `<td class="td-num" style="${s}">${v!=null&&!isNaN(n)?(n*100).toFixed(1)+'%':'—'}</td>`;
-        }).join('')}
-        <td class="td-num" style="font-weight:600">${pctR[12]!=null&&!isNaN(parseFloat(pctR[12]))?(parseFloat(pctR[12])*100).toFixed(1)+'%':'—'}</td>
-      </tr>`;
-    });
-    set('prev-tab2-body', h2 || '<tr><td colspan="14" style="text-align:center;padding:16px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
-
-    // ── tab7: posição por classe ────────────────────────────────
-    const tab7key = pfx === 'mv' ? 'MV_tab7' : 'CURVA_tab7';
-    const tab7 = t[tab7key] || [];
-    let h7 = '', tot7 = 0;
-    const saldoFimK = k => k.includes('31') || k.toLowerCase().includes('saldo bruto') && !k.includes('13');
-    tab7.forEach(row => {
-      const vals = Object.values(row);
-      // Detect: skip first empty col
-      const nome = String(vals[1] || vals[0] || '').trim(); if (!nome) return;
-      const saldoFim = parseFloat(vals[4]||vals[3]||0) || 0;
-      const pct      = parseFloat(vals[5]||vals[4]||0) || 0;
-      const rend     = parseFloat(vals[3]||vals[2]||0) || 0;
-      const saldoIni = parseFloat(vals[2]||vals[1]||0) || 0;
-      tot7 += Math.abs(saldoFim);
-
-      const cls = nome.toLowerCase().includes('inflação') ? 'badge-navy' :
-                  nome.toLowerCase().includes('pós') ? 'badge-gold' : 'badge-gray';
-      h7 += `<tr>
-        <td><span class="badge ${cls}">${nome}</span></td>
-        <td class="td-num">${fmtM(saldoIni)}</td>
-        <td class="td-num" style="${corP(rend)}">${fmtM(rend)}</td>
-        <td class="td-num" style="font-weight:600">${fmtM(saldoFim)}</td>
-        <td class="td-num">
-          <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">
-            ${pct.toFixed(1)}%
-          </div>
-          <div class="alloc-bar-wrap"><div class="alloc-bar ${nome.toLowerCase().includes('pós')?'':'navy'}" style="width:${Math.min(Math.abs(pct),100).toFixed(1)}%"></div></div>
-        </td>
-      </tr>`;
-    });
-    set('prev-tab7-body', h7 || '<tr><td colspan="5" style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
-
-    // ── tab3: extrato anual ──────────────────────────────────────
-    const tab3key = pfx === 'mv' ? 'MV_tab3' : 'CURVA_tab3';
-    const tab3 = t[tab3key] || [];
-    let h3 = '';
-    tab3.forEach(row => {
-      const vals = Object.values(row);
-      const ano = vals[0];
-      if (!ano) return;
-      const anoStr = typeof ano === 'number' ? parseInt(ano) : String(ano);
-      const aplic  = parseFloat(vals[2])||0;
-      const resgate= parseFloat(vals[3])||0;
-      const rend   = parseFloat(vals[6])||0;
-      const saldo  = parseFloat(vals[7])||0;
-      h3 += `<tr>
-        <td style="font-weight:600">${anoStr}</td>
-        <td class="td-num" style="color:var(--verde)">${fmtM(aplic)}</td>
-        <td class="td-num" style="color:var(--vermelho)">${fmtM(resgate)}</td>
-        <td class="td-num" style="${corP(rend)}">${fmtM(rend)}</td>
-        <td class="td-num" style="font-weight:600">${fmtM(saldo)}</td>
-      </tr>`;
-    });
-    set('prev-tab3-body', h3 || '<tr><td colspan="5" style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
-
-    // ── tab9 (MV) / curva_yield (CURVA): posição detalhada ───────
-    if (prevMode === 'mv') {
-      renderPrevTab9MV(t);
-      renderPrevDuration(t);
-    } else {
-      renderPrevCurvaYield(t);
-    }
-  }
-
-  function renderPrevTab9MV(t) {
-    const tab9 = t['MV_tab9'] || [];
-    const fmtM  = v => { const n = parseFloat(String(v||'').replace(',','.')); if(isNaN(n)) return '—'; const a=Math.abs(n); return (n<0?'−':'')+'R$ '+(a>=1e6?(a/1e6).toFixed(2)+' mi':a>=1e3?Math.round(a/1e3)+'k':Math.round(a).toLocaleString('pt-BR')); };
-    const fmtP  = v => { const n = parseFloat(String(v||'').replace(',','.')); return isNaN(n) ? '—' : n.toFixed(1)+'%'; };
-
-    const durMap = {}; // from mv_duration
-    const durTab = t['mv_duration'] || [];
-    durTab.forEach(row => {
-      const vals = Object.values(row);
-      const ativo = String(vals[1]||'').trim();
-      const dur   = parseFloat(vals[4]);
-      if (ativo && !isNaN(dur)) durMap[ativo] = dur;
-    });
-
-    let h9 = '', totSaldo = 0;
-    tab9.forEach(row => {
-      const vals = Object.values(row);
-      const nome  = String(vals[1]||vals[0]||'').trim(); if(!nome) return;
-      const saldo = parseFloat(vals[7]||vals[6]||vals[5]||0);
-      const pct   = parseFloat(vals[6]||vals[5]||0);
-      totSaldo += Math.abs(saldo);
-      const dur = durMap[nome];
-      const isNeg = saldo < 0;
-      const cls = nome.toLowerCase().includes('inflação')||nome.toLowerCase().includes('ntn-b') ? 'badge-navy' :
-                  nome.toLowerCase().includes('pós')||nome.toLowerCase().includes('fif')||nome.toLowerCase().includes('flexprev') ? 'badge-gold' :
-                  nome.toLowerCase().includes('taxa') ? 'badge-gray' : 'badge-gray';
-      const durCell = dur != null
-        ? `<div style="font-size:12px;font-weight:600">${dur.toFixed(2)} a</div>
-           <div class="dur-bar-wrap"><div class="dur-bar ${dur>7?'long':''}" style="width:${Math.min(dur/12*100,100).toFixed(0)}%"></div></div>`
-        : '<span style="color:var(--text-muted)">—</span>';
-      h9 += `<tr>
-        <td>${nome}</td>
-        <td><span class="badge ${cls}" style="font-size:9px">${
-          nome.toLowerCase().includes('ntn-b') ? 'Título Público' :
-          nome.toLowerCase().includes('pós') ? 'Crédito Bancário' :
-          nome.toLowerCase().includes('taxa') ? 'Taxas' : 'Fundo'
-        }</span></td>
-        <td class="td-num">${durCell}</td>
-        <td class="td-num" style="${isNeg?'color:var(--vermelho)':'font-weight:500'}">${fmtM(saldo)}</td>
-        <td class="td-num">${fmtP(pct)}</td>
-      </tr>`;
-    });
-    const set = (id, h) => { const e = document.getElementById(id); if(e) e.innerHTML = h; };
-    set('prev-tab9-body', h9 || '<tr><td colspan="5" style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
-  }
-
-  function renderPrevCurvaYield(t) {
-    const yieldTab = t['curva_yield'] || [];
-    const fmtM = v => { const n = parseFloat(String(v||'').replace(',','.')); if(isNaN(n)) return '—'; const a=Math.abs(n); return (n<0?'−':'')+'R$ '+(a>=1e6?(a/1e6).toFixed(2)+' mi':a>=1e3?Math.round(a/1e3)+'k':Math.round(a).toLocaleString('pt-BR')); };
-    const set   = (id, h) => { const e = document.getElementById(id); if(e) e.innerHTML = h; };
-
-    // tab9 curva
-    const tab9c = t['CURVA_tab9'] || [];
-    let h9c = '';
-    tab9c.forEach(row => {
-      const vals = Object.values(row);
-      const nome  = String(vals[1]||vals[0]||'').trim(); if(!nome) return;
-      const saldo = parseFloat(vals[7]||vals[6]||vals[5]||0);
-      const pct   = parseFloat(vals[6]||vals[5]||0);
-      const taxa  = yieldTab.find(r => String(Object.values(r)[2]||'').trim() === nome || String(Object.values(r)[3]||'').includes(nome.substring(0,15)));
-      const taxaVal = taxa ? parseFloat(Object.values(taxa)[5]) : null;
-      const cls = nome.toLowerCase().includes('inflação')||nome.toLowerCase().includes('ntn-b') ? 'badge-navy' :
-                  nome.toLowerCase().includes('pós')||nome.toLowerCase().includes('fif') ? 'badge-gold' :
-                  nome.toLowerCase().includes('taxa') ? 'badge-gray' : 'badge-gray';
-      h9c += `<tr>
-        <td>${nome}</td>
-        <td><span class="badge ${cls}" style="font-size:9px">${
-          nome.toLowerCase().includes('ntn-b') ? 'Título Público' :
-          nome.toLowerCase().includes('pós')||nome.toLowerCase().includes('fif') ? 'Crédito Bancário' :
-          nome.toLowerCase().includes('taxa') ? 'Taxas' : 'Fundo'
-        }</span></td>
-        <td class="td-num prev-mode-curva">${taxaVal != null ? `<span class="yield-pill">IPCA+${taxaVal.toFixed(2)}%</span>` : '—'}</td>
-        <td class="td-num" style="font-weight:500">${fmtM(saldo)}</td>
-        <td class="td-num">${isNaN(pct) ? '—' : pct.toFixed(1)+'%'}</td>
-      </tr>`;
-    });
-    set('prev-tab9-body', h9c || '<tr><td colspan="5" style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
-
-    // Yield table (NTN-Bs detalhadas)
-    let totY = 0;
-    yieldTab.forEach(r => { const s = parseFloat(Object.values(r)[4]||0); if(s>0) totY += s; });
-
-    let hY = '';
-    yieldTab.forEach(row => {
-      const vals  = Object.values(row);
-      const ativo = String(vals[2]||'').trim();
-      const desc  = String(vals[3]||'').trim();
-      const saldo = parseFloat(vals[4]||0);
-      const taxa  = parseFloat(vals[5]||0);
-      const classe= String(vals[6]||'').trim();
-      if (!ativo || saldo === 0) return;
-
-      const pctCart = totY > 0 ? (saldo/totY*100) : 0;
-      const isPosFix = desc.toLowerCase().includes('fif')||desc.toLowerCase().includes('pós');
-      const cls = isPosFix ? 'badge-gold' : 'badge-navy';
-
-      // Extract vencimento from ativo name (e.g. NTN-B IPCA+6,10 15/08/2040)
-      const vtMatch = ativo.match(/(\d{2}\/\d{2}\/\d{4})/);
-      const venc = vtMatch ? vtMatch[1] : '—';
-
-      hY += `<tr>
-        <td style="font-size:12px">${ativo}</td>
-        <td style="font-size:11px;color:var(--text-muted)">${venc}</td>
-        <td><span class="badge ${cls}" style="font-size:9px">${classe || (isPosFix?'Crédito Bancário':'Inflação Soberano')}</span></td>
-        <td class="td-num" style="font-weight:500">${fmtM(saldo)}</td>
-        <td class="td-num"><span class="yield-pill">${!isNaN(taxa)&&taxa>0?'IPCA+'+taxa.toFixed(2)+'%':'—'}</span></td>
-        <td class="td-num" style="font-size:11px;color:var(--text-muted)">${pctCart.toFixed(1)}%</td>
-      </tr>`;
-    });
-    set('prev-yield-body', hY || '<tr><td colspan="6" style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
-  }
-
-  function renderPrevDuration(t) {
-    const durTab = t['mv_duration'] || [];
-    const fmtM = v => { const n = parseFloat(String(v||'').replace(',','.')); if(isNaN(n)) return '—'; const a=Math.abs(n); return (n<0?'−':'')+'R$ '+(a>=1e6?(a/1e6).toFixed(2)+' mi':a>=1e3?Math.round(a/1e3)+'k':Math.round(a).toLocaleString('pt-BR')); };
-    const set = (id, h) => { const e = document.getElementById(id); if(e) e.innerHTML = h; };
-
-    // Group by classe (minha_variavel)
-    const byClasse = {};
-    let maxDur = 0;
-    durTab.forEach(row => {
-      const vals = Object.values(row);
-      const ativo  = String(vals[1]||'').trim(); if(!ativo) return;
-      const saldo  = parseFloat(vals[3]||0);
-      const dur    = parseFloat(vals[4]);
-      const classe = String(vals[5]||'Outro').trim();
-      if (!byClasse[classe]) byClasse[classe] = [];
-      if (!isNaN(dur) && dur > maxDur) maxDur = dur;
-      byClasse[classe].push({ ativo, saldo, dur, classe });
-    });
-
-    let hD = '';
-    Object.entries(byClasse).forEach(([classe, ativos]) => {
-      if (classe === 'nd') return;
-      const clsBadge = classe.toLowerCase().includes('inflação') ? 'badge-navy' :
-                       classe.toLowerCase().includes('pós') ? 'badge-gold' : 'badge-gray';
-      hD += `<div style="margin-bottom:18px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-          <span class="badge ${clsBadge}">${classe}</span>
-          <span style="font-size:11px;color:var(--text-muted)">${ativos.length} título${ativos.length>1?'s':''}</span>
-        </div>`;
-      ativos.forEach(({ ativo, saldo, dur }) => {
-        if (!ativo || ativo.toLowerCase().includes('taxa')) return;
-        const durStr = !isNaN(dur) ? dur.toFixed(2)+' anos' : '—';
-        const pct    = maxDur > 0 && !isNaN(dur) ? (dur/maxDur)*100 : 0;
-        const isLong = dur > 7;
-        hD += `<div class="tir-item" style="margin-bottom:10px">
-          <div class="tir-header">
-            <span class="tir-name" style="font-size:11.5px">${ativo}</span>
-            <div style="display:flex;align-items:center;gap:8px">
-              <span style="font-size:11px;color:var(--text-muted)">${fmtM(saldo)}</span>
-              <span style="font-size:12px;font-weight:600;color:${isLong?'var(--gold)':'var(--verde)'}">${durStr}</span>
-            </div>
-          </div>
-          <div class="dur-bar-wrap"><div class="dur-bar ${isLong?'long':''}" style="width:${pct.toFixed(1)}%"></div></div>
-        </div>`;
-      });
-      hD += '</div>';
-    });
-
-    set('prev-duration-body', hD || '<div style="text-align:center;padding:20px;color:var(--text-muted)">Dados de duration não disponíveis</div>');
-  }
-
 </script>
 </body>
 </html>
