@@ -3292,6 +3292,8 @@
 
   function renderOnshoreTotal() {
     const t = CD.tables;
+    // Guard: se tab0 está vazio, não sobrescreve os valores hardcoded da página
+    if (!t.tab0 || t.tab0.length === 0) return;
 
     // ── tab0: KPIs rentabilidade ──────────────────────────────
     // Linhas: "Rend. Nominal (R$", "Var. Nominal (%)", "CDI (%)", "IPCAdp (%)"
@@ -3980,12 +3982,16 @@
 
     // Yield table separada (NTN-Bs com taxa)
     let totY = 0;
-    yieldTab.filter(r => r['Ativo'] && parseFloat(r['Saldo Bruto']) > 0).forEach(r => { totY += parseFloat(r['Saldo Bruto'] ?? 0) || 0; });
+    // Total apenas de NTN-Bs com taxa explícita (exclui fundo DI)
+    yieldTab.filter(r => r['Ativo'] && parseFloat(r['Saldo Bruto']) > 0 && !isNaN(parseFloat(r['Taxa Pré'])) && parseFloat(r['Taxa Pré']) > 0)
+      .forEach(r => { totY += parseFloat(r['Saldo Bruto'] ?? 0) || 0; });
 
     let hY = '';
     yieldTab.filter(r => {
       const a = String(r['Ativo']??'').trim();
-      return a && !SKIP.test(a) && parseFloat(r['Saldo Bruto']) > 0;
+      const taxa = parseFloat(r['Taxa Pré']);
+      // Só NTN-Bs com taxa explícita; exclui fundo DI (CNPJ) e linhas sem taxa
+      return a && !SKIP.test(a) && parseFloat(r['Saldo Bruto']) > 0 && !isNaN(taxa) && taxa > 0;
     }).forEach(row => {
       const ativo  = String(row['Ativo']).trim();
       const saldo  = parseFloat(row['Saldo Bruto'] ?? 0);
@@ -4004,6 +4010,28 @@
         <td class="td-num" style="font-size:11px;color:var(--text-muted)">${pctC.toFixed(1)}%</td>
       </tr>`;
     });
+    // YTM médio ponderado
+    let totSaldoY = 0, totYtmW = 0;
+    yieldTab.filter(r => {
+      const taxa = parseFloat(r['Taxa Pré']);
+      return !isNaN(taxa) && taxa > 0 && parseFloat(r['Saldo Bruto']) > 0;
+    }).forEach(r => {
+      const s = parseFloat(r['Saldo Bruto']);
+      const tx = parseFloat(r['Taxa Pré']);
+      totSaldoY += s; totYtmW += tx * s;
+    });
+    const ytmMedio = totSaldoY > 0 ? (totYtmW / totSaldoY) : null;
+
+    if (ytmMedio !== null && hY) {
+      const ytmHtml = `<tr style="background:rgba(42,90,102,0.06);font-weight:600">
+        <td colspan="3" style="padding:10px 12px;color:var(--navy)">YTM Médio Ponderado (IPCA+)</td>
+        <td class="td-num" style="font-weight:700;color:var(--navy)">${_fmtM(totSaldoY)}</td>
+        <td class="td-num"><span class="yield-pill" style="background:rgba(42,90,102,0.15);color:var(--navy-deep);font-size:11px;font-weight:700">IPCA+${ytmMedio.toFixed(2)}%</span></td>
+        <td class="td-num">100%</td>
+      </tr>`;
+      hY = ytmHtml + hY;
+    }
+
     _set('prev-yield-body', hY || '<tr><td colspan="6" style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
   }
 
@@ -4052,6 +4080,28 @@
       });
       hD += '</div>';
     });
+    // Calcula duration médio ponderado pelo saldo
+    let totSaldo = 0, totDurW = 0;
+    Object.values(byClasse).forEach(ativos => {
+      ativos.forEach(({ dur, saldo }) => {
+        if (dur != null && !isNaN(saldo) && saldo > 0) {
+          totSaldo += saldo;
+          totDurW  += dur * saldo;
+        }
+      });
+    });
+    const durMedio = totSaldo > 0 ? (totDurW / totSaldo) : null;
+
+    // Acrescenta linha de duration médio ponderado ao topo do bloco
+    if (durMedio !== null && hD) {
+      const durMedioHtml = `<div style="display:flex;align-items:center;justify-content:space-between;
+        padding:12px 16px;background:rgba(42,90,102,0.06);border-radius:8px;margin-bottom:18px;border:1px solid rgba(42,90,102,0.15)">
+        <span style="font-size:13px;font-weight:600;color:var(--navy)">Duration Médio Ponderado</span>
+        <span style="font-size:20px;font-weight:700;color:var(--navy)">${durMedio.toFixed(2)} anos</span>
+      </div>`;
+      hD = durMedioHtml + hD;
+    }
+
     _set('prev-duration-body', hD || '<div style="text-align:center;padding:20px;color:var(--text-muted)">Dados de duration não disponíveis</div>');
   }
 
