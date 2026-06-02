@@ -2399,18 +2399,32 @@
       }
 
       // ── Previdência Web App ────────────────────────────────────
-      const prevTables = previdencia.tables || {};
-      const prevKeys   = Object.keys(prevTables);
-      if (prevKeys.length > 0) {
-        Object.assign(CD.tables, prevTables);
-        // também propaga movimentações se o WA as servir
-        if (previdencia.mv_movimentacoes)   CD.mv_movimentacoes   = previdencia.mv_movimentacoes;
-        if (previdencia.curva_movimentacoes) CD.curva_movimentacoes = previdencia.curva_movimentacoes;
-        if (previdencia.mv_duration)         CD.tables.mv_duration  = previdencia.mv_duration;
-        if (previdencia.curva_yield)         CD.tables.curva_yield  = previdencia.curva_yield;
-        console.log("✅ Previdência carregada:", prevKeys);
+      // Estrutura real: { mercado: { tables: {...} }, curva: { tables: {...} },
+      //                   movimentacoes: [...], duration: [...], yield_medio: [...] }
+      if (previdencia && (previdencia.mercado || previdencia.curva)) {
+        // Mescla tabelas MV (mercado)
+        const mvTables = (previdencia.mercado && previdencia.mercado.tables) || {};
+        Object.assign(CD.tables, mvTables);
+
+        // Mescla tabelas CURVA
+        const cvTables = (previdencia.curva && previdencia.curva.tables) || {};
+        Object.assign(CD.tables, cvTables);
+
+        // Movimentações separadas por modo
+        if (previdencia.mercado && previdencia.mercado.movimentacoes)
+          CD.tables.mv_movimentacoes = previdencia.mercado.movimentacoes;
+        if (previdencia.curva && previdencia.curva.movimentacoes)
+          CD.tables.curva_movimentacoes = previdencia.curva.movimentacoes;
+
+        // Duration (MV) e yield_medio (Curva)
+        if (previdencia.duration)    CD.tables.mv_duration = previdencia.duration;
+        if (previdencia.yield_medio) CD.tables.curva_yield = previdencia.yield_medio;
+
+        const allKeys = [...Object.keys(mvTables), ...Object.keys(cvTables)];
+        console.log("✅ Previdência carregada:", allKeys.length, "tabelas →", allKeys);
       } else {
-        console.warn("⚠️ Previdência vazia:", previdencia.error || "sem tabelas");
+        console.warn("⚠️ Previdência vazia:", previdencia && previdencia.error || "estrutura inesperada");
+        console.log("   Estrutura recebida:", previdencia && Object.keys(previdencia));
       }
 
       // Movimentações ilíquidas — base para calcular TIR, MOIC, TVPI, DVPI, RVPI
@@ -3632,7 +3646,7 @@
   function renderPrevidencia() {
     if (!CD) return;
     const t   = CD.tables || {};
-    const pfx = prevMode === 'mv' ? 'MV' : 'CURVA';
+    const pfx = prevMode === 'mv' ? 'mv' : 'curva';
 
     const fmtM = v => {
       const n = parseFloat(String(v||'').replace(',','.'));
@@ -3812,7 +3826,7 @@
   }
 
   function renderPrevTab9MV(t, fmtM, corP) {
-    const tab9  = t['MV_tab9']     || [];
+    const tab9  = t['mv_tab9']     || [];
     const durTab= t['mv_duration'] || [];
     const setEl = (id,h) => { const e=document.getElementById(id); if(e) e.innerHTML=h; };
     const fmtP  = v => { const n=parseFloat(v); return isNaN(n)?'—':n.toFixed(1)+'%'; };
@@ -3849,7 +3863,7 @@
   }
 
   function renderPrevCurvaYield(t, fmtM) {
-    const tab9c   = t['CURVA_tab9']  || [];
+    const tab9c   = t['curva_tab9']  || [];
     const yieldTab= t['curva_yield'] || [];
     const setEl   = (id,h) => { const e=document.getElementById(id); if(e) e.innerHTML=h; };
 
