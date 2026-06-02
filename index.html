@@ -3599,9 +3599,11 @@
     carregarDados();
   });
 
+
   // ══════════════════════════════════════════════════════════════════
-  //  PREVIDÊNCIA — Itaú Flexprev Rio Bonito
-  //  Dentro do IIFE → acessa CD, prevMode sem problema de escopo
+  //  PREVIDÊNCIA — Itaú Flexprev Rio Bonito  (render reescrito)
+  //  Estrutura JSON: { mercado:{tables:{mv_tab*}}, curva:{tables:{curva_tab*}},
+  //                    duration:[], yield_medio:[], movimentacoes:{} }
   // ══════════════════════════════════════════════════════════════════
 
   let prevMode = 'mv';
@@ -3630,330 +3632,427 @@
     if (durCard)   durCard.style.display   = mode === 'mv'    ? '' : 'none';
     if (yieldCard) yieldCard.style.display = mode === 'curva' ? '' : 'none';
 
-    document.querySelectorAll('.prev-mode-mv').forEach(el => {
-      el.style.display = mode === 'mv' ? '' : 'none';
-    });
-    document.querySelectorAll('.prev-mode-curva').forEach(el => {
-      el.style.display = mode === 'curva' ? '' : 'none';
-    });
+    document.querySelectorAll('.prev-mode-mv').forEach(el => { el.style.display = mode === 'mv' ? '' : 'none'; });
+    document.querySelectorAll('.prev-mode-curva').forEach(el => { el.style.display = mode === 'curva' ? '' : 'none'; });
 
     renderPrevidencia();
   }
 
-  // Expõe ao escopo global para os onclick do HTML
   window.setPrevMode = setPrevMode;
+
+  // ── helpers de formatação ─────────────────────────────────────────
+  function _fmtM(v) {
+    const n = parseFloat(String(v ?? '').replace(',', '.'));
+    if (isNaN(n)) return '—';
+    const a = Math.abs(n), s = n < 0 ? '−' : '';
+    if (a >= 1e6) return s + 'R$ ' + (a / 1e6).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' mi';
+    if (a >= 1e3) return s + 'R$ ' + Math.round(a / 1e3).toLocaleString('pt-BR') + ' mil';
+    return s + 'R$ ' + Math.round(a).toLocaleString('pt-BR');
+  }
+  function _fmtPct(v, alreadyPercent = false) {
+    const n = parseFloat(String(v ?? '').replace(',', '.'));
+    if (isNaN(n) || v === '' || v === 'nd') return '—';
+    const val = alreadyPercent ? n : n * 100;
+    return val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
+  }
+  function _cor(v) { const n = parseFloat(v); return isNaN(n) ? '' : n >= 0 ? 'color:var(--verde)' : 'color:var(--vermelho)'; }
+  function _set(id, h) { const e = document.getElementById(id); if (e) e.innerHTML = h; }
+  function _txt(id, v) { const e = document.getElementById(id); if (e) e.textContent = v; }
 
   function renderPrevidencia() {
     if (!CD) return;
     const t   = CD.tables || {};
     const pfx = prevMode === 'mv' ? 'mv' : 'curva';
 
-    const fmtM = v => {
-      const n = parseFloat(String(v||'').replace(',','.'));
-      if (isNaN(n)) return '—';
-      const a = Math.abs(n);
-      const s = n < 0 ? '−' : '';
-      if (a >= 1e6) return s + 'R$ ' + (a/1e6).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' mi';
-      if (a >= 1e3) return s + 'R$ ' + Math.round(a/1e3).toLocaleString('pt-BR') + ' mil';
-      return s + 'R$ ' + Math.round(a).toLocaleString('pt-BR');
-    };
-    const fmtPx = v => {
-      const n = parseFloat(String(v||'').replace(',','.'));
-      if (isNaN(n) || v === 'nd') return '—';
-      return n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) + '%';
-    };
-    const corP = v => { const n = parseFloat(v); return isNaN(n) ? '' : n >= 0 ? 'color:var(--verde)' : 'color:var(--vermelho)'; };
-    const setEl  = (id, h) => { const e = document.getElementById(id); if(e) e.innerHTML  = h; };
-    const setTxt = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
+    // ── PL: vem do tab8 (total da instituição) ───────────────────────
+    const tab8 = t[pfx + '_tab8'] || [];
+    const plRow = tab8.find(r => r['Ativo'] && /itau|total/i.test(String(r['Ativo']))) || tab8[0] || {};
+    const plVal = parseFloat(plRow['Saldo Bruto 31/03/26'] ?? 0) || 0;
+    _txt('prev-pl', plVal ? _fmtM(plVal) : '—');
+    _txt('prev-pl-sub', 'Posição em 31/03/2026');
 
-    // ── KPIs (tab0) ──────────────────────────────────────────────
+    // ── tab0: [Rend Nominal R$, Var Nominal %, CDI %, IPCAdp %] ─────
+    // Colunas: { Mês, Ano, 12meses, 24meses, Noperíodo }
     const tab0 = t[pfx + '_tab0'] || [];
-    if (tab0.length >= 3) {
-      const varRow = tab0[1] || {};
-      const cdiRow = tab0[2] || {};
-      const keys   = Object.keys(varRow);
-      const mesK   = keys.find(k => /^m[eê]s$/i.test(k)) || keys[0];
-      const m12K   = keys.find(k => k.includes('12'))     || keys[2];
-      const perK   = keys.find(k => /per|nop/i.test(k))  || keys[keys.length-1];
+    const varRow = tab0[1] || {};  // Var. Nominal (%)
+    const cdiRow = tab0[2] || {};  // CDI (%)
 
-      // PL from tab6
-      const tab6 = t[pfx + '_tab6'] || [];
-      const plRow = tab6.find(r => /pl em/i.test(String(Object.values(r)[0]||''))) || {};
-      const plVal = Object.values(plRow)[1] || 0;
-      setTxt('prev-pl', fmtM(plVal));
+    // Detecta chaves (acento pode variar)
+    const t0keys = Object.keys(varRow);
+    const mesK = t0keys.find(k => /m[eê]s/i.test(k) && k.length <= 5) || t0keys[0];
+    const m12K = t0keys.find(k => k.includes('12')) || t0keys[2];
+    const perK = t0keys.find(k => /per|nop/i.test(k)) || t0keys[t0keys.length - 1];
 
-      const setKpi = (valId, subId, val, cdiVal, label) => {
-        const el = document.getElementById(valId);
-        if (el) { el.textContent = fmtPx(val); el.style.color = parseFloat(val) >= 0 ? 'var(--verde)' : 'var(--vermelho)'; }
-        setTxt(subId, label + fmtPx(cdiVal));
-      };
-      setKpi('prev-rent-mes',     'prev-cdi-mes',     varRow[mesK], cdiRow[mesK], 'CDI: ');
-      setKpi('prev-rent-12m',     'prev-cdi-12m',     varRow[m12K], cdiRow[m12K], 'CDI 12m: ');
-      setKpi('prev-rent-periodo', 'prev-cdi-periodo', varRow[perK], cdiRow[perK], 'CDI período: ');
-      setTxt('prev-pl-sub', 'Posição em 31/03/2026');
-    }
+    // Rentab mês (valores já em % — ex: 0.144603 = 0,14%)
+    const rentMes = varRow[mesK];
+    const cdiMes  = cdiRow[mesK];
+    const elMes = document.getElementById('prev-rent-mes');
+    if (elMes) { elMes.textContent = _fmtPct(rentMes); elMes.style.color = parseFloat(rentMes) >= 0 ? 'var(--verde)' : 'var(--vermelho)'; }
+    _txt('prev-cdi-mes', cdiMes != null && cdiMes !== '' ? 'CDI: ' + _fmtPct(cdiMes) : '');
 
-    // ── tab5: performance comparativa ────────────────────────────
+    // Rentab 12m
+    const rent12 = varRow[m12K];
+    const cdi12  = cdiRow[m12K];
+    const el12 = document.getElementById('prev-rent-12m');
+    if (el12) { el12.textContent = _fmtPct(rent12); el12.style.color = parseFloat(rent12) >= 0 ? 'var(--verde)' : 'var(--vermelho)'; }
+    _txt('prev-cdi-12m', cdi12 != null && cdi12 !== '' ? 'CDI 12m: ' + _fmtPct(cdi12) : '');
+
+    // Rentab período
+    const rentPer = varRow[perK];
+    const cdiPer  = cdiRow[perK];
+    const elPer = document.getElementById('prev-rent-periodo');
+    if (elPer) { elPer.textContent = _fmtPct(rentPer); elPer.style.color = parseFloat(rentPer) >= 0 ? 'var(--verde)' : 'var(--vermelho)'; }
+    _txt('prev-cdi-periodo', cdiPer != null && cdiPer !== '' ? 'CDI período: ' + _fmtPct(cdiPer) : '');
+
+    // ── tab5: performance comparativa ───────────────────────────────
+    // Estrutura: array de objetos { Carteira: val, CDI: val }
+    // Ordem: [Retorno período, 6m, 12m, Volatilidade, Sharpe]
     const tab5 = t[pfx + '_tab5'] || [];
-    const tab0r = t[pfx + '_tab0'] || [];
+    const lbls5 = ['Retorno no período', 'Retorno 6 meses', 'Retorno 12 meses', 'Volatilidade', 'Sharpe (CDI)'];
     let h5 = '';
-    const lbls5 = ['Retorno no período','Retorno 6 meses','Retorno 12 meses','Volatilidade','Sharpe (CDI)'];
     tab5.forEach((row, i) => {
-      const vals   = Object.values(row);
-      const label  = lbls5[i] || String(vals[0]||'');
-      const cartV  = vals[1], cdiV = vals[2];
-      const tab0rr = tab0r[i] || {};
-      const ipcaV  = tab0rr['IPCAdp (%)'] ?? Object.values(tab0rr)[4] ?? null;
-      const isMeta = /volat|sharpe/i.test(label);
+      const cartV = row['Carteira'];
+      const cdiV  = row['CDI'];
+      const isMeta = i >= 3; // Volatilidade e Sharpe: não colorir como positivo/negativo
+      const cartStyle = !isMeta ? _cor(cartV) : '';
+      const cartTxt = cartV != null && cartV !== '' ? _fmtPct(cartV) : '—';
+      const cdiTxt  = cdiV  != null && cdiV  !== '' ? _fmtPct(cdiV)  : '—';
+      // IPCA+ do tab0 na mesma posição (linha 3 = IPCAdp)
+      const ipcaRow = tab0[3] || {};
+      let ipcaTxt = '—';
+      if (i === 0) ipcaTxt = ipcaRow[perK] != null ? _fmtPct(ipcaRow[perK]) : '—';
+      else if (i === 2) ipcaTxt = ipcaRow[m12K] != null ? _fmtPct(ipcaRow[m12K]) : '—';
       h5 += `<tr>
-        <td>${label}</td>
-        <td class="td-num" style="${isMeta?'':corP(cartV)}">${fmtPx(cartV)}</td>
-        <td class="td-num" style="color:var(--text-muted)">${fmtPx(cdiV)}</td>
-        <td class="td-num" style="color:var(--text-muted)">${ipcaV!=null?fmtPx(ipcaV):'—'}</td>
+        <td>${lbls5[i]}</td>
+        <td class="td-num" style="${cartStyle}">${cartTxt}</td>
+        <td class="td-num" style="color:var(--text-muted)">${cdiTxt}</td>
+        <td class="td-num" style="color:var(--text-muted)">${ipcaTxt}</td>
       </tr>`;
-      if (/sharpe/i.test(label)) {
+      if (i === 4 && cartV != null) {
         const el = document.getElementById('prev-sharpe');
-        if (el) { const n=parseFloat(cartV); el.textContent=isNaN(n)?'—':n.toFixed(2); el.style.color=n>=0?'var(--verde)':'var(--vermelho)'; }
+        if (el) { const n = parseFloat(cartV); el.textContent = isNaN(n) ? '—' : n.toFixed(2); el.style.color = n >= 0 ? 'var(--verde)' : 'var(--vermelho)'; }
       }
     });
-    setEl('prev-tab5-body', h5 || '<tr><td colspan="4" style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
+    _set('prev-tab5-body', h5 || '<tr><td colspan="4" style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
 
-    // ── tab6: destaques ──────────────────────────────────────────
-    const tab6d = t[pfx + '_tab6'] || [];
-    let h6 = '';
-    tab6d.forEach(row => {
-      const vals = Object.values(row);
-      const lbl  = String(vals[0]||'').trim();
-      const val  = vals[1];
-      if (!lbl || val == null) return;
-      let vs = 'font-weight:600;color:var(--navy)';
-      let vt = String(val);
-      if (/maior/i.test(lbl))   vs = 'color:var(--verde);font-weight:600';
-      if (/menor/i.test(lbl))   vs = 'color:var(--vermelho);font-weight:600';
-      if (/pl em|médio/i.test(lbl)) { const n=parseFloat(val); vt=isNaN(n)?vt:fmtM(n); }
-      h6 += `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
-        <span>${lbl}</span><span style="${vs}">${vt}</span></div>`;
-    });
-    setEl('prev-tab6-body', h6 || '<div style="color:var(--text-muted);padding:14px;text-align:center">Dados não disponíveis</div>');
-
-    // ── tab2: rentabilidade mensal ────────────────────────────────
+    // ── tab6: VAZIO no JSON — calculamos a partir do tab2 ───────────
     const tab2 = t[pfx + '_tab2'] || [];
+    // tab2: grupos de 3 linhas (Carteira, CDI, %CDI) sem campo de ano
+    // inferimos o ano: 2022 + grupo_index
     const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-    const byYear = {};
-    tab2.forEach(row => {
-      const vals = Object.values(row);
-      const ano  = parseInt(vals[0]); const ativo = String(vals[1]||'').trim();
-      if (!ano || !ativo) return;
-      if (!byYear[ano]) byYear[ano] = {};
-      byYear[ano][ativo] = vals.slice(2);
+    const anoBase = 2022;
+    const grupos = [];
+    for (let i = 0; i + 2 < tab2.length; i += 3) {
+      const cartRow = tab2[i];
+      const cRow    = tab2[i+1];
+      const pctRow  = tab2[i+2];
+      if (!cartRow || !String(cartRow['Ativo']||'').includes('Carteira')) continue;
+      grupos.push({ ano: anoBase + grupos.length, cart: cartRow, cdi: cRow, pct: pctRow });
+    }
+    // Destaques do período calculados de tab2
+    const todosVals = grupos.flatMap(g =>
+      meses.map(m => { const v = g.cart[m]; return v !== '' && v != null ? parseFloat(v) : null; }).filter(v => v !== null)
+    );
+    const maiorM = todosVals.length ? Math.max(...todosVals) : null;
+    const menorM = todosVals.length ? Math.min(...todosVals) : null;
+    const mPos   = todosVals.filter(v => v >= 0).length;
+    const mNeg   = todosVals.filter(v => v < 0).length;
+    // Mês/ano do maior e menor
+    let maiorLabel = '', menorLabel = '';
+    const nomMes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    grupos.forEach(g => {
+      nomMes.forEach(m => {
+        const v = parseFloat(g.cart[m]);
+        if (!isNaN(v)) {
+          if (maiorM !== null && Math.abs(v - maiorM) < 1e-9) maiorLabel = ` (${m}/${g.ano})`;
+          if (menorM !== null && Math.abs(v - menorM) < 1e-9) menorLabel = ` (${m}/${g.ano})`;
+        }
+      });
     });
+    let h6 = '';
+    if (maiorM !== null) h6 += `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span>Maior rentab. mensal</span><span style="color:var(--verde);font-weight:600">${_fmtPct(maiorM)}${maiorLabel}</span></div>`;
+    if (menorM !== null) h6 += `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span>Menor rentab. mensal</span><span style="color:var(--vermelho);font-weight:600">${_fmtPct(menorM)}${menorLabel}</span></div>`;
+    h6 += `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span>Meses positivos</span><span style="font-weight:600;color:var(--navy)">${mPos} de ${mPos+mNeg}</span></div>`;
+    h6 += `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span>PL em 31/03/2026</span><span style="font-weight:600;color:var(--navy)">${plVal ? _fmtM(plVal) : '—'}</span></div>`;
+    h6 += `<div style="display:flex;justify-content:space-between;padding:8px 0"><span>Início do fundo</span><span style="font-weight:600;color:var(--navy)">13/06/2022</span></div>`;
+    _set('prev-tab6-body', h6 || '<div style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</div>');
+
+    // ── Rentabilidade Mensal (tab2 agrupado) ─────────────────────────
     let h2 = '';
-    const anos = Object.keys(byYear).sort();
-    anos.forEach((ano, yi) => {
-      const d = byYear[ano];
-      const cR=d['Carteira']||[], cdR=d['CDI']||[], pcR=d['%CDI']||[];
-      const anoV = cR[12]; const anoN = parseFloat(anoV);
-      const anoS = !isNaN(anoN)&&anoN>=0?'color:var(--verde)':'color:var(--vermelho)';
-      const bb   = yi<anos.length-1?'border-bottom:2px solid var(--border-strong)':'';
-      const cellC = (v,pct=false) => {
-        if(v==null) return `<td class="td-num" style="color:var(--text-muted)">—</td>`;
-        const n=parseFloat(v); if(isNaN(n)) return `<td class="td-num" style="color:var(--text-muted)">—</td>`;
-        const disp = pct ? (n*100).toFixed(2)+'%' : (n>=1?(n>=0?'+':'')+n.toFixed(1)+'%':(n*100).toFixed(2)+'%');
-        const s = pct ? (n>=1?'color:var(--verde)':'color:var(--vermelho)') : (n>=0?'color:var(--verde)':'color:var(--vermelho)');
-        return `<td class="td-num" style="${s}">${disp}</td>`;
+    grupos.forEach((g, gi) => {
+      const bb = gi < grupos.length - 1 ? 'border-bottom:2px solid var(--border-strong)' : '';
+      const anoV = g.cart['Ano'];
+      const anoN = parseFloat(anoV);
+      const anoStyle = !isNaN(anoN) && anoN >= 0 ? 'color:var(--verde)' : 'color:var(--vermelho)';
+
+      const cellC = (v) => {
+        if (v === '' || v == null) return `<td class="td-num" style="color:var(--text-muted)">—</td>`;
+        const n = parseFloat(v);
+        if (isNaN(n)) return `<td class="td-num" style="color:var(--text-muted)">—</td>`;
+        const pct = (n * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
+        const s = n >= 0 ? 'color:var(--verde)' : 'color:var(--vermelho)';
+        return `<td class="td-num" style="${s}">${pct}</td>`;
       };
+      const cellMute = (v) => {
+        if (v === '' || v == null) return `<td class="td-num" style="color:var(--text-muted)">—</td>`;
+        const n = parseFloat(v);
+        if (isNaN(n)) return `<td class="td-num" style="color:var(--text-muted)">—</td>`;
+        return `<td class="td-num" style="color:var(--text-muted)">${(n*100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%'}</td>`;
+      };
+      const cellPct = (v) => {
+        if (v === '' || v == null) return `<td class="td-num" style="color:var(--text-muted)">—</td>`;
+        const n = parseFloat(v);
+        if (isNaN(n)) return `<td class="td-num" style="color:var(--text-muted)">—</td>`;
+        const s = n >= 1 ? 'color:var(--verde)' : 'color:var(--vermelho)';
+        return `<td class="td-num" style="${s}">${(n*100).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%'}</td>`;
+      };
+
       h2 += `<tr>
-        <td rowspan="3" style="font-weight:700;color:var(--navy);vertical-align:middle;border-right:1px solid var(--border)">${ano}</td>
+        <td rowspan="3" style="font-weight:700;color:var(--navy);vertical-align:middle;border-right:1px solid var(--border)">${g.ano}</td>
         <td style="font-weight:500;color:var(--navy)">Carteira</td>
-        ${meses.map((_,i)=>cellC(cR[i])).join('')}
-        <td class="td-num" style="${anoS};font-weight:700">${!isNaN(anoN)?(anoN*100).toFixed(2)+'%':'—'}</td>
+        ${meses.map(m => cellC(g.cart[m])).join('')}
+        <td class="td-num" style="${anoStyle};font-weight:700">${!isNaN(anoN) ? (anoN*100).toFixed(2)+'%' : '—'}</td>
       </tr><tr>
         <td style="color:var(--text-muted)">CDI</td>
-        ${meses.map((_,i)=>{ const n=parseFloat(cdR[i]); return `<td class="td-num" style="color:var(--text-muted)">${!isNaN(n)?(n*100).toFixed(2)+'%':'—'}</td>`; }).join('')}
-        <td class="td-num" style="color:var(--text-muted);font-weight:600">${!isNaN(parseFloat(cdR[12]))?(parseFloat(cdR[12])*100).toFixed(2)+'%':'—'}</td>
+        ${meses.map(m => cellMute(g.cdi[m])).join('')}
+        <td class="td-num" style="color:var(--text-muted);font-weight:600">${(() => { const n=parseFloat(g.cdi['Ano']); return isNaN(n)?'—':(n*100).toFixed(2)+'%'; })()}</td>
       </tr><tr style="${bb}">
         <td style="color:var(--text-muted)">%CDI</td>
-        ${meses.map((_,i)=>cellC(pcR[i],true)).join('')}
-        <td class="td-num" style="font-weight:600">${!isNaN(parseFloat(pcR[12]))?(parseFloat(pcR[12]*100)).toFixed(1)+'%':'—'}</td>
+        ${meses.map(m => cellPct(g.pct[m])).join('')}
+        <td class="td-num" style="font-weight:600">${(() => { const n=parseFloat(g.pct['Ano']); return isNaN(n)?'—':(n*100).toFixed(1)+'%'; })()}</td>
       </tr>`;
     });
-    setEl('prev-tab2-body', h2 || '<tr><td colspan="14" style="text-align:center;padding:16px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
+    _set('prev-tab2-body', h2 || '<tr><td colspan="14" style="text-align:center;padding:16px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
 
-    // ── tab7: posição por classe ─────────────────────────────────
+    // ── tab7: posição por classe ─────────────────────────────────────
+    // Estrutura: { Ativo, 'Saldo Bruto 13/06/22', Movimentação, 'Rendimento Bruto', 'Saldo Bruto 31/03/26', '%' }
+    // Filtra: só Inflação Soberano e Pós-Fixado (não Genérico)
     const tab7 = t[pfx + '_tab7'] || [];
+    // Detecta a data de início a partir da chave 'Saldo Bruto DD/MM/AA'
+    const saldoIniKey = tab7.length ? Object.keys(tab7[0]).find(k => /saldo bruto \d{2}\/\d{2}/i.test(k)) : null;
+    const saldoFimKey = tab7.length ? Object.keys(tab7[0]).find(k => /saldo bruto.*31/i.test(k) || /saldo bruto.*26$/i.test(k)) : null;
+    const dataIni = saldoIniKey ? saldoIniKey.replace(/saldo bruto /i,'').trim() : '—';
+
     let h7 = '';
-    tab7.forEach(row => {
-      const v = Object.values(row);
-      const nome = String(v[1]||v[0]||'').trim(); if (!nome) return;
-      const sIni=parseFloat(v[2]||0), rend=parseFloat(v[3]||0), sFim=parseFloat(v[4]||0), pct=parseFloat(v[5]||0);
-      const cls = /inflação|soberano/i.test(nome)?'badge-navy':/pós|bancário/i.test(nome)?'badge-gold':'badge-gray';
+    tab7.filter(r => r['Ativo'] && !/genérico|generico/i.test(String(r['Ativo']))).forEach(row => {
+      const nome = String(row['Ativo']).trim();
+      const saldoIni = parseFloat(row[saldoIniKey] ?? 0) || 0;
+      const rend     = parseFloat(row['Rendimento Bruto'] ?? 0) || 0;
+      const saldoFim = parseFloat(row[saldoFimKey] ?? 0) || 0;
+      const pct      = parseFloat(row['%'] ?? 0) || 0;
+      const cls = /inflação|soberano/i.test(nome) ? 'badge-navy' : 'badge-gold';
       h7 += `<tr>
         <td><span class="badge ${cls}">${nome}</span></td>
-        <td class="td-num">${fmtM(sIni)}</td>
-        <td class="td-num" style="${corP(rend)}">${fmtM(rend)}</td>
-        <td class="td-num" style="font-weight:600">${fmtM(sFim)}</td>
+        <td class="td-num">${_fmtM(saldoIni)}</td>
+        <td class="td-num" style="${_cor(rend)}">${_fmtM(rend)}</td>
+        <td class="td-num" style="font-weight:600">${_fmtM(saldoFim)}</td>
         <td class="td-num">
-          ${isNaN(pct)?'—':pct.toFixed(1)+'%'}
-          <div class="alloc-bar-wrap"><div class="alloc-bar ${/pós/i.test(nome)?'':'navy'}" style="width:${Math.min(Math.abs(pct||0),100).toFixed(1)}%"></div></div>
+          ${pct.toFixed(1)}%
+          <div class="alloc-bar-wrap"><div class="alloc-bar ${/pós/i.test(nome)?'':'navy'}" style="width:${Math.min(Math.abs(pct),100).toFixed(1)}%"></div></div>
         </td>
       </tr>`;
     });
-    setEl('prev-tab7-body', h7 || '<tr><td colspan="5" style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
+    // Atualiza o label da coluna "Saldo Início" com a data real
+    const saldoIniLabel = document.querySelector('#prev-tab7-table th:nth-child(2)');
+    if (saldoIniLabel && dataIni !== '—') saldoIniLabel.textContent = 'Saldo ' + dataIni;
+    _set('prev-tab7-body', h7 || '<tr><td colspan="5" style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
 
-    // ── tab3: extrato anual ──────────────────────────────────────
+    // ── tab3: extrato anual ──────────────────────────────────────────
+    // Estrutura: { 'Mês/Ano', 'Saldo Inicial', Aplicações, Resgates, 'Impostos Pagos', ..., 'Rendimento Nominal', 'Saldo Final' }
     const tab3 = t[pfx + '_tab3'] || [];
     let h3 = '';
     tab3.forEach(row => {
-      const v=Object.values(row); const ano=v[0]; if(!ano) return;
-      const anoStr=typeof ano==='number'?parseInt(ano):String(ano);
+      const label = row['Mês/Ano'];
+      if (!label) return;
+      // Exibe anos inteiros + linha do início + linha parcial 2026
+      const labelStr = typeof label === 'number' ? String(parseInt(label)) : String(label);
+      const saldoIni = parseFloat(row['Saldo Inicial'] ?? 0);
+      const aplic    = parseFloat(row['Aplicações'] ?? 0);
+      const resgate  = parseFloat(row['Resgates'] ?? 0);
+      const rend     = parseFloat(row['Rendimento Nominal'] ?? 0);
+      const saldoFim = parseFloat(row['Saldo Final'] ?? 0);
       h3 += `<tr>
-        <td style="font-weight:600">${anoStr}</td>
-        <td class="td-num" style="color:var(--verde)">${fmtM(v[2]||0)}</td>
-        <td class="td-num" style="color:var(--vermelho)">${fmtM(v[3]||0)}</td>
-        <td class="td-num" style="${corP(v[6]||0)}">${fmtM(v[6]||0)}</td>
-        <td class="td-num" style="font-weight:600">${fmtM(v[7]||0)}</td>
+        <td style="font-weight:600">${labelStr}</td>
+        <td class="td-num" style="color:var(--verde)">${_fmtM(aplic)}</td>
+        <td class="td-num" style="color:var(--vermelho)">${_fmtM(resgate)}</td>
+        <td class="td-num" style="${_cor(rend)}">${_fmtM(rend)}</td>
+        <td class="td-num" style="font-weight:600">${_fmtM(saldoFim)}</td>
       </tr>`;
     });
-    setEl('prev-tab3-body', h3 || '<tr><td colspan="5" style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
+    _set('prev-tab3-body', h3 || '<tr><td colspan="5" style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
 
-    // ── Posição detalhada + duration/yield ───────────────────────
+    // ── Posição detalhada (tab9) + Duration/Yield ────────────────────
     if (prevMode === 'mv') {
-      renderPrevTab9MV(t, fmtM, corP);
-      renderPrevDuration(t, fmtM);
+      renderPrevTab9MV(t);
+      renderPrevDuration(t);
     } else {
-      renderPrevCurvaYield(t, fmtM);
+      renderPrevCurvaYield(t);
     }
   }
 
-  function renderPrevTab9MV(t, fmtM, corP) {
-    const tab9  = t['mv_tab9']     || [];
-    const durTab= t['mv_duration'] || [];
-    const setEl = (id,h) => { const e=document.getElementById(id); if(e) e.innerHTML=h; };
-    const fmtP  = v => { const n=parseFloat(v); return isNaN(n)?'—':n.toFixed(1)+'%'; };
-
+  // ── Posição por ativo — Mercado (tab9 + mv_duration) ─────────────
+  function renderPrevTab9MV(t) {
+    // tab9 tem linhas mistas: subtotais de classe + ativos individuais + linha Total
+    // Filtra: só NTN-Bs e o Fundo DI. Remove subtotais (sem data vencto no nome) e 'Total'
+    const tab9 = t['mv_tab9'] || [];
     const durMap = {};
-    durTab.forEach(row => {
-      const v=Object.values(row);
-      const a=String(v[1]||'').trim(), d=parseFloat(v[4]);
-      if(a&&!isNaN(d)) durMap[a]=d;
+    (t['mv_duration'] || []).forEach(row => {
+      const a = String(row['Ativo'] ?? '').trim();
+      const d = parseFloat(row['duration(a,a,c)']);
+      const c = String(row['minha_variavel(relatorio_investimentos)'] ?? '').trim();
+      if (a) durMap[a] = { dur: isNaN(d) ? null : d, classe: c };
     });
 
-    let h9='';
-    tab9.forEach(row => {
-      const v=Object.values(row);
-      const nome=String(v[1]||v[0]||'').trim(); if(!nome) return;
-      const saldo=parseFloat(v[7]??v[6]??v[5]??0)||0;
-      const pct  =parseFloat(v[6]??v[5]??0)||0;
-      const dur  =durMap[nome];
-      const isNeg=saldo<0;
-      const cls  =/ntn-b|inflação/i.test(nome)?'badge-navy':/pós|fif|flexprev/i.test(nome)?'badge-gold':'badge-gray';
-      const tipo =/ntn-b/i.test(nome)?'Título Público':/fif|flexprev/i.test(nome)?'Crédito Bancário':/taxa/i.test(nome)?'Taxas':'Outro';
-      const durCell= dur!=null
-        ? `<div style="font-size:12px;font-weight:600">${dur.toFixed(2)} a</div><div class="dur-bar-wrap"><div class="dur-bar ${dur>7?'long':''}" style="width:${Math.min(dur/12*100,100).toFixed(0)}%"></div></div>`
-        : '<span style="color:var(--text-muted)">—</span>';
-      h9+=`<tr>
+    // Filtra linhas válidas: deve ter data de vencimento (NTN-B) ou ser o Fundo DI
+    // Remove: Genérico, Taxa de Adm, Taxa de Previdência, Inflação Soberano (subtotal), Pós-Fixado (subtotal), Total
+    const SKIP = /^(genérico|generico|taxa de adm|taxa de previdência|taxa de previdencia|inflação soberano|infla.o soberano|pós-fixado crédito|pos-fixado credito|total)$/i;
+
+    let h9 = '', totSaldo = 0;
+    const ativos = tab9.filter(r => r['Ativo'] && !SKIP.test(String(r['Ativo']).trim()));
+    ativos.forEach(row => {
+      const nome = String(row['Ativo']).trim();
+      // Usa Saldo Líquido 31/03/26 para mostrar o real disponível
+      const saldo = parseFloat(row['Saldo Líquido 31/03/26'] ?? row['Saldo Bruto 31/03/26'] ?? 0) || 0;
+      const pct   = parseFloat(row['%'] ?? 0) || 0;
+      const dur   = durMap[nome];
+      totSaldo += Math.abs(saldo);
+
+      const isNTNB = /NTN-B/i.test(nome);
+      const isFund = /fif|flexprev/i.test(nome);
+      const cls = isNTNB ? 'badge-navy' : isFund ? 'badge-gold' : 'badge-gray';
+      const tipo = isNTNB ? 'Título Público' : isFund ? 'Crédito Bancário' : 'Taxas';
+
+      let durCell = '<span style="color:var(--text-muted)">—</span>';
+      if (dur && dur.dur != null) {
+        const isLong = dur.dur > 7;
+        durCell = `<div style="font-size:12px;font-weight:600">${dur.dur.toFixed(2)} anos</div>
+          <div class="dur-bar-wrap"><div class="dur-bar ${isLong?'long':''}" style="width:${Math.min(dur.dur/12*100,100).toFixed(0)}%"></div></div>`;
+      }
+
+      h9 += `<tr>
         <td>${nome}</td>
         <td><span class="badge ${cls}" style="font-size:9px">${tipo}</span></td>
         <td class="td-num prev-mode-mv">${durCell}</td>
-        <td class="td-num" style="${isNeg?'color:var(--vermelho)':'font-weight:500'}">${fmtM(saldo)}</td>
-        <td class="td-num">${fmtP(pct)}</td>
+        <td class="td-num" style="${saldo < 0 ? 'color:var(--vermelho)' : 'font-weight:500'}">${_fmtM(saldo)}</td>
+        <td class="td-num">${pct.toFixed(1)}%</td>
       </tr>`;
     });
-    setEl('prev-tab9-body', h9||'<tr><td colspan="5" style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
+    _set('prev-tab9-body', h9 || '<tr><td colspan="5" style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
   }
 
-  function renderPrevCurvaYield(t, fmtM) {
-    const tab9c   = t['curva_tab9']  || [];
-    const yieldTab= t['curva_yield'] || [];
-    const setEl   = (id,h) => { const e=document.getElementById(id); if(e) e.innerHTML=h; };
+  // ── Posição + Yield — Curva (curva_tab9 + curva_yield) ───────────
+  function renderPrevCurvaYield(t) {
+    const tab9c    = t['curva_tab9']  || [];
+    const yieldTab = t['curva_yield'] || [];
 
-    let totY=0;
-    yieldTab.forEach(r => { const s=parseFloat(Object.values(r)[4]||0); if(s>0) totY+=s; });
+    // Mapa ativo → taxa contratada
+    const taxaMap = {};
+    yieldTab.forEach(row => {
+      const a = String(row['Ativo'] ?? '').trim();
+      const tx = parseFloat(row['Taxa Pré']);
+      if (a && !isNaN(tx)) taxaMap[a] = tx;
+    });
 
-    // Tab9 curva
-    let h9c='';
-    tab9c.forEach(row => {
-      const v=Object.values(row);
-      const nome=String(v[1]||v[0]||'').trim(); if(!nome) return;
-      const saldo=parseFloat(v[7]??v[6]??v[5]??0)||0;
-      const pct  =parseFloat(v[6]??v[5]??0)||0;
-      const match=yieldTab.find(r => String(Object.values(r)[2]||'').trim()===nome || String(Object.values(r)[3]||'').includes(nome.substring(0,15)));
-      const taxa =match?parseFloat(Object.values(match)[5]):null;
-      const cls  =/ntn-b|inflação/i.test(nome)?'badge-navy':/fif|flexprev|pós/i.test(nome)?'badge-gold':'badge-gray';
-      const tipo =/ntn-b/i.test(nome)?'Título Público':/fif|flexprev/i.test(nome)?'Crédito Bancário':/taxa/i.test(nome)?'Taxas':'Outro';
-      h9c+=`<tr>
+    const SKIP = /^(genérico|generico|taxa de adm|taxa de previdência|taxa de previdencia|inflação soberano|infla.o soberano|pós-fixado crédito|pos-fixado credito|total)$/i;
+    const ativos = tab9c.filter(r => r['Ativo'] && !SKIP.test(String(r['Ativo']).trim()));
+
+    let h9c = '';
+    ativos.forEach(row => {
+      const nome  = String(row['Ativo']).trim();
+      const saldo = parseFloat(row['Saldo Líquido 31/03/26'] ?? row['Saldo Bruto 31/03/26'] ?? 0) || 0;
+      const pct   = parseFloat(row['%'] ?? 0) || 0;
+      const taxa  = taxaMap[nome];
+
+      const isNTNB = /NTN-B/i.test(nome);
+      const isFund = /fif|flexprev/i.test(nome);
+      const cls  = isNTNB ? 'badge-navy' : isFund ? 'badge-gold' : 'badge-gray';
+      const tipo = isNTNB ? 'Título Público' : isFund ? 'Crédito Bancário' : 'Taxas';
+
+      h9c += `<tr>
         <td>${nome}</td>
         <td><span class="badge ${cls}" style="font-size:9px">${tipo}</span></td>
-        <td class="td-num prev-mode-curva">${taxa!=null?`<span class="yield-pill">IPCA+${taxa.toFixed(2)}%</span>`:'—'}</td>
-        <td class="td-num" style="font-weight:500">${fmtM(saldo)}</td>
-        <td class="td-num">${isNaN(pct)?'—':pct.toFixed(1)+'%'}</td>
+        <td class="td-num prev-mode-curva">${taxa != null ? `<span class="yield-pill">IPCA+${taxa.toFixed(2)}%</span>` : '—'}</td>
+        <td class="td-num" style="${saldo < 0 ? 'color:var(--vermelho)' : 'font-weight:500'}">${_fmtM(saldo)}</td>
+        <td class="td-num">${pct.toFixed(1)}%</td>
       </tr>`;
     });
-    setEl('prev-tab9-body', h9c||'<tr><td colspan="5" style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
+    _set('prev-tab9-body', h9c || '<tr><td colspan="5" style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
 
-    // Yield table
-    let hY='';
-    yieldTab.forEach(row => {
-      const v=Object.values(row);
-      const ativo=String(v[2]||'').trim(), desc=String(v[3]||'').trim();
-      const saldo=parseFloat(v[4]||0), taxa=parseFloat(v[5]||0), classe=String(v[6]||'').trim();
-      if(!ativo||saldo===0) return;
-      const pctC=totY>0?(saldo/totY*100):0;
-      const isPosFix=/fif|pós/i.test(desc);
-      const vtMatch=ativo.match(/(\d{2}\/\d{2}\/\d{4})/);
-      hY+=`<tr>
+    // Yield table separada (NTN-Bs com taxa)
+    let totY = 0;
+    yieldTab.filter(r => r['Ativo'] && parseFloat(r['Saldo Bruto']) > 0).forEach(r => { totY += parseFloat(r['Saldo Bruto'] ?? 0) || 0; });
+
+    let hY = '';
+    yieldTab.filter(r => {
+      const a = String(r['Ativo']??'').trim();
+      return a && !SKIP.test(a) && parseFloat(r['Saldo Bruto']) > 0;
+    }).forEach(row => {
+      const ativo  = String(row['Ativo']).trim();
+      const saldo  = parseFloat(row['Saldo Bruto'] ?? 0);
+      const taxa   = parseFloat(row['Taxa Pré'] ?? 0);
+      const classe = String(row['minha_variavel(relatorio_investimentos)'] ?? '').trim();
+      const pctC   = totY > 0 ? (saldo / totY * 100) : 0;
+      const vtMatch = ativo.match(/(\d{2}\/\d{2}\/\d{4})/);
+      const venc = vtMatch ? vtMatch[1] : '—';
+      const isPosFix = /fif|pós/i.test(String(row['Descrição']??''));
+      hY += `<tr>
         <td style="font-size:12px">${ativo}</td>
-        <td style="font-size:11px;color:var(--text-muted)">${vtMatch?vtMatch[1]:'—'}</td>
-        <td><span class="badge ${isPosFix?'badge-gold':'badge-navy'}" style="font-size:9px">${classe||(isPosFix?'Crédito Bancário':'Inflação Soberano')}</span></td>
-        <td class="td-num" style="font-weight:500">${fmtM(saldo)}</td>
+        <td style="font-size:11px;color:var(--text-muted)">${venc}</td>
+        <td><span class="badge ${isPosFix?'badge-gold':'badge-navy'}" style="font-size:9px">${classe||'Inflação Soberano'}</span></td>
+        <td class="td-num" style="font-weight:500">${_fmtM(saldo)}</td>
         <td class="td-num"><span class="yield-pill">${!isNaN(taxa)&&taxa>0?'IPCA+'+taxa.toFixed(2)+'%':'—'}</span></td>
         <td class="td-num" style="font-size:11px;color:var(--text-muted)">${pctC.toFixed(1)}%</td>
       </tr>`;
     });
-    setEl('prev-yield-body', hY||'<tr><td colspan="6" style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
+    _set('prev-yield-body', hY || '<tr><td colspan="6" style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
   }
 
-  function renderPrevDuration(t, fmtM) {
-    const durTab=t['mv_duration']||[];
-    const setEl=(id,h)=>{ const e=document.getElementById(id); if(e) e.innerHTML=h; };
-    const byClasse={};
-    let maxDur=0;
-    durTab.forEach(row=>{
-      const v=Object.values(row);
-      const ativo=String(v[1]||'').trim(); if(!ativo) return;
-      const saldo=parseFloat(v[3]||0), dur=parseFloat(v[4]), classe=String(v[5]||'Outro').trim();
-      if(!byClasse[classe]) byClasse[classe]=[];
-      if(!isNaN(dur)&&dur>maxDur) maxDur=dur;
-      byClasse[classe].push({ativo,saldo,dur});
+  // ── Duration (modo MV) ────────────────────────────────────────────
+  function renderPrevDuration(t) {
+    const durTab = t['mv_duration'] || [];
+    const byClasse = {};
+    let maxDur = 0;
+    durTab.filter(r => {
+      const c = String(r['minha_variavel(relatorio_investimentos)']??'').trim();
+      return c && c !== 'nd';
+    }).forEach(row => {
+      const ativo  = String(row['Ativo'] ?? '').trim();
+      const saldo  = parseFloat(row['Saldo Bruto'] ?? row['Saldo Bruto 31/03/26'] ?? 0);
+      const dur    = parseFloat(row['duration(a,a,c)']);
+      const classe = String(row['minha_variavel(relatorio_investimentos)'] ?? '').trim();
+      if (!byClasse[classe]) byClasse[classe] = [];
+      if (!isNaN(dur) && dur > maxDur) maxDur = dur;
+      byClasse[classe].push({ ativo, saldo, dur: isNaN(dur) ? null : dur });
     });
-    let hD='';
-    Object.entries(byClasse).forEach(([classe,ativos])=>{
-      if(classe==='nd') return;
-      const cb=/inflação/i.test(classe)?'badge-navy':/pós/i.test(classe)?'badge-gold':'badge-gray';
-      hD+=`<div style="margin-bottom:18px">
+
+    let hD = '';
+    Object.entries(byClasse).forEach(([classe, ativos]) => {
+      const cb = /inflação/i.test(classe) ? 'badge-navy' : /pós/i.test(classe) ? 'badge-gold' : 'badge-gray';
+      const titulos = ativos.filter(a => /NTN-B|fif|flexprev/i.test(a.ativo));
+      if (!titulos.length) return;
+      hD += `<div style="margin-bottom:18px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
           <span class="badge ${cb}">${classe}</span>
-          <span style="font-size:11px;color:var(--text-muted)">${ativos.length} título${ativos.length>1?'s':''}</span>
+          <span style="font-size:11px;color:var(--text-muted)">${titulos.length} título${titulos.length>1?'s':''}</span>
         </div>`;
-      ativos.forEach(({ativo,saldo,dur})=>{
-        if(/taxa/i.test(ativo)) return;
-        const durStr=!isNaN(dur)?dur.toFixed(2)+' anos':'—';
-        const pct=maxDur>0&&!isNaN(dur)?(dur/maxDur)*100:0;
-        const isLong=dur>7;
-        hD+=`<div class="tir-item" style="margin-bottom:10px">
+      titulos.forEach(({ ativo, saldo, dur }) => {
+        const durStr = dur != null ? dur.toFixed(2) + ' anos' : '—';
+        const pct    = maxDur > 0 && dur != null ? (dur / maxDur * 100) : 0;
+        const isLong = dur != null && dur > 7;
+        hD += `<div class="tir-item" style="margin-bottom:10px">
           <div class="tir-header">
             <span class="tir-name" style="font-size:11.5px">${ativo}</span>
             <div style="display:flex;align-items:center;gap:8px">
-              <span style="font-size:11px;color:var(--text-muted)">${fmtM(saldo)}</span>
+              <span style="font-size:11px;color:var(--text-muted)">${_fmtM(saldo)}</span>
               <span style="font-size:12px;font-weight:600;color:${isLong?'var(--gold)':'var(--verde)'}">${durStr}</span>
             </div>
           </div>
           <div class="dur-bar-wrap"><div class="dur-bar ${isLong?'long':''}" style="width:${pct.toFixed(1)}%"></div></div>
         </div>`;
       });
-      hD+='</div>';
+      hD += '</div>';
     });
-    setEl('prev-duration-body', hD||'<div style="text-align:center;padding:20px;color:var(--text-muted)">Dados de duration não disponíveis</div>');
+    _set('prev-duration-body', hD || '<div style="text-align:center;padding:20px;color:var(--text-muted)">Dados de duration não disponíveis</div>');
   }
 
 
