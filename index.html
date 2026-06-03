@@ -2416,23 +2416,16 @@
         if (previdencia.curva && previdencia.curva.movimentacoes)
           CD.tables.curva_movimentacoes = previdencia.curva.movimentacoes;
 
-        // Duration (MV) e yield_medio (Curva)
-        if (previdencia.duration)    CD.tables.mv_duration = previdencia.duration;
-        if (previdencia.yield_medio) CD.tables.curva_yield = previdencia.yield_medio;
+        // Duration está em mercado.duration, yield_medio em curva.yield_medio
+        if (previdencia.mercado && previdencia.mercado.duration)
+          CD.tables.mv_duration = previdencia.mercado.duration;
+        if (previdencia.curva && previdencia.curva.yield_medio)
+          CD.tables.curva_yield = previdencia.curva.yield_medio;
 
         const allKeys = [...Object.keys(mvTables), ...Object.keys(cvTables)];
         console.log("✅ Previdência carregada:", allKeys.length, "tabelas →", allKeys);
-        console.log("   Previdência keys (root):", Object.keys(previdencia));
-        console.log("   duration:", previdencia.duration ? previdencia.duration.length + " rows" : "NOT FOUND");
-        console.log("   yield_medio:", previdencia.yield_medio ? previdencia.yield_medio.length + " rows" : "NOT FOUND");
-        console.log("   mv_duration in CD.tables:", !!CD.tables.mv_duration);
-        console.log("   curva_yield in CD.tables:", !!CD.tables.curva_yield);
-        // Probe mercado sub-keys
-        if (previdencia.mercado) console.log("   mercado keys:", Object.keys(previdencia.mercado));
-        if (previdencia.curva)   console.log("   curva keys:",   Object.keys(previdencia.curva));
-        // Show actual key names
-        if (previdencia.mercado) Object.keys(previdencia.mercado).forEach(k => console.log("     mercado." + k + ":", Array.isArray(previdencia.mercado[k]) ? previdencia.mercado[k].length + " rows" : typeof previdencia.mercado[k]));
-        if (previdencia.curva)   Object.keys(previdencia.curva).forEach(k =>   console.log("     curva."   + k + ":", Array.isArray(previdencia.curva[k])   ? previdencia.curva[k].length   + " rows" : typeof previdencia.curva[k]));
+        console.log("   mv_duration:", CD.tables.mv_duration ? CD.tables.mv_duration.length + " rows ✅" : "NOT FOUND ❌");
+        console.log("   curva_yield:", CD.tables.curva_yield ? CD.tables.curva_yield.length + " rows ✅" : "NOT FOUND ❌");
       } else {
         console.warn("⚠️ Previdência vazia:", previdencia && previdencia.error || "estrutura inesperada");
         console.log("   Estrutura recebida:", previdencia && Object.keys(previdencia));
