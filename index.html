@@ -3344,24 +3344,45 @@
     const perK = _perK(varNom) || _perK(cdi) || Object.keys(varNom).at(-1) || '';
     const m12K = _12mK(varNom) || _12mK(cdi) || '';
 
-    // KPI — PL: tab6 está vazia → usa tab8 (posição total por instituição)
+    // KPI — PL: tab6 está vazia → soma tab8 (todas as instituições)
     const tab8inst = t.tab8 || [];
-    // Detecta chave de saldo final (ex: 'Saldo Bruto 31/03/26')
-    const saldoFimKey = tab8inst[0] ? Object.keys(tab8inst[0]).find(k => /saldo bruto.*[0-9]{2}\/[0-9]{2}\/[0-9]{2}/i.test(k) && !k.includes('início') && !k.includes('31/12/24')) : null;
-    const plRow = tab8inst.find(r => /total/i.test(String(r['Ativo']||''))) || tab8inst[tab8inst.length - 1] || {};
-    const pl = saldoFimKey ? parseFloat(plRow[saldoFimKey]) : 0;
+    // Detecta chave de saldo final — a que NÃO é a data inicial
+    const saldoKeys = tab8inst[0] ? Object.keys(tab8inst[0]).filter(k => /saldo bruto/i.test(k)) : [];
+    const saldoIniKey8 = saldoKeys[0] || '';
+    const saldoFimKey  = saldoKeys[1] || saldoKeys[0] || '';
+    // PL = soma de todos os Saldo Final (inclui todas as corretoras/custodiantes)
+    const pl = tab8inst.reduce((sum, r) => {
+      const v = parseFloat(r[saldoFimKey] ?? 0);
+      return sum + (isNaN(v) ? 0 : v);
+    }, 0);
 
     // r6 vazio mas mantemos compatibilidade para resto do código
     const tab6 = t.tab6 || [];
     const r6   = {};
     tab6.forEach(row => { r6[Object.values(row)[0]] = Object.values(row)[1]; });
 
-    // pl agora vem de tab8 (calculado acima)
-    const plMedio  = r6["PL médio no período"] || '';
-    const maiorMes = r6["Maior rentabilidade mensal"] || '';
-    const menorMes = r6["Menor rentabilidade mensal"] || '';
-    const mesesPos = r6["Número de meses com retorno positivo"] || '';
-    const mesesNeg = r6["Número de meses com retorno negativo"] || '';
+    // Calcula destaques a partir do tab2 (tab6 está vazia nesta planilha)
+    const mesesNomesAll = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    let _todosVals = [];
+    Object.entries(anos).forEach(([ano, bloco]) => {
+      const cartR = bloco['Carteira'] || {};
+      mesesNomesAll.forEach(m => {
+        const v = cartR[m];
+        if (v !== undefined && v !== '' && v !== null) {
+          const n = parseFloat(v);
+          if (!isNaN(n)) _todosVals.push({ v: n, label: m + '/' + ano });
+        }
+      });
+    });
+    const _maiorObj = _todosVals.length ? _todosVals.reduce((a,b) => b.v > a.v ? b : a) : null;
+    const _menorObj = _todosVals.length ? _todosVals.reduce((a,b) => b.v < a.v ? b : a) : null;
+    const _mPos = _todosVals.filter(x => x.v >= 0).length;
+    const _mNeg = _todosVals.filter(x => x.v < 0).length;
+    const maiorMes = _maiorObj ? (_maiorObj.v*100).toFixed(2) + '% (' + _maiorObj.label + ')' : '';
+    const menorMes = _menorObj ? (_menorObj.v*100).toFixed(2) + '% (' + _menorObj.label + ')' : '';
+    const mesesPos = _mPos ? String(_mPos) : '';
+    const mesesNeg = _mNeg ? String(_mNeg) : '';
+    const plMedio  = '';  // não disponível sem tab6
 
     setText('ont-pl',            pl ? fmtBRL(pl) : '—');
     setText('ont-pl-sub',        pl ? (saldoFimKey ? saldoFimKey.replace(/saldo bruto /i,'').trim() : '31/03/2026') : '');
@@ -3370,15 +3391,16 @@
     setText('ont-rent-12m',      varNom[m12K] !== undefined ? fmtPctDireto(varNom[m12K]) : '—');
     setText('ont-rent-12m-sub',  cdi[m12K]    !== undefined ? 'CDI 12m: ' + fmtPctDireto(cdi[m12K]) : '');
 
-    // tab5: Sharpe e Volatilidade
+    // tab5: Sharpe e Volatilidade por índice — valores JÁ em %
     const tab5 = t.tab5 || [];
-    const r5   = {};
-    tab5.forEach(row => { r5[Object.values(row)[0]] = { carteira: Object.values(row)[1], cdi: Object.values(row)[2] }; });
-
-    const sharpe = r5["Índice de Sharpe no período (CDI)"] || r5[Object.keys(r5).find(k=>k.includes("Sharpe"))] || {};
-    const volat  = r5["Volatilidade no período"] || r5[Object.keys(r5).find(k=>k.includes("Volatilidade"))] || {};
-    setText('ont-sharpe',     sharpe.carteira !== undefined ? fmtNum(sharpe.carteira) : '—');
-    setText('ont-sharpe-sub', volat.carteira  !== undefined ? 'Volatilidade: ' + fmtNum(volat.carteira) + '%' : '');
+    const _t5 = (i) => tab5[i] || {};
+    const _t5c = (i) => { const v = parseFloat(_t5(i)['Carteira']); return isNaN(v) ? undefined : v; };
+    const _t5d = (i) => { const v = parseFloat(_t5(i)['CDI']);      return isNaN(v) ? undefined : v; };
+    // Sharpe e Volatilidade
+    const sharpeCar = _t5c(4); const sharpeCdi = _t5d(4);
+    const volatCar  = _t5c(3);
+    setText('ont-sharpe',     sharpeCar !== undefined ? fmtNum(sharpeCar) : '—');
+    setText('ont-sharpe-sub', volatCar  !== undefined ? 'Volatilidade: ' + fmtNum(volatCar) + '%' : '');
 
 
     // ── tab7: Alocação por Classe ──────────────────────────────
@@ -3415,17 +3437,22 @@
     setText('ont-total-rend',  'Rend. Total: ' + fmtBRL(totalRend));
 
     // ── tab5: Performance Comparativa ─────────────────────────
-    const r5keys = ['Retorno no período','Retorno nos últimos 6 meses','Retorno nos últimos 12 meses','Volatilidade no período','Índice de Sharpe no período (CDI)'];
     const labels5 = ['Retorno no período','Retorno últimos 6m','Retorno últimos 12m','Volatilidade','Índice de Sharpe'];
     let htmlTab5 = '';
-    r5keys.forEach((k, i) => {
-      const row = r5[k] || r5[Object.keys(r5).find(rk => rk.includes(k.substring(0,15)))] || {};
-      const cart = row.carteira !== undefined ? fmtNum(row.carteira) + '%' : '—';
-      const cdiV = row.cdi      !== undefined ? fmtNum(row.cdi)      + '%' : '—';
-      const estilo = (k.includes('Sharpe') || k.includes('Volatil')) ? '' : cor(row.carteira);
-      htmlTab5 += `<tr><td>${labels5[i]}</td><td class="td-num" style="${estilo}">${cart}</td><td class="td-num" style="color:var(--text-muted)">${cdiV}</td></tr>`;
+    labels5.forEach((lbl, i) => {
+      const cartV = _t5c(i);
+      const cdiV  = _t5d(i);
+      const isMeta = i >= 3;
+      const cartTxt = cartV !== undefined ? (isMeta ? fmtNum(cartV) : (cartV>=0?'+':'') + fmtNum(cartV)) + '%' : '—';
+      const cdiTxt  = cdiV  !== undefined ? (isMeta ? fmtNum(cdiV)  : (cdiV >=0?'+':'') + fmtNum(cdiV))  + '%' : '—';
+      const cartStyle = (!isMeta && cartV !== undefined) ? (cartV>=0?'color:var(--verde)':'color:var(--vermelho)') : '';
+      htmlTab5 += `<tr>
+        <td>${lbl}</td>
+        <td class="td-num" style="${cartStyle}">${cartTxt}</td>
+        <td class="td-num" style="color:var(--text-muted)">${cdiTxt}</td>
+      </tr>`;
     });
-    set('ont-tab5-body', htmlTab5);
+        set('ont-tab5-body', htmlTab5);
 
     // ── tab6: Destaques ────────────────────────────────────────
     set('ont-tab6-body', `
@@ -3453,15 +3480,25 @@
 
     // ── tab2: Rentabilidade mensal ─────────────────────────────
     const tab2 = t.tab2 || [];
-    // Agrupa por ano → { "2025": { Carteira: {...meses}, CDI: {...}, "%CDI": {...} } }
+    // Estrutura: { Ativo:'Carteira'|'CDI'|'%CDI', Jan:0.0099, ..., Ano:0.117 }
+    // SEM coluna de ano → agrupamos em triplets (Carteira/CDI/%CDI)
+    // Inferimos o ano a partir da posição: inferência por contagem de anos únicos
+    // Com 6 rows e 3 indicadores = 2 anos de dados
     const anos = {};
-    tab2.forEach(row => {
-      const cols = Object.keys(row);
-      const ano  = String(parseInt(row[cols[0]])).trim(); // converte 2025.0 → "2025"
-      const ind  = String(row[cols[1]]).trim();
+    // Detecta ano de início: conta grupos e subtrai do ano atual
+    const _nGrupos = Math.floor(tab2.length / 3);
+    const _anoAtual = new Date().getFullYear();
+    const _anoInicio = _anoAtual - _nGrupos + 1;
+    for (let i = 0; i < tab2.length; i += 3) {
+      const ano = String(_anoInicio + Math.floor(i / 3));
+      const cartRow = tab2[i]   || {};
+      const cdiRow  = tab2[i+1] || {};
+      const pctRow  = tab2[i+2] || {};
       if (!anos[ano]) anos[ano] = {};
-      anos[ano][ind] = row;
-    });
+      anos[ano]['Carteira'] = cartRow;
+      anos[ano]['CDI']      = cdiRow;
+      anos[ano]['%CDI']     = pctRow;
+    }
 
     const mesesNomes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez','Ano'];
     const mesesKeys  = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez','Ano'];
