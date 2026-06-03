@@ -3312,6 +3312,9 @@
     });
         set('ont-tab5-body', htmlTab5);
 
+    // Destaques vars — calculadas após tab2 (ver abaixo)
+    let maiorMes = '', menorMes = '', mesesPos = '', mesesNeg = '', plMedio = '';
+
     // ── tab6: Destaques ────────────────────────────────────────
     set('ont-tab6-body', `
       <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
@@ -3360,26 +3363,25 @@
 
     // Calcula destaques a partir do tab2 (tab6 está vazia)
     const mesesNomesAll = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-    let _todosVals = [];
+    const _todosVals2 = [];
     Object.entries(anos).forEach(([ano, bloco]) => {
       const cartR = bloco['Carteira'] || {};
       mesesNomesAll.forEach(m => {
         const v = cartR[m];
         if (v !== undefined && v !== '' && v !== null) {
           const n = parseFloat(v);
-          if (!isNaN(n)) _todosVals.push({ v: n, label: m + '/' + ano });
+          if (!isNaN(n)) _todosVals2.push({ v: n, label: m + '/' + ano });
         }
       });
     });
-    const _maiorObj = _todosVals.length ? _todosVals.reduce((a,b) => b.v > a.v ? b : a) : null;
-    const _menorObj = _todosVals.length ? _todosVals.reduce((a,b) => b.v < a.v ? b : a) : null;
-    const _mPos = _todosVals.filter(x => x.v >= 0).length;
-    const _mNeg = _todosVals.filter(x => x.v < 0).length;
-    const maiorMes = _maiorObj ? (_maiorObj.v*100).toFixed(2) + '% (' + _maiorObj.label + ')' : '';
-    const menorMes = _menorObj ? (_menorObj.v*100).toFixed(2) + '% (' + _menorObj.label + ')' : '';
-    const mesesPos = _mPos ? String(_mPos) : '';
-    const mesesNeg = _mNeg ? String(_mNeg) : '';
-    const plMedio  = '';  // não disponível sem tab6
+    const _maiorObj2 = _todosVals2.length ? _todosVals2.reduce((a,b) => b.v > a.v ? b : a) : null;
+    const _menorObj2 = _todosVals2.length ? _todosVals2.reduce((a,b) => b.v < a.v ? b : a) : null;
+    const _mPos2 = _todosVals2.filter(x => x.v >= 0).length;
+    const _mNeg2 = _todosVals2.filter(x => x.v < 0).length;
+    maiorMes = _maiorObj2 ? (_maiorObj2.v*100).toFixed(2) + '% (' + _maiorObj2.label + ')' : '';
+    menorMes = _menorObj2 ? (_menorObj2.v*100).toFixed(2) + '% (' + _menorObj2.label + ')' : '';
+    mesesPos = _mPos2 ? String(_mPos2) : '';
+    mesesNeg = _mNeg2 ? String(_mNeg2) : '';
 
     const mesesNomes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez','Ano'];
     const mesesKeys  = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez','Ano'];
@@ -4093,11 +4095,24 @@
       const primeiroAnoDisp = sorted[0] ? parseInt(sorted[0].split('/')[1]) : 0;
       const primeiroAnoSel  = sel.options[0] ? parseInt(sel.options[0].value.split(' ')[1]) : 0;
       if (sorted.length > 0 && primeiroAnoDisp !== primeiroAnoSel) {
-        const anos = [...new Set(sorted.map(s => s.split('/')[1]))];
+        const anosDisp = [...new Set(sorted.map(s => s.split('/')[1]))];
         sel.innerHTML = sorted.map(mv => {
           const [mm, yy] = mv.split('/');
           return `<option value="${nomMes3[parseInt(mm)-1]} ${yy}">${nomMes3[parseInt(mm)-1]} ${yy}</option>`;
-        }).join('') + anos.map(y => `<option value="${y} YTD">${y} YTD</option>`).join('');
+        }).join('') + anosDisp.map(y => `<option value="${y} YTD">${y} YTD</option>`).join('');
+
+        // Seleciona o mês mais recente que tenha eventos reais
+        for (const mv of sorted) {
+          const [mm2, yy2] = mv.split('/').map(Number);
+          const hasData = mov.some(r => {
+            const d = String(r['Data']||''); const m2 = d.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+            return m2 && parseInt(m2[2])===mm2 && parseInt(m2[3])===yy2 && parseFloat(r['Valor Bruto']||0)>0;
+          });
+          if (hasData) {
+            sel.value = `${nomMes3[mm2-1]} ${yy2}`;
+            break;
+          }
+        }
       }
     }
     // Lê período do select APÓS eventual repopulação
