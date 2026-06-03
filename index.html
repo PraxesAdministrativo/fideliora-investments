@@ -4,40 +4,53 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Praxes — Ultra HNW · Família Azevedo</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Urbanist:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     /* ── SISTEMA DE DESIGN PRAXES ULTRA HNW ───────────────────────
        Navy profundo + Ouro preciso + Superfícies frias
-       DM Serif Display (display) + DM Sans (corpo)
+       Urbanist (display + corpo)
        Filosofia: Autoridade silenciosa. Nada decorativo.
     ─────────────────────────────────────────────────────────────── */
     :root {
-      --navy:          #0f3d57;
-      --navy-deep:     #081f2d;
-      --navy-mid:      #1a5570;
-      --navy-light:    #2e6b8e;
-      --navy-pale:     #e8f1f7;
-      --gold:          #b8924a;
+      /* ── Praxes brand palette (Branding Kit 2026) ── */
+      --praxes-abyss:   #041924;
+      --praxes-deep:    #03313e;
+      --praxes-teal:    #2a5a66;
+      --praxes-sand:    #f2ddc6;
+      --praxes-teal-40: #5b818b;
+      --praxes-teal-20: #a5bcc2;
+      --praxes-mist:    #d7e1e4;
+      --praxes-shell:   #ebe3d6;
+      --praxes-paper:   #faf6f0;
+      --praxes-bone:    #fffdf9;
+
+      /* ── Legacy aliases (mantém compatibilidade com todo o código existente) ── */
+      --navy:          #041924;
+      --navy-deep:     #03313e;
+      --navy-mid:      #2a5a66;
+      --navy-light:    #5b818b;
+      --navy-pale:     #d7e1e4;
+      --gold:          #c4913a;
       --gold-light:    #d4aa6a;
-      --gold-pale:     #f5efe4;
-      --surface:       #f7f8fa;
-      --surface-2:     #ffffff;
-      --border:        rgba(15,61,87,0.08);
-      --border-strong: rgba(15,61,87,0.16);
-      --text-primary:  #0f3d57;
-      --text-secondary:#4a6474;
-      --text-muted:    #8a9fad;
+      --gold-pale:     #f5ede0;
+      --surface:       #faf6f0;
+      --surface-2:     #fffdf9;
+      --border:        rgba(4,25,36,0.09);
+      --border-strong: rgba(4,25,36,0.18);
+      --text-primary:  #041924;
+      --text-secondary:#2a5a66;
+      --text-muted:    #5b818b;
       --verde:         #1a6645;
       --verde-bg:      #e8f5ee;
-      --vermelho:      #8c2020;
+      --vermelho:      #c0392b;
       --vermelho-bg:   #fceaea;
     }
 
     * { margin:0; padding:0; box-sizing:border-box; }
 
     body {
-      font-family:'DM Sans',system-ui,sans-serif;
+      font-family:'Urbanist', 'Helvetica Neue', Arial, sans-serif;
       background:var(--surface);
       color:var(--text-primary);
       line-height:1.55;
@@ -45,14 +58,14 @@
       -webkit-font-smoothing:antialiased;
     }
 
-    h1,h2,h3 { font-family:'DM Serif Display',Georgia,serif; font-weight:400; letter-spacing:-0.02em; }
+    h1,h2,h3 { font-family:'Urbanist', 'Helvetica Neue', sans-serif; font-weight:500; letter-spacing:-0.02em; }
 
     .app-container { display:flex; min-height:100vh; }
 
     /* ── SIDEBAR ── */
     .sidebar {
       width:240px;
-      background:var(--navy-deep);
+      background:#041924;
       color:#fff;
       position:fixed;
       left:0; top:0; bottom:0;
@@ -60,7 +73,7 @@
       z-index:1000;
       display:flex;
       flex-direction:column;
-      border-right:1px solid rgba(184,146,74,0.15);
+      border-right:1px solid rgba(42,90,102,0.15);
     }
     .sidebar-header {
       padding:32px 24px 24px;
@@ -68,7 +81,7 @@
       flex-shrink:0;
     }
     .sidebar-logo {
-      font-family:'DM Serif Display',Georgia,serif;
+      font-family:'Urbanist', 'Helvetica Neue', sans-serif;
       font-size:22px;
       font-weight:400;
       letter-spacing:0.12em;
@@ -84,8 +97,8 @@
     }
     .sidebar-client-badge {
       margin:16px 24px 0;
-      background:rgba(184,146,74,0.08);
-      border:1px solid rgba(184,146,74,0.18);
+      background:rgba(242,221,198,0.08);
+      border:1px solid rgba(242,221,198,0.18);
       border-radius:8px;
       padding:12px 14px;
     }
@@ -97,7 +110,7 @@
       margin-bottom:4px;
     }
     .scb-name {
-      font-family:'DM Serif Display',Georgia,serif;
+      font-family:'Urbanist', 'Helvetica Neue', sans-serif;
       font-size:15px;
       color:#fff;
       letter-spacing:-0.01em;
@@ -134,12 +147,12 @@
     .nav-item:hover {
       background:rgba(255,255,255,0.04);
       color:rgba(255,255,255,0.82);
-      border-left-color:rgba(184,146,74,0.35);
+      border-left-color:rgba(196,145,58,0.35);
     }
     .nav-item.active {
       background:rgba(184,146,74,0.08);
       color:#fff;
-      border-left-color:var(--gold);
+      border-left-color:var(--navy-mid);
       font-weight:500;
     }
     .nav-item.sub { padding-left:44px; font-size:12.5px; }
@@ -170,7 +183,7 @@
       font-size:9px;
       padding:2px 7px;
       border-radius:3px;
-      background:rgba(184,146,74,0.15);
+      background:rgba(242,221,198,0.15);
       color:var(--gold-light);
       letter-spacing:0.05em;
     }
@@ -203,7 +216,7 @@
       border-radius:6px;
       cursor:pointer;
       font-size:11px;
-      font-family:'DM Sans',sans-serif;
+      font-family:'Urbanist', sans-serif;
       transition:all 0.15s;
       letter-spacing:0.03em;
     }
@@ -221,7 +234,7 @@
       position:sticky; top:0; z-index:100;
     }
     .page-title {
-      font-family:'DM Serif Display',Georgia,serif;
+      font-family:'Urbanist', 'Helvetica Neue', sans-serif;
       font-size:19px;
       font-weight:400;
       color:var(--navy);
@@ -229,7 +242,7 @@
     }
     .top-bar-right { display:flex; align-items:center; gap:12px; }
     .period-select {
-      font-family:'DM Sans',sans-serif;
+      font-family:'Urbanist', sans-serif;
       font-size:12px;
       color:var(--text-secondary);
       background:var(--surface);
@@ -246,7 +259,7 @@
       border-radius:6px;
       cursor:pointer;
       font-size:12px;
-      font-family:'DM Sans',sans-serif;
+      font-family:'Urbanist', sans-serif;
       font-weight:500;
       transition:background 0.15s;
       display:flex; align-items:center; gap:6px;
@@ -261,7 +274,7 @@
 
     /* ── WELCOME HERO ── */
     .dash-welcome {
-      background:var(--navy-deep);
+      background:#041924;
       border-radius:12px;
       padding:28px 36px 32px;
       margin-bottom:28px;
@@ -271,13 +284,13 @@
       border:1px solid rgba(184,146,74,0.12);
     }
     .dash-welcome::after {
-      content:'Praxes';
-      font-family:'DM Serif Display',Georgia,serif;
+      content:'praxes';
+      font-family:'Urbanist', 'Helvetica Neue', sans-serif;
       font-size:120px;
       position:absolute;
       right:32px; top:50%;
       transform:translateY(-50%);
-      color:rgba(184,146,74,0.05);
+      color:rgba(196,145,58,0.05);
       pointer-events:none;
       letter-spacing:0.06em;
     }
@@ -289,7 +302,7 @@
       margin-bottom:6px;
     }
     .dw-name {
-      font-family:'DM Serif Display',Georgia,serif;
+      font-family:'Urbanist', 'Helvetica Neue', sans-serif;
       font-size:28px;
       margin-bottom:2px;
       letter-spacing:-0.02em;
@@ -316,7 +329,7 @@
       margin-bottom:5px;
     }
     .dw-kpi-val {
-      font-family:'DM Serif Display',Georgia,serif;
+      font-family:'Urbanist', 'Helvetica Neue', sans-serif;
       font-size:24px;
       color:#fff;
       letter-spacing:-0.02em;
@@ -332,7 +345,7 @@
     .kpi-card {
       background:var(--surface-2);
       border:1px solid var(--border);
-      border-top:2px solid var(--gold);
+      border-top:2.5px solid var(--navy-mid);
       border-radius:10px;
       padding:20px 22px;
       transition:box-shadow 0.15s;
@@ -349,7 +362,7 @@
       font-weight:500;
     }
     .kpi-val {
-      font-family:'DM Serif Display',Georgia,serif;
+      font-family:'Urbanist', 'Helvetica Neue', sans-serif;
       font-size:28px;
       color:var(--navy);
       letter-spacing:-0.02em;
@@ -368,7 +381,7 @@
       margin-bottom:16px;
     }
     .section-title {
-      font-family:'DM Serif Display',Georgia,serif;
+      font-family:'Urbanist', 'Helvetica Neue', sans-serif;
       font-size:17px;
       color:var(--navy);
       letter-spacing:-0.01em;
@@ -483,7 +496,7 @@
       transition:all 0.2s;
       background:var(--surface);
     }
-    .upload-zone:hover { border-color:var(--gold); background:var(--gold-pale); }
+    .upload-zone:hover { border-color:var(--navy-mid); background:rgba(42,90,102,0.04); }
     .upload-zone-icon { font-size:28px; margin-bottom:10px; color:var(--text-muted); }
     .upload-zone p { font-size:13px; color:var(--text-secondary); line-height:1.7; }
     .upload-zone small { font-size:11px; color:var(--text-muted); }
@@ -522,7 +535,7 @@
     .btn-doc {
       padding:6px 14px;
       font-size:12px;
-      font-family:'DM Sans',sans-serif;
+      font-family:'Urbanist', sans-serif;
       background:transparent;
       border:1px solid var(--border-strong);
       border-radius:6px;
@@ -561,13 +574,13 @@
       overflow:hidden;
     }
     .fund-card-header {
-      background:var(--navy-deep);
+      background:#041924;
       padding:16px 20px;
       display:flex;
       justify-content:space-between;
       align-items:flex-start;
     }
-    .fund-card-name { font-family:'DM Serif Display',Georgia,serif; font-size:15px; color:#fff; letter-spacing:-0.01em; }
+    .fund-card-name { font-family:'Urbanist', 'Helvetica Neue', sans-serif; font-size:15px; color:#fff; letter-spacing:-0.01em; }
     .fund-card-classe { font-size:10px; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.1em; margin-top:3px; }
     .fund-card-status { font-size:10px; padding:3px 10px; border-radius:20px; font-weight:500; letter-spacing:0.03em; }
     .fund-card-body { padding:16px 20px; }
@@ -580,7 +593,7 @@
     .fund-metric:nth-child(even) { border-right:none; }
     .fund-metric:nth-last-child(-n+2) { border-bottom:none; }
     .fund-metric-label { font-size:9px; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); margin-bottom:5px; font-weight:500; }
-    .fund-metric-val { font-family:'DM Serif Display',Georgia,serif; font-size:20px; color:var(--navy); letter-spacing:-0.02em; }
+    .fund-metric-val { font-family:'Urbanist', 'Helvetica Neue', sans-serif; font-size:20px; color:var(--navy); letter-spacing:-0.02em; }
     .fund-metric-val.pos { color:var(--verde); }
     .fund-metric-val.neg { color:var(--vermelho); }
     .fund-metric-val.gold { color:var(--gold); }
@@ -596,8 +609,8 @@
 
     /* Tabela resumo de métricas */
     .metricas-resumo { background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:0; overflow:hidden; margin-bottom:20px; }
-    .metricas-resumo-header { background:var(--navy-deep); padding:14px 20px; font-family:'DM Serif Display',Georgia,serif; font-size:15px; color:#fff; display:flex; justify-content:space-between; align-items:center; }
-    .metricas-resumo-sub { font-size:10px; color:rgba(255,255,255,0.35); font-family:'DM Sans',sans-serif; font-weight:400; letter-spacing:0.05em; }
+    .metricas-resumo-header { background:#041924; padding:14px 20px; font-family:'Urbanist', 'Helvetica Neue', sans-serif; font-size:15px; color:#fff; display:flex; justify-content:space-between; align-items:center; }
+    .metricas-resumo-sub { font-size:10px; color:rgba(255,255,255,0.35); font-family:'Urbanist', sans-serif; font-weight:400; letter-spacing:0.05em; }
 
     /* Aviso de sem dados métricas */
     .metricas-aviso { background:var(--navy-pale); border:1px solid var(--border-strong); border-radius:8px; padding:20px 24px; text-align:center; color:var(--text-secondary); font-size:13px; }
@@ -606,6 +619,97 @@
     /* scrollbar */
     ::-webkit-scrollbar { width:4px; }
     ::-webkit-scrollbar-thumb { background:rgba(15,61,87,0.12); border-radius:2px; }
+  
+    /* ── TOGGLE CURVA / MERCADO ────────────────────────────────── */
+    .mode-toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      background: var(--surface-sunken, #ebe3d6);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--r-pill, 999px);
+      padding: 3px;
+    }
+    .mode-toggle-btn {
+      padding: 6px 18px;
+      border-radius: var(--r-pill, 999px);
+      border: none;
+      background: transparent;
+      font-family: var(--font-body, 'Urbanist', sans-serif);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted, #5b818b);
+      cursor: pointer;
+      transition: all 0.18s;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+    }
+    .mode-toggle-btn.active {
+      background: var(--navy-deep, #03313e);
+      color: #fff;
+      box-shadow: 0 1px 4px rgba(4,25,36,0.18);
+    }
+
+    /* ── MODO INDICATOR BANNER ─────────────────────────────────── */
+    .mode-banner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 18px;
+      border-radius: var(--r-md, 8px);
+      margin-bottom: 20px;
+      font-size: 12.5px;
+      font-weight: 500;
+      border: 1px solid;
+    }
+    .mode-banner.mercado {
+      background: #fceaea;
+      border-color: rgba(192,57,43,0.18);
+      color: #8c2020;
+    }
+    .mode-banner.curva {
+      background: var(--verde-bg, #e8f5ee);
+      border-color: rgba(26,102,69,0.18);
+      color: var(--verde, #1a6645);
+    }
+    .mode-banner-icon { font-size: 16px; }
+
+    /* ── DELTA BADGE (diff curva vs mercado) ─────────────────────── */
+    .delta-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: var(--r-pill, 999px);
+    }
+    .delta-pos { background: var(--verde-bg); color: var(--verde); }
+    .delta-neg { background: var(--vermelho-bg); color: var(--vermelho); }
+
+    /* ── YIELD TABLE (NTN-B por ativo) ───────────────────────────── */
+    .yield-pill {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: var(--r-pill, 999px);
+      background: rgba(42,90,102,0.1);
+      color: var(--navy-mid, #2a5a66);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── DURATION HEAT ───────────────────────────────────────────── */
+    .dur-bar-wrap { height: 5px; background: rgba(4,25,36,0.07); border-radius: 3px; margin-top: 5px; }
+    .dur-bar      { height: 5px; border-radius: 3px; background: var(--navy-mid, #2a5a66); }
+    .dur-bar.long { background: var(--gold, #c4913a); }
+
+    /* ── RENTAB GRID TABS ────────────────────────────────────────── */
+    .prev-mode-mv   { display: block; }
+    .prev-mode-curva{ display: none; }
+    .mode-curva .prev-mode-mv   { display: none; }
+    .mode-curva .prev-mode-curva{ display: block; }
+
   </style>
 </head>
 <body>
@@ -616,8 +720,12 @@
   ════════════════════════════════════════════════ -->
   <aside class="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-logo">PRA<span class="logo-x">X</span>ES</div>
-      <div class="sidebar-tagline">Family Office · Ultra HNW</div>
+      <div class="sidebar-logo">
+        <svg width="100" height="22" viewBox="0 0 100 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <text x="0" y="17" font-family="Urbanist, Helvetica, sans-serif" font-size="20" font-weight="200" letter-spacing="3" fill="white">praxes</text>
+        </svg>
+      </div>
+      <div class="sidebar-tagline">gestão patrimonial</div>
     </div>
 
     <div class="sidebar-client-badge">
@@ -648,6 +756,10 @@
         <div class="nav-item sub" onclick="showPage('iliquidos',this)">
           <svg class="nav-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 16V8a2 2 0 0 0-1-1.73L13 2.27a2 2 0 0 0-2 0L4 6.27A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73L11 21.73a2 2 0 0 0 2 0L20 17.73A2 2 0 0 0 21 16z"/></svg>
           Ilíquidos
+        </div>
+        <div class="nav-item sub" onclick="showPage('previdencia',this)">
+          <svg class="nav-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Previdência
         </div>
         <div class="nav-item sub" onclick="showPage('fluxo-onshore',this)">
           <svg class="nav-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3m10 0h3a2 2 0 0 0 2-2v-3"/><path d="M7 12h10M12 7v10"/></svg>
@@ -2051,6 +2163,189 @@
       </div>
     </div>
 
+
+    <!-- ══ PÁGINA: PREVIDÊNCIA (Itaú Flexprev Rio Bonito) ══════════ -->
+    <div id="page-previdencia" class="page">
+      <div class="top-bar">
+        <div class="page-title">Previdência — Itaú Flexprev Rio Bonito</div>
+        <div class="top-bar-right">
+          <!-- TOGGLE CURVA / MERCADO -->
+          <div class="mode-toggle-wrap" id="prev-toggle">
+            <button class="mode-toggle-btn active" id="btn-mv"    onclick="setPrevMode('mv')">Mercado (MV)</button>
+            <button class="mode-toggle-btn"         id="btn-curva" onclick="setPrevMode('curva')">Curva</button>
+          </div>
+          <select class="period-select">
+            <option>Mar 2026</option>
+            <option>2026 YTD</option>
+            <option>12 Meses</option>
+            <option>Desde Início</option>
+          </select>
+          <button class="btn-export">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Exportar PDF
+          </button>
+        </div>
+      </div>
+
+      <div class="content-wrapper" id="prev-content">
+
+        <!-- MODO BANNER -->
+        <div class="mode-banner mercado" id="prev-mode-banner">
+          <span class="mode-banner-icon">📊</span>
+          <span><strong>Visão a Mercado (MV)</strong> — rentabilidade reflete marcação a mercado das NTN-Bs. Mais volátil, impacta resultado mensal.</span>
+        </div>
+
+        <!-- ── KPIs ── -->
+        <div class="kpi-grid kpi-grid-4" style="margin-bottom:20px">
+          <div class="kpi-card">
+            <div class="kpi-label">PL do Fundo</div>
+            <div class="kpi-val" id="prev-pl">—</div>
+            <div class="kpi-change" id="prev-pl-sub">Posição em 31/03/2026</div>
+          </div>
+          <div class="kpi-card accent">
+            <div class="kpi-label">Rentab. no Mês</div>
+            <div class="kpi-val" id="prev-rent-mes">—</div>
+            <div class="kpi-change" id="prev-cdi-mes">CDI: —</div>
+          </div>
+          <div class="kpi-card accent">
+            <div class="kpi-label">Rentab. 12 Meses</div>
+            <div class="kpi-val" id="prev-rent-12m">—</div>
+            <div class="kpi-change" id="prev-cdi-12m">CDI 12m: —</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Retorno desde Início</div>
+            <div class="kpi-val" id="prev-rent-periodo">—</div>
+            <div class="kpi-change" id="prev-cdi-periodo">CDI período: —</div>
+          </div>
+        </div>
+
+        <!-- ── LINHA 2: Performance comparativa + Destaques ── -->
+        <div class="two-col mb-20">
+          <!-- Performance tab5 -->
+          <div class="card">
+            <div class="card-title">Performance Comparativa <span class="card-title-label">Carteira vs CDI vs IPCA+</span></div>
+            <table class="data-table">
+              <thead><tr><th>Indicador</th><th class="td-num">Carteira</th><th class="td-num">CDI</th><th class="td-num">IPCA+dp</th></tr></thead>
+              <tbody id="prev-tab5-body">
+                <tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted)">Carregando...</td></tr>
+              </tbody>
+            </table>
+            <div style="margin-top:14px" id="prev-sharpe-wrap">
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:4px">Índice de Sharpe (CDI)</div>
+              <div id="prev-sharpe" style="font-size:18px;font-weight:600;color:var(--navy)">—</div>
+            </div>
+          </div>
+          <!-- Destaques tab6 -->
+          <div class="card">
+            <div class="card-title">Destaques do Período</div>
+            <div id="prev-tab6-body" style="font-size:12.5px;color:var(--text-secondary)">
+              <div style="text-align:center;padding:20px;color:var(--text-muted)">Carregando...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── LINHA 3: Rentabilidade mensal (tab2) ── -->
+        <div class="card mb-20">
+          <div class="card-title">Rentabilidade Mensal <span class="card-title-label">Carteira vs CDI vs %CDI</span></div>
+          <div style="overflow-x:auto">
+            <table class="data-table" style="font-size:11px;min-width:640px">
+              <thead>
+                <tr>
+                  <th>Ano</th><th>Indicador</th>
+                  <th class="td-num">Jan</th><th class="td-num">Fev</th><th class="td-num">Mar</th>
+                  <th class="td-num">Abr</th><th class="td-num">Mai</th><th class="td-num">Jun</th>
+                  <th class="td-num">Jul</th><th class="td-num">Ago</th><th class="td-num">Set</th>
+                  <th class="td-num">Out</th><th class="td-num">Nov</th><th class="td-num">Dez</th>
+                  <th class="td-num">Ano</th>
+                </tr>
+              </thead>
+              <tbody id="prev-tab2-body">
+                <tr><td colspan="14" style="text-align:center;padding:20px;color:var(--text-muted)">Carregando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ── LINHA 4: Posição por classe (tab7) + Extrato (tab3) ── -->
+        <div class="two-col mb-20">
+          <!-- Posição por classe -->
+          <div class="card">
+            <div class="card-title">Posição por Classe de Ativo</div>
+            <table class="data-table" id="prev-tab7-table">
+              <thead><tr><th>Classe</th><th class="td-num">Saldo Início</th><th class="td-num">Rendimento</th><th class="td-num">Saldo 31/03</th><th class="td-num">%</th></tr></thead>
+              <tbody id="prev-tab7-body">
+                <tr><td colspan="5" style="text-align:center;padding:16px;color:var(--text-muted)">Carregando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- Extrato anual -->
+          <div class="card">
+            <div class="card-title">Extrato de Movimentações Anuais</div>
+            <table class="data-table">
+              <thead><tr><th>Ano</th><th class="td-num">Aplicações</th><th class="td-num">Resgates</th><th class="td-num">Rendimento</th><th class="td-num">Saldo Final</th></tr></thead>
+              <tbody id="prev-tab3-body">
+                <tr><td colspan="5" style="text-align:center;padding:16px;color:var(--text-muted)">Carregando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ── LINHA 5: Posição por ativo (tab9/curva_yield) ── -->
+        <div class="card mb-20">
+          <div class="card-title">
+            Posição Detalhada por Ativo
+            <span class="card-title-label prev-mode-mv">Mercado — saldo com marcação</span>
+            <span class="card-title-label prev-mode-curva" style="display:none">Curva — saldo na taxa de contratação</span>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="data-table" style="min-width:700px">
+              <thead>
+                <tr>
+                  <th>Ativo</th>
+                  <th>Classe</th>
+                  <th class="td-num prev-mode-curva" style="display:none">Taxa (IPCA+)</th>
+                  <th class="td-num prev-mode-mv">Duration</th>
+                  <th class="td-num">Saldo Bruto</th>
+                  <th class="td-num">%</th>
+                </tr>
+              </thead>
+              <tbody id="prev-tab9-body">
+                <tr><td colspan="6" style="text-align:center;padding:16px;color:var(--text-muted)">Carregando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ── LINHA 6: CURVA ONLY — Yield dos títulos ── -->
+        <div class="card prev-mode-curva" id="prev-yield-card" style="display:none;margin-bottom:20px">
+          <div class="card-title">Yield to Maturity — NTN-Bs na Curva <span class="card-title-label">IPCA + spread por título</span></div>
+          <div style="overflow-x:auto">
+            <table class="data-table" style="min-width:680px">
+              <thead>
+                <tr>
+                  <th>Título</th><th>Vencimento</th><th>Classe</th>
+                  <th class="td-num">Saldo (R$)</th><th class="td-num">Taxa (IPCA+)</th><th class="td-num">% Cart.</th>
+                </tr>
+              </thead>
+              <tbody id="prev-yield-body">
+                <tr><td colspan="6" style="text-align:center;padding:16px;color:var(--text-muted)">Carregando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ── LINHA 7: MV ONLY — Duration por título ── -->
+        <div class="card prev-mode-mv" id="prev-duration-card" style="margin-bottom:20px">
+          <div class="card-title">Duration por Ativo (anos) <span class="card-title-label">Risco de mercado — quanto cada ponto de taxa impacta o PL</span></div>
+          <div id="prev-duration-body">
+            <div style="text-align:center;padding:20px;color:var(--text-muted)">Carregando...</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ══ FIM PREVIDÊNCIA ══════════════════════════════════════ -->
+
   </main>
 </div>
 
@@ -2060,6 +2355,7 @@
   //  CONFIGURAÇÃO — cole aqui a URL do seu Web App após implantar
   // ═══════════════════════════════════════════════════════════════
   const CD_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbw6zagw8pRYcFZw9OOD88C8kvTc60zzU0WB9hLaMuZ1bQRNIqv3Bh5OHIGoicrWnt-Q/exec";
+  const PREV_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxX5zY8sG8iYe2C6DsVwZhuviDoHTvXr5deSWbvWn0pYrUhEvs0kXSwD4j70RHgfoQMgg/exec";
 
   // Cache dos dados carregados
   let CD = null;
@@ -2072,9 +2368,10 @@
 
       const IL_URL = "https://script.google.com/macros/s/AKfycbx__8KDLvyl1tPokvAQPV4M3SiMgreoveS4QcaK4CXwazIPbtfR3BSyMZ-dxs4CKX4v/exec";
 
-      const [principal, iliquidos] = await Promise.all([
+      const [principal, iliquidos, previdencia] = await Promise.all([
         fetchWA(CD_WEBAPP_URL),
-        fetchWA(IL_URL)
+        fetchWA(IL_URL),
+        fetchWA(PREV_WEBAPP_URL)
       ]);
 
       if (principal.error) throw new Error(principal.error);
@@ -2101,6 +2398,39 @@
         CD._iliquidosVazio = true;
       }
 
+      // ── Previdência Web App ────────────────────────────────────
+      // Estrutura real: { mercado: { tables: {...} }, curva: { tables: {...} },
+      //                   movimentacoes: [...], duration: [...], yield_medio: [...] }
+      if (previdencia && (previdencia.mercado || previdencia.curva)) {
+        // Mescla tabelas MV (mercado)
+        const mvTables = (previdencia.mercado && previdencia.mercado.tables) || {};
+        Object.assign(CD.tables, mvTables);
+
+        // Mescla tabelas CURVA
+        const cvTables = (previdencia.curva && previdencia.curva.tables) || {};
+        Object.assign(CD.tables, cvTables);
+
+        // Movimentações separadas por modo
+        if (previdencia.mercado && previdencia.mercado.movimentacoes)
+          CD.tables.mv_movimentacoes = previdencia.mercado.movimentacoes;
+        if (previdencia.curva && previdencia.curva.movimentacoes)
+          CD.tables.curva_movimentacoes = previdencia.curva.movimentacoes;
+
+        // Duration está em mercado.duration, yield_medio em curva.yield_medio
+        if (previdencia.mercado && previdencia.mercado.duration)
+          CD.tables.mv_duration = previdencia.mercado.duration;
+        if (previdencia.curva && previdencia.curva.yield_medio)
+          CD.tables.curva_yield = previdencia.curva.yield_medio;
+
+        const allKeys = [...Object.keys(mvTables), ...Object.keys(cvTables)];
+        console.log("✅ Previdência carregada:", allKeys.length, "tabelas →", allKeys);
+        console.log("   mv_duration:", CD.tables.mv_duration ? CD.tables.mv_duration.length + " rows ✅" : "NOT FOUND ❌");
+        console.log("   curva_yield:", CD.tables.curva_yield ? CD.tables.curva_yield.length + " rows ✅" : "NOT FOUND ❌");
+      } else {
+        console.warn("⚠️ Previdência vazia:", previdencia && previdencia.error || "estrutura inesperada");
+        console.log("   Estrutura recebida:", previdencia && Object.keys(previdencia));
+      }
+
       // Movimentações ilíquidas — base para calcular TIR, MOIC, TVPI, DVPI, RVPI
       const ilMovs = iliquidos.movimentacoes || [];
       if (ilMovs.length > 0) {
@@ -2115,13 +2445,13 @@
         CD.il_movimentacoes = [];
       }
 
-      // Renderiza todas as páginas com dados reais de uma vez
-      // (não só a ativa — evita tela vazia ao navegar antes dos dados chegarem)
-      ['onshore-total', 'iliquidos'].forEach(id => renderizarPagina(id));
-
-      // Marca que os dados estão prontos — showPage vai re-renderizar ao navegar
-      CD._carregado = true;
-
+      const paginaAtiva = document.querySelector('.page.active');
+      if (paginaAtiva) {
+        const id = paginaAtiva.id.replace('page-','');
+        renderizarPagina(id);
+      }
+      // Pré-renderiza métricas PE/VC mesmo se não estiver na página de ilíquidos
+      if (CD.tables['il_metricas']) renderMetricasIliquidos();
     } catch(e) {
       console.warn("Web App não disponível:", e.message);
     } finally {
@@ -2934,6 +3264,7 @@
     if (!CD) return; // sem dados ainda
     if (id === 'onshore-total') renderOnshoreTotal();
     if (id === 'iliquidos')     renderIliquidos();
+    if (id === 'previdencia')   renderPrevidencia();
     // Outras páginas com dados reais podem ser adicionadas aqui
   }
 
@@ -2965,72 +3296,36 @@
 
   function renderOnshoreTotal() {
     const t = CD.tables;
+    // Guard: se tab0 está vazio, não sobrescreve os valores hardcoded da página
+    if (!t.tab0 || t.tab0.length === 0) return;
 
     // ── tab0: KPIs rentabilidade ──────────────────────────────
     // Linhas: "Rend. Nominal (R$", "Var. Nominal (%)", "CDI (%)", "IPCAdp (%)"
     // Colunas: Mês | Ano | 12meses | 24meses | Noperiodo
     const tab0 = t.tab0 || [];
+    const r0   = {}; // { "Var. Nominal (%)": {Mês, Ano, 12meses, ...}, ... }
+    tab0.forEach(row => {
+      const chave = Object.values(row)[0]; // primeira coluna = label
+      r0[chave] = row;
+    });
 
-    // tab0 pode chegar como array de arrays (com cabeçalho na pos 0)
-    // ou como array de objetos com chaves nomeadas
-    // Normaliza para: r0 = { 'Var. Nominal (%)': { 'Mês': val, 'Ano': val, 'Noperíodo': val, ... }, ... }
-    const r0 = {};
-    let _tab0Headers = [];
+    const varNom = r0["Var. Nominal (%)"] || r0[Object.keys(r0).find(k=>k.includes("Var. Nominal"))] || {};
+    const cdi    = r0["CDI (%)"] || r0[Object.keys(r0).find(k=>k.includes("CDI (%)"))] || {};
 
-    if (tab0.length > 0) {
-      const first = tab0[0];
-      const isArr = Array.isArray(first);
-
-      if (isArr) {
-        // Primeira linha = cabeçalho, demais = dados
-        _tab0Headers = first.map(h => String(h||'').trim());
-        tab0.slice(1).forEach(row => {
-          const vals = Array.isArray(row) ? row : Object.values(row);
-          const chave = String(vals[0]||'').trim();
-          if (!chave) return;
-          const obj = {};
-          _tab0Headers.forEach((h, i) => { if(h && i > 0) obj[h] = vals[i]; });
-          r0[chave] = obj;
-        });
-      } else {
-        // Objetos com chaves nomeadas — extrai header das chaves e constrói igual
-        tab0.forEach(row => {
-          const vals = Object.values(row);
-          const keys = Object.keys(row);
-          const chave = String(vals[0]||'').trim();
-          if (!chave) return;
-          const obj = {};
-          keys.slice(1).forEach((k,i) => { obj[k] = vals[i+1]; });
-          r0[chave] = obj;
-        });
-        if (tab0[0]) _tab0Headers = Object.keys(tab0[0]);
-      }
-    }
-
-    const varNom = r0['Var. Nominal (%)'] || r0[Object.keys(r0).find(k=>k.includes('Var. Nominal'))] || {};
-    const cdi    = r0['CDI (%)']          || r0[Object.keys(r0).find(k=>k.includes('CDI (%)'))]     || {};
-
-    // Localiza chave do período de forma robusta
+    // Localiza chave do período de forma robusta (aceita com ou sem acento)
     const _findKey = (obj, hints) => Object.keys(obj).find(k => hints.some(h => k.toLowerCase().includes(h.toLowerCase()))) || '';
     const _perK = obj => _findKey(obj, ['Noperíodo','Noperiodo','período','periodo','nop']);
     const _12mK = obj => _findKey(obj, ['12meses','12 meses']);
 
-    const perK = _perK(varNom) || _perK(cdi) || (_tab0Headers.length ? _tab0Headers[_tab0Headers.length-1] : '') || '';
-    const m12K = _12mK(varNom) || _12mK(cdi) || '';
-
-    console.log('tab0 r0 keys:', Object.keys(r0));
-    console.log('varNom:', varNom, '| perK:', perK, '| m12K:', m12K);
+    const perK  = _perK(varNom) || _perK(cdi) || Object.keys(varNom).at(-1) || '';
+    const m12K  = _12mK(varNom) || _12mK(cdi) || '';
 
     // KPI — PL (tab6)
     const tab6 = t.tab6 || [];
     const r6   = {};
-    tab6.forEach(row => {
-      const vals = Array.isArray(row) ? row : Object.values(row);
-      const k = String(vals[0]||'').trim();
-      if (k) r6[k] = vals[1];
-    });
+    tab6.forEach(row => { r6[Object.values(row)[0]] = Object.values(row)[1]; });
 
-    const pl = r6['PL em 31/03/2026'] || r6[Object.keys(r6).find(k => k.includes('PL em'))] || '';
+    const pl       = r6["PL em 31/03/2026"] || r6[Object.keys(r6).find(k => k.includes("PL em"))] || '';
     const plMedio  = r6["PL médio no período"] || '';
     const maiorMes = r6["Maior rentabilidade mensal"] || '';
     const menorMes = r6["Menor rentabilidade mensal"] || '';
@@ -3047,11 +3342,7 @@
     // tab5: Sharpe e Volatilidade
     const tab5 = t.tab5 || [];
     const r5   = {};
-    tab5.forEach(row => {
-      const vals = Array.isArray(row) ? row : Object.values(row);
-      const k = String(vals[0]||'').trim();
-      if (k) r5[k] = { carteira: vals[1], cdi: vals[2] };
-    });
+    tab5.forEach(row => { r5[Object.values(row)[0]] = { carteira: Object.values(row)[1], cdi: Object.values(row)[2] }; });
 
     const sharpe = r5["Índice de Sharpe no período (CDI)"] || r5[Object.keys(r5).find(k=>k.includes("Sharpe"))] || {};
     const volat  = r5["Volatilidade no período"] || r5[Object.keys(r5).find(k=>k.includes("Volatilidade"))] || {};
@@ -3259,8 +3550,8 @@
     document.getElementById('page-' + id).classList.add('active');
     if (el) el.classList.add('active');
     updateTopBar(id);
-    // Sempre re-renderiza ao navegar — garante dados mesmo se chegarem após navegação
-    if (CD) renderizarPagina(id);
+    // Renderiza dados reais ANTES dos gráficos
+    renderizarPagina(id);
     initChartsForPage(id);
   }
 
@@ -3313,6 +3604,512 @@
     initChartsForPage('home');
     carregarDados();
   });
+
+
+  // ══════════════════════════════════════════════════════════════════
+  //  PREVIDÊNCIA — Itaú Flexprev Rio Bonito  (render reescrito)
+  //  Estrutura JSON: { mercado:{tables:{mv_tab*}}, curva:{tables:{curva_tab*}},
+  //                    duration:[], yield_medio:[], movimentacoes:{} }
+  // ══════════════════════════════════════════════════════════════════
+
+  let prevMode = 'mv';
+
+  function setPrevMode(mode) {
+    prevMode = mode;
+    document.getElementById('btn-mv').classList.toggle('active', mode === 'mv');
+    document.getElementById('btn-curva').classList.toggle('active', mode === 'curva');
+
+    const banner = document.getElementById('prev-mode-banner');
+    if (banner) {
+      if (mode === 'mv') {
+        banner.className = 'mode-banner mercado';
+        banner.innerHTML = '<span class="mode-banner-icon">📊</span><span><strong>Visão a Mercado (MV)</strong> — rentabilidade reflete marcação a mercado das NTN-Bs. Mais volátil, impacta o resultado mensal.</span>';
+      } else {
+        banner.className = 'mode-banner curva';
+        banner.innerHTML = '<span class="mode-banner-icon">📈</span><span><strong>Visão na Curva</strong> — rentabilidade pela taxa de contratação de cada título. Estável, sem efeito de marcação a mercado.</span>';
+      }
+    }
+
+    const pc = document.getElementById('prev-content');
+    if (pc) pc.classList.toggle('mode-curva', mode === 'curva');
+
+    const durCard   = document.getElementById('prev-duration-card');
+    const yieldCard = document.getElementById('prev-yield-card');
+    if (durCard)   durCard.style.display   = mode === 'mv'    ? '' : 'none';
+    if (yieldCard) yieldCard.style.display = mode === 'curva' ? '' : 'none';
+
+    document.querySelectorAll('.prev-mode-mv').forEach(el => { el.style.display = mode === 'mv' ? '' : 'none'; });
+    document.querySelectorAll('.prev-mode-curva').forEach(el => { el.style.display = mode === 'curva' ? '' : 'none'; });
+
+    renderPrevidencia();
+  }
+
+  window.setPrevMode = setPrevMode;
+
+  // ── helpers de formatação ─────────────────────────────────────────
+  function _fmtM(v) {
+    const n = parseFloat(String(v ?? '').replace(',', '.'));
+    if (isNaN(n)) return '—';
+    const a = Math.abs(n), s = n < 0 ? '−' : '';
+    if (a >= 1e6) return s + 'R$ ' + (a / 1e6).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' mi';
+    if (a >= 1e3) return s + 'R$ ' + Math.round(a / 1e3).toLocaleString('pt-BR') + ' mil';
+    return s + 'R$ ' + Math.round(a).toLocaleString('pt-BR');
+  }
+  function _fmtPct(v, alreadyPercent = false) {
+    const n = parseFloat(String(v ?? '').replace(',', '.'));
+    if (isNaN(n) || v === '' || v === 'nd') return '—';
+    const val = alreadyPercent ? n : n * 100;
+    return val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
+  }
+  function _cor(v) { const n = parseFloat(v); return isNaN(n) ? '' : n >= 0 ? 'color:var(--verde)' : 'color:var(--vermelho)'; }
+  function _set(id, h) { const e = document.getElementById(id); if (e) e.innerHTML = h; }
+  function _txt(id, v) { const e = document.getElementById(id); if (e) e.textContent = v; }
+
+  function renderPrevidencia() {
+    if (!CD) return;
+    const t   = CD.tables || {};
+    const pfx = prevMode === 'mv' ? 'mv' : 'curva';
+
+    // ── PL: vem do tab8 (total da instituição) ───────────────────────
+    const tab8 = t[pfx + '_tab8'] || [];
+    const plRow = tab8.find(r => r['Ativo'] && /itau|total/i.test(String(r['Ativo']))) || tab8[0] || {};
+    const plVal = parseFloat(plRow['Saldo Bruto 31/03/26'] ?? 0) || 0;
+    _txt('prev-pl', plVal ? _fmtM(plVal) : '—');
+    _txt('prev-pl-sub', 'Posição em 31/03/2026');
+
+    // ── tab0: [Rend Nominal R$, Var Nominal %, CDI %, IPCAdp %] ─────
+    // Colunas: { Mês, Ano, 12meses, 24meses, Noperíodo }
+    const tab0 = t[pfx + '_tab0'] || [];
+    const varRow = tab0[1] || {};  // Var. Nominal (%)
+    const cdiRow = tab0[2] || {};  // CDI (%)
+
+    // Detecta chaves (acento pode variar)
+    const t0keys = Object.keys(varRow);
+    const mesK = t0keys.find(k => /m[eê]s/i.test(k) && k.length <= 5) || t0keys[0];
+    const m12K = t0keys.find(k => k.includes('12')) || t0keys[2];
+    const perK = t0keys.find(k => /per|nop/i.test(k)) || t0keys[t0keys.length - 1];
+
+    // Rentab mês (valores já em % — ex: 0.144603 = 0,14%)
+    const rentMes = varRow[mesK];
+    const cdiMes  = cdiRow[mesK];
+    const elMes = document.getElementById('prev-rent-mes');
+    if (elMes) { elMes.textContent = _fmtPct(rentMes); elMes.style.color = parseFloat(rentMes) >= 0 ? 'var(--verde)' : 'var(--vermelho)'; }
+    _txt('prev-cdi-mes', cdiMes != null && cdiMes !== '' ? 'CDI: ' + _fmtPct(cdiMes) : '');
+
+    // Rentab 12m
+    const rent12 = varRow[m12K];
+    const cdi12  = cdiRow[m12K];
+    const el12 = document.getElementById('prev-rent-12m');
+    if (el12) { el12.textContent = _fmtPct(rent12); el12.style.color = parseFloat(rent12) >= 0 ? 'var(--verde)' : 'var(--vermelho)'; }
+    _txt('prev-cdi-12m', cdi12 != null && cdi12 !== '' ? 'CDI 12m: ' + _fmtPct(cdi12) : '');
+
+    // Rentab período
+    const rentPer = varRow[perK];
+    const cdiPer  = cdiRow[perK];
+    const elPer = document.getElementById('prev-rent-periodo');
+    if (elPer) { elPer.textContent = _fmtPct(rentPer); elPer.style.color = parseFloat(rentPer) >= 0 ? 'var(--verde)' : 'var(--vermelho)'; }
+    _txt('prev-cdi-periodo', cdiPer != null && cdiPer !== '' ? 'CDI período: ' + _fmtPct(cdiPer) : '');
+
+    // ── tab5: performance comparativa ───────────────────────────────
+    // Estrutura: array de objetos { Carteira: val, CDI: val }
+    // Ordem: [Retorno período, 6m, 12m, Volatilidade, Sharpe]
+    const tab5 = t[pfx + '_tab5'] || [];
+    const lbls5 = ['Retorno no período', 'Retorno 6 meses', 'Retorno 12 meses', 'Volatilidade', 'Sharpe (CDI)'];
+    let h5 = '';
+    tab5.forEach((row, i) => {
+      const cartV = row['Carteira'];
+      const cdiV  = row['CDI'];
+      const isMeta = i >= 3; // Volatilidade e Sharpe: não colorir como positivo/negativo
+      const cartStyle = !isMeta ? _cor(cartV) : '';
+      const cartTxt = cartV != null && cartV !== '' ? _fmtPct(cartV) : '—';
+      const cdiTxt  = cdiV  != null && cdiV  !== '' ? _fmtPct(cdiV)  : '—';
+      // IPCA+ do tab0 na mesma posição (linha 3 = IPCAdp)
+      const ipcaRow = tab0[3] || {};
+      let ipcaTxt = '—';
+      if (i === 0) ipcaTxt = ipcaRow[perK] != null ? _fmtPct(ipcaRow[perK]) : '—';
+      else if (i === 2) ipcaTxt = ipcaRow[m12K] != null ? _fmtPct(ipcaRow[m12K]) : '—';
+      h5 += `<tr>
+        <td>${lbls5[i]}</td>
+        <td class="td-num" style="${cartStyle}">${cartTxt}</td>
+        <td class="td-num" style="color:var(--text-muted)">${cdiTxt}</td>
+        <td class="td-num" style="color:var(--text-muted)">${ipcaTxt}</td>
+      </tr>`;
+      if (i === 4 && cartV != null) {
+        const el = document.getElementById('prev-sharpe');
+        if (el) { const n = parseFloat(cartV); el.textContent = isNaN(n) ? '—' : n.toFixed(2); el.style.color = n >= 0 ? 'var(--verde)' : 'var(--vermelho)'; }
+      }
+    });
+    _set('prev-tab5-body', h5 || '<tr><td colspan="4" style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
+
+    // ── tab6: VAZIO no JSON — calculamos a partir do tab2 ───────────
+    const tab2 = t[pfx + '_tab2'] || [];
+    // tab2: grupos de 3 linhas (Carteira, CDI, %CDI) sem campo de ano
+    // inferimos o ano: 2022 + grupo_index
+    const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    const anoBase = 2022;
+    const grupos = [];
+    for (let i = 0; i + 2 < tab2.length; i += 3) {
+      const cartRow = tab2[i];
+      const cRow    = tab2[i+1];
+      const pctRow  = tab2[i+2];
+      if (!cartRow || !String(cartRow['Ativo']||'').includes('Carteira')) continue;
+      grupos.push({ ano: anoBase + grupos.length, cart: cartRow, cdi: cRow, pct: pctRow });
+    }
+    // Destaques do período calculados de tab2
+    const todosVals = grupos.flatMap(g =>
+      meses.map(m => { const v = g.cart[m]; return v !== '' && v != null ? parseFloat(v) : null; }).filter(v => v !== null)
+    );
+    const maiorM = todosVals.length ? Math.max(...todosVals) : null;
+    const menorM = todosVals.length ? Math.min(...todosVals) : null;
+    const mPos   = todosVals.filter(v => v >= 0).length;
+    const mNeg   = todosVals.filter(v => v < 0).length;
+    // Mês/ano do maior e menor
+    let maiorLabel = '', menorLabel = '';
+    const nomMes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    grupos.forEach(g => {
+      nomMes.forEach(m => {
+        const v = parseFloat(g.cart[m]);
+        if (!isNaN(v)) {
+          if (maiorM !== null && Math.abs(v - maiorM) < 1e-9) maiorLabel = ` (${m}/${g.ano})`;
+          if (menorM !== null && Math.abs(v - menorM) < 1e-9) menorLabel = ` (${m}/${g.ano})`;
+        }
+      });
+    });
+    let h6 = '';
+    if (maiorM !== null) h6 += `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span>Maior rentab. mensal</span><span style="color:var(--verde);font-weight:600">${_fmtPct(maiorM)}${maiorLabel}</span></div>`;
+    if (menorM !== null) h6 += `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span>Menor rentab. mensal</span><span style="color:var(--vermelho);font-weight:600">${_fmtPct(menorM)}${menorLabel}</span></div>`;
+    h6 += `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span>Meses positivos</span><span style="font-weight:600;color:var(--navy)">${mPos} de ${mPos+mNeg}</span></div>`;
+    h6 += `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span>PL em 31/03/2026</span><span style="font-weight:600;color:var(--navy)">${plVal ? _fmtM(plVal) : '—'}</span></div>`;
+    h6 += `<div style="display:flex;justify-content:space-between;padding:8px 0"><span>Início do fundo</span><span style="font-weight:600;color:var(--navy)">13/06/2022</span></div>`;
+    _set('prev-tab6-body', h6 || '<div style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</div>');
+
+    // ── Rentabilidade Mensal (tab2 agrupado) ─────────────────────────
+    let h2 = '';
+    grupos.forEach((g, gi) => {
+      const bb = gi < grupos.length - 1 ? 'border-bottom:2px solid var(--border-strong)' : '';
+      const anoV = g.cart['Ano'];
+      const anoN = parseFloat(anoV);
+      const anoStyle = !isNaN(anoN) && anoN >= 0 ? 'color:var(--verde)' : 'color:var(--vermelho)';
+
+      const cellC = (v) => {
+        if (v === '' || v == null) return `<td class="td-num" style="color:var(--text-muted)">—</td>`;
+        const n = parseFloat(v);
+        if (isNaN(n)) return `<td class="td-num" style="color:var(--text-muted)">—</td>`;
+        const pct = (n * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
+        const s = n >= 0 ? 'color:var(--verde)' : 'color:var(--vermelho)';
+        return `<td class="td-num" style="${s}">${pct}</td>`;
+      };
+      const cellMute = (v) => {
+        if (v === '' || v == null) return `<td class="td-num" style="color:var(--text-muted)">—</td>`;
+        const n = parseFloat(v);
+        if (isNaN(n)) return `<td class="td-num" style="color:var(--text-muted)">—</td>`;
+        return `<td class="td-num" style="color:var(--text-muted)">${(n*100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%'}</td>`;
+      };
+      const cellPct = (v) => {
+        if (v === '' || v == null) return `<td class="td-num" style="color:var(--text-muted)">—</td>`;
+        const n = parseFloat(v);
+        if (isNaN(n)) return `<td class="td-num" style="color:var(--text-muted)">—</td>`;
+        const s = n >= 1 ? 'color:var(--verde)' : 'color:var(--vermelho)';
+        return `<td class="td-num" style="${s}">${(n*100).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%'}</td>`;
+      };
+
+      h2 += `<tr>
+        <td rowspan="3" style="font-weight:700;color:var(--navy);vertical-align:middle;border-right:1px solid var(--border)">${g.ano}</td>
+        <td style="font-weight:500;color:var(--navy)">Carteira</td>
+        ${meses.map(m => cellC(g.cart[m])).join('')}
+        <td class="td-num" style="${anoStyle};font-weight:700">${!isNaN(anoN) ? (anoN*100).toFixed(2)+'%' : '—'}</td>
+      </tr><tr>
+        <td style="color:var(--text-muted)">CDI</td>
+        ${meses.map(m => cellMute(g.cdi[m])).join('')}
+        <td class="td-num" style="color:var(--text-muted);font-weight:600">${(() => { const n=parseFloat(g.cdi['Ano']); return isNaN(n)?'—':(n*100).toFixed(2)+'%'; })()}</td>
+      </tr><tr style="${bb}">
+        <td style="color:var(--text-muted)">%CDI</td>
+        ${meses.map(m => cellPct(g.pct[m])).join('')}
+        <td class="td-num" style="font-weight:600">${(() => { const n=parseFloat(g.pct['Ano']); return isNaN(n)?'—':(n*100).toFixed(1)+'%'; })()}</td>
+      </tr>`;
+    });
+    _set('prev-tab2-body', h2 || '<tr><td colspan="14" style="text-align:center;padding:16px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
+
+    // ── tab7: posição por classe ─────────────────────────────────────
+    // Estrutura: { Ativo, 'Saldo Bruto 13/06/22', Movimentação, 'Rendimento Bruto', 'Saldo Bruto 31/03/26', '%' }
+    // Filtra: só Inflação Soberano e Pós-Fixado (não Genérico)
+    const tab7 = t[pfx + '_tab7'] || [];
+    // Detecta a data de início a partir da chave 'Saldo Bruto DD/MM/AA'
+    const saldoIniKey = tab7.length ? Object.keys(tab7[0]).find(k => /saldo bruto \d{2}\/\d{2}/i.test(k)) : null;
+    const saldoFimKey = tab7.length ? Object.keys(tab7[0]).find(k => /saldo bruto.*31/i.test(k) || /saldo bruto.*26$/i.test(k)) : null;
+    const dataIni = saldoIniKey ? saldoIniKey.replace(/saldo bruto /i,'').trim() : '—';
+
+    let h7 = '';
+    tab7.filter(r => r['Ativo'] && !/genérico|generico/i.test(String(r['Ativo']))).forEach(row => {
+      const nome = String(row['Ativo']).trim();
+      const saldoIni = parseFloat(row[saldoIniKey] ?? 0) || 0;
+      const rend     = parseFloat(row['Rendimento Bruto'] ?? 0) || 0;
+      const saldoFim = parseFloat(row[saldoFimKey] ?? 0) || 0;
+      const pct      = parseFloat(row['%'] ?? 0) || 0;
+      const cls = /inflação|soberano/i.test(nome) ? 'badge-navy' : 'badge-gold';
+      h7 += `<tr>
+        <td><span class="badge ${cls}">${nome}</span></td>
+        <td class="td-num">${_fmtM(saldoIni)}</td>
+        <td class="td-num" style="${_cor(rend)}">${_fmtM(rend)}</td>
+        <td class="td-num" style="font-weight:600">${_fmtM(saldoFim)}</td>
+        <td class="td-num">
+          ${pct.toFixed(1)}%
+          <div class="alloc-bar-wrap"><div class="alloc-bar ${/pós/i.test(nome)?'':'navy'}" style="width:${Math.min(Math.abs(pct),100).toFixed(1)}%"></div></div>
+        </td>
+      </tr>`;
+    });
+    // Atualiza o label da coluna "Saldo Início" com a data real
+    const saldoIniLabel = document.querySelector('#prev-tab7-table th:nth-child(2)');
+    if (saldoIniLabel && dataIni !== '—') saldoIniLabel.textContent = 'Saldo ' + dataIni;
+    _set('prev-tab7-body', h7 || '<tr><td colspan="5" style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
+
+    // ── tab3: extrato anual ──────────────────────────────────────────
+    // Estrutura: { 'Mês/Ano', 'Saldo Inicial', Aplicações, Resgates, 'Impostos Pagos', ..., 'Rendimento Nominal', 'Saldo Final' }
+    const tab3 = t[pfx + '_tab3'] || [];
+    let h3 = '';
+    tab3.forEach(row => {
+      const label = row['Mês/Ano'];
+      if (!label) return;
+      // Exibe anos inteiros + linha do início + linha parcial 2026
+      const labelStr = typeof label === 'number' ? String(parseInt(label)) : String(label);
+      const saldoIni = parseFloat(row['Saldo Inicial'] ?? 0);
+      const aplic    = parseFloat(row['Aplicações'] ?? 0);
+      const resgate  = parseFloat(row['Resgates'] ?? 0);
+      const rend     = parseFloat(row['Rendimento Nominal'] ?? 0);
+      const saldoFim = parseFloat(row['Saldo Final'] ?? 0);
+      h3 += `<tr>
+        <td style="font-weight:600">${labelStr}</td>
+        <td class="td-num" style="color:var(--verde)">${_fmtM(aplic)}</td>
+        <td class="td-num" style="color:var(--vermelho)">${_fmtM(resgate)}</td>
+        <td class="td-num" style="${_cor(rend)}">${_fmtM(rend)}</td>
+        <td class="td-num" style="font-weight:600">${_fmtM(saldoFim)}</td>
+      </tr>`;
+    });
+    _set('prev-tab3-body', h3 || '<tr><td colspan="5" style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
+
+    // ── Posição detalhada (tab9) + Duration/Yield ────────────────────
+    if (prevMode === 'mv') {
+      renderPrevTab9MV(t);
+      renderPrevDuration(t);
+    } else {
+      renderPrevCurvaYield(t);
+    }
+  }
+
+  // ── Posição por ativo — Mercado (tab9 + mv_duration) ─────────────
+  function renderPrevTab9MV(t) {
+    // tab9 tem linhas mistas: subtotais de classe + ativos individuais + linha Total
+    // Filtra: só NTN-Bs e o Fundo DI. Remove subtotais (sem data vencto no nome) e 'Total'
+    const tab9 = t['mv_tab9'] || [];
+    const durMap = {};
+    (t['mv_duration'] || []).forEach(row => {
+      const a = String(row['Ativo'] ?? '').trim();
+      const d = parseFloat(row['duration(a,a,c)']);
+      const c = String(row['minha_variavel(relatorio_investimentos)'] ?? '').trim();
+      if (a) durMap[a] = { dur: isNaN(d) ? null : d, classe: c };
+    });
+
+    // Filtra linhas válidas: deve ter data de vencimento (NTN-B) ou ser o Fundo DI
+    // Remove: Genérico, Taxa de Adm, Taxa de Previdência, Inflação Soberano (subtotal), Pós-Fixado (subtotal), Total
+    const SKIP = /^(genérico|generico|taxa de adm|taxa de previdência|taxa de previdencia|inflação soberano|infla.o soberano|pós-fixado crédito|pos-fixado credito|total)$/i;
+
+    let h9 = '', totSaldo = 0;
+    const ativos = tab9.filter(r => r['Ativo'] && !SKIP.test(String(r['Ativo']).trim()));
+    ativos.forEach(row => {
+      const nome = String(row['Ativo']).trim();
+      // Usa Saldo Líquido 31/03/26 para mostrar o real disponível
+      const saldo = parseFloat(row['Saldo Líquido 31/03/26'] ?? row['Saldo Bruto 31/03/26'] ?? 0) || 0;
+      const pct   = parseFloat(row['%'] ?? 0) || 0;
+      const dur   = durMap[nome];
+      totSaldo += Math.abs(saldo);
+
+      const isNTNB = /NTN-B/i.test(nome);
+      const isFund = /fif|flexprev/i.test(nome);
+      const cls = isNTNB ? 'badge-navy' : isFund ? 'badge-gold' : 'badge-gray';
+      const tipo = isNTNB ? 'Título Público' : isFund ? 'Crédito Bancário' : 'Taxas';
+
+      let durCell = '<span style="color:var(--text-muted)">—</span>';
+      if (dur && dur.dur != null) {
+        const isLong = dur.dur > 7;
+        durCell = `<div style="font-size:12px;font-weight:600">${dur.dur.toFixed(2)} anos</div>
+          <div class="dur-bar-wrap"><div class="dur-bar ${isLong?'long':''}" style="width:${Math.min(dur.dur/12*100,100).toFixed(0)}%"></div></div>`;
+      }
+
+      h9 += `<tr>
+        <td>${nome}</td>
+        <td><span class="badge ${cls}" style="font-size:9px">${tipo}</span></td>
+        <td class="td-num prev-mode-mv">${durCell}</td>
+        <td class="td-num" style="${saldo < 0 ? 'color:var(--vermelho)' : 'font-weight:500'}">${_fmtM(saldo)}</td>
+        <td class="td-num">${pct.toFixed(1)}%</td>
+      </tr>`;
+    });
+    _set('prev-tab9-body', h9 || '<tr><td colspan="5" style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
+  }
+
+  // ── Posição + Yield — Curva (curva_tab9 + curva_yield) ───────────
+  function renderPrevCurvaYield(t) {
+    const tab9c    = t['curva_tab9']  || [];
+    const yieldTab = t['curva_yield'] || [];
+
+    // Mapa ativo → taxa contratada
+    const taxaMap = {};
+    yieldTab.forEach(row => {
+      const a = String(row['Ativo'] ?? '').trim();
+      const tx = parseFloat(row['Taxa Pré']);
+      if (a && !isNaN(tx)) taxaMap[a] = tx;
+    });
+
+    const SKIP = /^(genérico|generico|taxa de adm|taxa de previdência|taxa de previdencia|inflação soberano|infla.o soberano|pós-fixado crédito|pos-fixado credito|total)$/i;
+    const ativos = tab9c.filter(r => r['Ativo'] && !SKIP.test(String(r['Ativo']).trim()));
+
+    let h9c = '';
+    ativos.forEach(row => {
+      const nome  = String(row['Ativo']).trim();
+      const saldo = parseFloat(row['Saldo Líquido 31/03/26'] ?? row['Saldo Bruto 31/03/26'] ?? 0) || 0;
+      const pct   = parseFloat(row['%'] ?? 0) || 0;
+      const taxa  = taxaMap[nome];
+
+      const isNTNB = /NTN-B/i.test(nome);
+      const isFund = /fif|flexprev/i.test(nome);
+      const cls  = isNTNB ? 'badge-navy' : isFund ? 'badge-gold' : 'badge-gray';
+      const tipo = isNTNB ? 'Título Público' : isFund ? 'Crédito Bancário' : 'Taxas';
+
+      h9c += `<tr>
+        <td>${nome}</td>
+        <td><span class="badge ${cls}" style="font-size:9px">${tipo}</span></td>
+        <td class="td-num prev-mode-curva">${taxa != null ? `<span class="yield-pill">IPCA+${taxa.toFixed(2)}%</span>` : '—'}</td>
+        <td class="td-num" style="${saldo < 0 ? 'color:var(--vermelho)' : 'font-weight:500'}">${_fmtM(saldo)}</td>
+        <td class="td-num">${pct.toFixed(1)}%</td>
+      </tr>`;
+    });
+    _set('prev-tab9-body', h9c || '<tr><td colspan="5" style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
+
+    // Yield table separada (NTN-Bs com taxa)
+    let totY = 0;
+    // Total apenas de NTN-Bs com taxa explícita (exclui fundo DI)
+    yieldTab.filter(r => r['Ativo'] && parseFloat(r['Saldo Bruto']) > 0 && !isNaN(parseFloat(r['Taxa Pré'])) && parseFloat(r['Taxa Pré']) > 0)
+      .forEach(r => { totY += parseFloat(r['Saldo Bruto'] ?? 0) || 0; });
+
+    let hY = '';
+    yieldTab.filter(r => {
+      const a = String(r['Ativo']??'').trim();
+      const taxa = parseFloat(r['Taxa Pré']);
+      // Só NTN-Bs com taxa explícita; exclui fundo DI (CNPJ) e linhas sem taxa
+      return a && !SKIP.test(a) && parseFloat(r['Saldo Bruto']) > 0 && !isNaN(taxa) && taxa > 0;
+    }).forEach(row => {
+      const ativo  = String(row['Ativo']).trim();
+      const saldo  = parseFloat(row['Saldo Bruto'] ?? 0);
+      const taxa   = parseFloat(row['Taxa Pré'] ?? 0);
+      const classe = String(row['minha_variavel(relatorio_investimentos)'] ?? '').trim();
+      const pctC   = totY > 0 ? (saldo / totY * 100) : 0;
+      const vtMatch = ativo.match(/(\d{2}\/\d{2}\/\d{4})/);
+      const venc = vtMatch ? vtMatch[1] : '—';
+      const isPosFix = /fif|pós/i.test(String(row['Descrição']??''));
+      hY += `<tr>
+        <td style="font-size:12px">${ativo}</td>
+        <td style="font-size:11px;color:var(--text-muted)">${venc}</td>
+        <td><span class="badge ${isPosFix?'badge-gold':'badge-navy'}" style="font-size:9px">${classe||'Inflação Soberano'}</span></td>
+        <td class="td-num" style="font-weight:500">${_fmtM(saldo)}</td>
+        <td class="td-num"><span class="yield-pill">${!isNaN(taxa)&&taxa>0?'IPCA+'+taxa.toFixed(2)+'%':'—'}</span></td>
+        <td class="td-num" style="font-size:11px;color:var(--text-muted)">${pctC.toFixed(1)}%</td>
+      </tr>`;
+    });
+    // YTM médio ponderado
+    let totSaldoY = 0, totYtmW = 0;
+    yieldTab.filter(r => {
+      const taxa = parseFloat(r['Taxa Pré']);
+      return !isNaN(taxa) && taxa > 0 && parseFloat(r['Saldo Bruto']) > 0;
+    }).forEach(r => {
+      const s = parseFloat(r['Saldo Bruto']);
+      const tx = parseFloat(r['Taxa Pré']);
+      totSaldoY += s; totYtmW += tx * s;
+    });
+    const ytmMedio = totSaldoY > 0 ? (totYtmW / totSaldoY) : null;
+
+    if (ytmMedio !== null && hY) {
+      const ytmHtml = `<tr style="background:rgba(42,90,102,0.06);font-weight:600">
+        <td colspan="3" style="padding:10px 12px;color:var(--navy)">YTM Médio Ponderado (IPCA+)</td>
+        <td class="td-num" style="font-weight:700;color:var(--navy)">${_fmtM(totSaldoY)}</td>
+        <td class="td-num"><span class="yield-pill" style="background:rgba(42,90,102,0.15);color:var(--navy-deep);font-size:11px;font-weight:700">IPCA+${ytmMedio.toFixed(2)}%</span></td>
+        <td class="td-num">100%</td>
+      </tr>`;
+      hY = ytmHtml + hY;
+    }
+
+    _set('prev-yield-body', hY || '<tr><td colspan="6" style="text-align:center;padding:14px;color:var(--text-muted)">Dados não disponíveis</td></tr>');
+  }
+
+  // ── Duration (modo MV) ────────────────────────────────────────────
+  function renderPrevDuration(t) {
+    const durTab = t['mv_duration'] || [];
+    const byClasse = {};
+    let maxDur = 0;
+    durTab.filter(r => {
+      const c = String(r['minha_variavel(relatorio_investimentos)']??'').trim();
+      return c && c !== 'nd';
+    }).forEach(row => {
+      const ativo  = String(row['Ativo'] ?? '').trim();
+      const saldo  = parseFloat(row['Saldo Bruto'] ?? row['Saldo Bruto 31/03/26'] ?? 0);
+      const dur    = parseFloat(row['duration(a,a,c)']);
+      const classe = String(row['minha_variavel(relatorio_investimentos)'] ?? '').trim();
+      if (!byClasse[classe]) byClasse[classe] = [];
+      if (!isNaN(dur) && dur > maxDur) maxDur = dur;
+      byClasse[classe].push({ ativo, saldo, dur: isNaN(dur) ? null : dur });
+    });
+
+    let hD = '';
+    Object.entries(byClasse).forEach(([classe, ativos]) => {
+      const cb = /inflação/i.test(classe) ? 'badge-navy' : /pós/i.test(classe) ? 'badge-gold' : 'badge-gray';
+      const titulos = ativos.filter(a => /NTN-B|fif|flexprev/i.test(a.ativo));
+      if (!titulos.length) return;
+      hD += `<div style="margin-bottom:18px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span class="badge ${cb}">${classe}</span>
+          <span style="font-size:11px;color:var(--text-muted)">${titulos.length} título${titulos.length>1?'s':''}</span>
+        </div>`;
+      titulos.forEach(({ ativo, saldo, dur }) => {
+        const durStr = dur != null ? dur.toFixed(2) + ' anos' : '—';
+        const pct    = maxDur > 0 && dur != null ? (dur / maxDur * 100) : 0;
+        const isLong = dur != null && dur > 7;
+        hD += `<div class="tir-item" style="margin-bottom:10px">
+          <div class="tir-header">
+            <span class="tir-name" style="font-size:11.5px">${ativo}</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:11px;color:var(--text-muted)">${_fmtM(saldo)}</span>
+              <span style="font-size:12px;font-weight:600;color:${isLong?'var(--gold)':'var(--verde)'}">${durStr}</span>
+            </div>
+          </div>
+          <div class="dur-bar-wrap"><div class="dur-bar ${isLong?'long':''}" style="width:${pct.toFixed(1)}%"></div></div>
+        </div>`;
+      });
+      hD += '</div>';
+    });
+    // Calcula duration médio ponderado pelo saldo
+    let totSaldo = 0, totDurW = 0;
+    Object.values(byClasse).forEach(ativos => {
+      ativos.forEach(({ dur, saldo }) => {
+        if (dur != null && !isNaN(saldo) && saldo > 0) {
+          totSaldo += saldo;
+          totDurW  += dur * saldo;
+        }
+      });
+    });
+    const durMedio = totSaldo > 0 ? (totDurW / totSaldo) : null;
+
+    // Acrescenta linha de duration médio ponderado ao topo do bloco
+    if (durMedio !== null && hD) {
+      const durMedioHtml = `<div style="display:flex;align-items:center;justify-content:space-between;
+        padding:12px 16px;background:rgba(42,90,102,0.06);border-radius:8px;margin-bottom:18px;border:1px solid rgba(42,90,102,0.15)">
+        <span style="font-size:13px;font-weight:600;color:var(--navy)">Duration Médio Ponderado</span>
+        <span style="font-size:20px;font-weight:700;color:var(--navy)">${durMedio.toFixed(2)} anos</span>
+      </div>`;
+      hD = durMedioHtml + hD;
+    }
+
+    _set('prev-duration-body', hD || '<div style="text-align:center;padding:20px;color:var(--text-muted)">Dados de duration não disponíveis</div>');
+  }
+
+
 })(); // fim IIFE
 
   /* ────── CHARTS ────── */
@@ -3332,7 +4129,7 @@
     const SURFACE = '#f7f8fa';
 
     const defaults = {
-      font: { family: "'DM Sans', sans-serif", size: 11 },
+      font: { family: "'Urbanist', sans-serif", size: 11 },
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -3341,8 +4138,8 @@
           bodyColor: 'rgba(255,255,255,0.75)',
           padding: 10,
           cornerRadius: 6,
-          titleFont: { family: "'DM Serif Display', Georgia, serif", size: 13 },
-          bodyFont: { family: "'DM Sans', sans-serif", size: 11 }
+          titleFont: { family: "'Urbanist', sans-serif", size: 13 },
+          bodyFont: { family: "'Urbanist', sans-serif", size: 11 }
         }
       }
     };
