@@ -3313,6 +3313,7 @@
     const t = CD.tables;
     // Guard: se tab0 está vazio, não sobrescreve os valores hardcoded da página
     if (!t.tab0 || t.tab0.length === 0) return;
+    try {
 
     // ── tab0: estrutura real ─────────────────────────────────
     // Colunas: {Mês, Ano, 12meses, 24meses, Noperíodo} — SEM coluna de label
@@ -3608,6 +3609,7 @@
     set('ont-tab3-body', htmlTab3);
 
     // ── Gráficos ───────────────────────────────────────────────
+    } catch(e) { console.error('❌ renderOnshoreTotal ERRO:', e.message, e.stack); }
     initChartsForPage('onshore-total');
   }
 
