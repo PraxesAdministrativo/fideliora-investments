@@ -2377,6 +2377,13 @@
       if (principal.error) throw new Error(principal.error);
       CD = principal;
       console.log("✅ Principal carregado:", Object.keys(CD.tables));
+      // DEBUG estrutura das tabelas problemáticas
+      ['tab2','tab5','tab6','tab8'].forEach(k => {
+        const tbl = CD.tables[k] || [];
+        console.log(`DEBUG ${k}: ${tbl.length} rows | keys:`, tbl[0] ? Object.keys(tbl[0]) : 'EMPTY');
+        if (tbl[0]) console.log(`  ${k}[0]:`, tbl[0]);
+        if (tbl[1]) console.log(`  ${k}[1]:`, tbl[1]);
+      });
       // DEBUG tab0 e tab6
       const _t0 = CD.tables.tab0 || [];
       const _t6 = CD.tables.tab6 || [];
