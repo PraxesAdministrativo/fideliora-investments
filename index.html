@@ -3307,33 +3307,49 @@
     // Guard: se tab0 está vazio, não sobrescreve os valores hardcoded da página
     if (!t.tab0 || t.tab0.length === 0) return;
 
-    // ── tab0: KPIs rentabilidade ──────────────────────────────
-    // Linhas: "Rend. Nominal (R$", "Var. Nominal (%)", "CDI (%)", "IPCAdp (%)"
-    // Colunas: Mês | Ano | 12meses | 24meses | Noperiodo
+    // ── tab0: estrutura real ─────────────────────────────────
+    // Colunas: {Mês, Ano, 12meses, 24meses, Noperíodo} — SEM coluna de label
+    // Linha 0 = Rendimento Nominal (R$)
+    // Linha 1 = Var. Nominal (%) — valores já em % (ex: 0.587 = 0,59%)
+    // Linha 2 = CDI (%)
+    // Linha 3 = IPCAdp (%)
     const tab0 = t.tab0 || [];
-    const r0   = {}; // { "Var. Nominal (%)": {Mês, Ano, 12meses, ...}, ... }
-    tab0.forEach(row => {
-      const chave = Object.values(row)[0]; // primeira coluna = label
-      r0[chave] = row;
-    });
+    const varNom = tab0[1] || {};  // Var. Nominal (%)
+    const cdi    = tab0[2] || {};  // CDI (%)
 
-    const varNom = r0["Var. Nominal (%)"] || r0[Object.keys(r0).find(k=>k.includes("Var. Nominal"))] || {};
-    const cdi    = r0["CDI (%)"] || r0[Object.keys(r0).find(k=>k.includes("CDI (%)"))] || {};
+    // Formata % direto (valores já são %, não decimal)
+    const fmtPctDireto = v => {
+      const n = parseFloat(v);
+      if (isNaN(n)) return '—';
+      return (n >= 0 ? '+' : '') + n.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2}) + '%';
+    };
+    const fmtPctDir = v => {
+      const n = parseFloat(v);
+      if (isNaN(n)) return '—';
+      return n.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2}) + '%';
+    };
 
-    // Localiza chave do período de forma robusta (aceita com ou sem acento)
-    const _findKey = (obj, hints) => Object.keys(obj).find(k => hints.some(h => k.toLowerCase().includes(h.toLowerCase()))) || '';
-    const _perK = obj => _findKey(obj, ['Noperíodo','Noperiodo','período','periodo','nop']);
+    // Detecta chaves de período (aceita Noperíodo, Noperiodo, etc.)
+    const _findKey = (obj, hints) => Object.keys(obj).find(k => hints.some(h => k.toLowerCase().replace(/[íi]/g,'i').includes(h.toLowerCase().replace(/[íi]/g,'i')))) || '';
+    const _perK = obj => _findKey(obj, ['Noperíodo','Noperíodo','Noperiodo','noperio','nop']);
     const _12mK = obj => _findKey(obj, ['12meses','12 meses']);
 
-    const perK  = _perK(varNom) || _perK(cdi) || Object.keys(varNom).at(-1) || '';
-    const m12K  = _12mK(varNom) || _12mK(cdi) || '';
+    const perK = _perK(varNom) || _perK(cdi) || Object.keys(varNom).at(-1) || '';
+    const m12K = _12mK(varNom) || _12mK(cdi) || '';
 
-    // KPI — PL (tab6)
+    // KPI — PL: tab6 está vazia → usa tab8 (posição total por instituição)
+    const tab8inst = t.tab8 || [];
+    // Detecta chave de saldo final (ex: 'Saldo Bruto 31/03/26')
+    const saldoFimKey = tab8inst[0] ? Object.keys(tab8inst[0]).find(k => /saldo bruto.*[0-9]{2}\/[0-9]{2}\/[0-9]{2}/i.test(k) && !k.includes('início') && !k.includes('31/12/24')) : null;
+    const plRow = tab8inst.find(r => /total/i.test(String(r['Ativo']||''))) || tab8inst[tab8inst.length - 1] || {};
+    const pl = saldoFimKey ? parseFloat(plRow[saldoFimKey]) : 0;
+
+    // r6 vazio mas mantemos compatibilidade para resto do código
     const tab6 = t.tab6 || [];
     const r6   = {};
     tab6.forEach(row => { r6[Object.values(row)[0]] = Object.values(row)[1]; });
 
-    const pl       = r6["PL em 31/03/2026"] || r6[Object.keys(r6).find(k => k.includes("PL em"))] || '';
+    // pl agora vem de tab8 (calculado acima)
     const plMedio  = r6["PL médio no período"] || '';
     const maiorMes = r6["Maior rentabilidade mensal"] || '';
     const menorMes = r6["Menor rentabilidade mensal"] || '';
@@ -3341,11 +3357,11 @@
     const mesesNeg = r6["Número de meses com retorno negativo"] || '';
 
     setText('ont-pl',            pl ? fmtBRL(pl) : '—');
-    setText('ont-pl-sub',        pl ? '31/03/2026' : '');
-    setText('ont-rent-periodo',  varNom[perK] !== undefined ? fmtPct(varNom[perK]) : '—');
-    setText('ont-rent-periodo-sub', cdi[perK] !== undefined ? 'CDI: ' + fmtPct(cdi[perK]) : '');
-    setText('ont-rent-12m',      varNom[m12K] !== undefined ? fmtPct(varNom[m12K]) : '—');
-    setText('ont-rent-12m-sub',  cdi[m12K]    !== undefined ? 'CDI 12m: ' + fmtPct(cdi[m12K]) : '');
+    setText('ont-pl-sub',        pl ? (saldoFimKey ? saldoFimKey.replace(/saldo bruto /i,'').trim() : '31/03/2026') : '');
+    setText('ont-rent-periodo',  varNom[perK] !== undefined ? fmtPctDireto(varNom[perK]) : '—');
+    setText('ont-rent-periodo-sub', cdi[perK] !== undefined ? 'CDI: ' + fmtPctDireto(cdi[perK]) : '');
+    setText('ont-rent-12m',      varNom[m12K] !== undefined ? fmtPctDireto(varNom[m12K]) : '—');
+    setText('ont-rent-12m-sub',  cdi[m12K]    !== undefined ? 'CDI 12m: ' + fmtPctDireto(cdi[m12K]) : '');
 
     // tab5: Sharpe e Volatilidade
     const tab5 = t.tab5 || [];
