@@ -2430,6 +2430,9 @@
         // Probe mercado sub-keys
         if (previdencia.mercado) console.log("   mercado keys:", Object.keys(previdencia.mercado));
         if (previdencia.curva)   console.log("   curva keys:",   Object.keys(previdencia.curva));
+        // Show actual key names
+        if (previdencia.mercado) Object.keys(previdencia.mercado).forEach(k => console.log("     mercado." + k + ":", Array.isArray(previdencia.mercado[k]) ? previdencia.mercado[k].length + " rows" : typeof previdencia.mercado[k]));
+        if (previdencia.curva)   Object.keys(previdencia.curva).forEach(k =>   console.log("     curva."   + k + ":", Array.isArray(previdencia.curva[k])   ? previdencia.curva[k].length   + " rows" : typeof previdencia.curva[k]));
       } else {
         console.warn("⚠️ Previdência vazia:", previdencia && previdencia.error || "estrutura inesperada");
         console.log("   Estrutura recebida:", previdencia && Object.keys(previdencia));
