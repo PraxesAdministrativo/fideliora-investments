@@ -2970,29 +2970,67 @@
     // Linhas: "Rend. Nominal (R$", "Var. Nominal (%)", "CDI (%)", "IPCAdp (%)"
     // Colunas: Mês | Ano | 12meses | 24meses | Noperiodo
     const tab0 = t.tab0 || [];
-    const r0   = {}; // { "Var. Nominal (%)": {Mês, Ano, 12meses, ...}, ... }
-    tab0.forEach(row => {
-      const chave = Object.values(row)[0]; // primeira coluna = label
-      r0[chave] = row;
-    });
 
-    const varNom = r0["Var. Nominal (%)"] || r0[Object.keys(r0).find(k=>k.includes("Var. Nominal"))] || {};
-    const cdi    = r0["CDI (%)"] || r0[Object.keys(r0).find(k=>k.includes("CDI (%)"))] || {};
+    // tab0 pode chegar como array de arrays (com cabeçalho na pos 0)
+    // ou como array de objetos com chaves nomeadas
+    // Normaliza para: r0 = { 'Var. Nominal (%)': { 'Mês': val, 'Ano': val, 'Noperíodo': val, ... }, ... }
+    const r0 = {};
+    let _tab0Headers = [];
 
-    // Localiza chave do período de forma robusta (aceita com ou sem acento)
+    if (tab0.length > 0) {
+      const first = tab0[0];
+      const isArr = Array.isArray(first);
+
+      if (isArr) {
+        // Primeira linha = cabeçalho, demais = dados
+        _tab0Headers = first.map(h => String(h||'').trim());
+        tab0.slice(1).forEach(row => {
+          const vals = Array.isArray(row) ? row : Object.values(row);
+          const chave = String(vals[0]||'').trim();
+          if (!chave) return;
+          const obj = {};
+          _tab0Headers.forEach((h, i) => { if(h && i > 0) obj[h] = vals[i]; });
+          r0[chave] = obj;
+        });
+      } else {
+        // Objetos com chaves nomeadas — extrai header das chaves e constrói igual
+        tab0.forEach(row => {
+          const vals = Object.values(row);
+          const keys = Object.keys(row);
+          const chave = String(vals[0]||'').trim();
+          if (!chave) return;
+          const obj = {};
+          keys.slice(1).forEach((k,i) => { obj[k] = vals[i+1]; });
+          r0[chave] = obj;
+        });
+        if (tab0[0]) _tab0Headers = Object.keys(tab0[0]);
+      }
+    }
+
+    const varNom = r0['Var. Nominal (%)'] || r0[Object.keys(r0).find(k=>k.includes('Var. Nominal'))] || {};
+    const cdi    = r0['CDI (%)']          || r0[Object.keys(r0).find(k=>k.includes('CDI (%)'))]     || {};
+
+    // Localiza chave do período de forma robusta
     const _findKey = (obj, hints) => Object.keys(obj).find(k => hints.some(h => k.toLowerCase().includes(h.toLowerCase()))) || '';
     const _perK = obj => _findKey(obj, ['Noperíodo','Noperiodo','período','periodo','nop']);
     const _12mK = obj => _findKey(obj, ['12meses','12 meses']);
 
-    const perK  = _perK(varNom) || _perK(cdi) || Object.keys(varNom).at(-1) || '';
-    const m12K  = _12mK(varNom) || _12mK(cdi) || '';
+    const perK = _perK(varNom) || _perK(cdi) || (_tab0Headers.length ? _tab0Headers[_tab0Headers.length-1] : '') || '';
+    const m12K = _12mK(varNom) || _12mK(cdi) || '';
+
+    console.log('tab0 r0 keys:', Object.keys(r0));
+    console.log('varNom:', varNom, '| perK:', perK, '| m12K:', m12K);
 
     // KPI — PL (tab6)
     const tab6 = t.tab6 || [];
     const r6   = {};
-    tab6.forEach(row => { r6[Object.values(row)[0]] = Object.values(row)[1]; });
+    tab6.forEach(row => {
+      const vals = Array.isArray(row) ? row : Object.values(row);
+      const k = String(vals[0]||'').trim();
+      if (k) r6[k] = vals[1];
+    });
 
-    const pl       = r6["PL em 31/03/2026"] || r6[Object.keys(r6).find(k => k.includes("PL em"))] || '';
+    const pl = r6['PL em 31/03/2026'] || r6[Object.keys(r6).find(k => k.includes('PL em'))] || '';
     const plMedio  = r6["PL médio no período"] || '';
     const maiorMes = r6["Maior rentabilidade mensal"] || '';
     const menorMes = r6["Menor rentabilidade mensal"] || '';
@@ -3009,7 +3047,11 @@
     // tab5: Sharpe e Volatilidade
     const tab5 = t.tab5 || [];
     const r5   = {};
-    tab5.forEach(row => { r5[Object.values(row)[0]] = { carteira: Object.values(row)[1], cdi: Object.values(row)[2] }; });
+    tab5.forEach(row => {
+      const vals = Array.isArray(row) ? row : Object.values(row);
+      const k = String(vals[0]||'').trim();
+      if (k) r5[k] = { carteira: vals[1], cdi: vals[2] };
+    });
 
     const sharpe = r5["Índice de Sharpe no período (CDI)"] || r5[Object.keys(r5).find(k=>k.includes("Sharpe"))] || {};
     const volat  = r5["Volatilidade no período"] || r5[Object.keys(r5).find(k=>k.includes("Volatilidade"))] || {};
