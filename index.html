@@ -1723,110 +1723,61 @@
       </div>
     </div>
 
-    <!-- ══ PÁGINA: OFFSHORE TOTAL ══════════════════════ -->
-    <div id="page-offshore-total" class="page">
+    <!-- ══ FLUXO ONSHORE ══════════════════════════════════════ -->
+    <div id="page-fluxo-onshore" class="page">
       <div class="top-bar">
-        <div class="page-title">Offshore — Carteira Total</div>
+        <div class="page-title">Onshore — Fluxo de Caixa</div>
         <div class="top-bar-right">
-          <select class="period-select"><option>Mai 2025</option><option>Abr 2025</option><option>YTD</option></select>
+          <select class="period-select" id="fluxo-periodo-select" onchange="renderFluxoOnshore()">
+            <option>Mai 2025</option><option>Abr 2025</option><option>Mar 2025</option><option>2025 YTD</option>
+          </select>
           <button class="btn-export">Exportar PDF</button>
         </div>
       </div>
       <div class="content-wrapper">
-        <div class="kpi-grid kpi-grid-4 mb-20">
-          <div class="kpi-card">
-            <div class="kpi-label">Patrimônio Offshore (USD)</div>
-            <div class="kpi-val">US$ 86,2 mi</div>
-            <div class="kpi-change pos">▲ +US$ 1,9 mi no mês</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Patrimônio Offshore (BRL)</div>
-            <div class="kpi-val">R$ 449 mi</div>
-            <div class="kpi-change">USD/BRL 5,21</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Rentab. mês (USD)</div>
-            <div class="kpi-val">+2,27%</div>
-            <div class="kpi-change pos">S&P 500: +1,4%</div>
-          </div>
+        <!-- KPIs -->
+        <div class="kpi-grid kpi-grid-3 mb-20">
           <div class="kpi-card green">
-            <div class="kpi-label">Rentab. YTD (USD)</div>
-            <div class="kpi-val">+11,84%</div>
-            <div class="kpi-change pos">▲ Benchmark: +9,2%</div>
+            <div class="kpi-label" id="fluxo-kpi1-label">Total Recebido</div>
+            <div class="kpi-val" id="fluxo-kpi1-val">—</div>
+            <div class="kpi-change" id="fluxo-kpi1-sub"></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Juros Totais</div>
+            <div class="kpi-val" id="fluxo-kpi2-val">—</div>
+            <div class="kpi-change" id="fluxo-kpi2-sub"></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Amortizações</div>
+            <div class="kpi-val" id="fluxo-kpi3-val">—</div>
+            <div class="kpi-change" id="fluxo-kpi3-sub"></div>
           </div>
         </div>
 
-        <div class="col-3-2 mb-20">
+        <div class="col-2-3 mb-20">
+          <!-- Eventos do mês -->
           <div class="card">
-            <div class="card-title">Posição Offshore Consolidada <span class="card-title-label">USD</span></div>
-            <table class="data-table">
-              <thead>
-                <tr><th>Ativo / Fundo</th><th>Estrutura</th><th>USD</th><th>%</th><th>Rent. mês</th><th>Rent. YTD</th></tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Cayman Fund — Azevedo LLC</td>
-                  <td><span class="badge badge-gold">Cart. Adm.</span></td>
-                  <td class="td-num">US$ 42,8 mi</td>
-                  <td class="td-num">49,7%</td>
-                  <td class="td-num" style="color:var(--verde)">+2,84%</td>
-                  <td class="td-num" style="color:var(--verde)">+14,20%</td>
-                </tr>
-                <tr>
-                  <td>Blackrock Global Alloc.</td>
-                  <td><span class="badge badge-navy">Fundo</span></td>
-                  <td class="td-num">US$ 18,4 mi</td>
-                  <td class="td-num">21,3%</td>
-                  <td class="td-num" style="color:var(--verde)">+1,92%</td>
-                  <td class="td-num" style="color:var(--verde)">+10,80%</td>
-                </tr>
-                <tr>
-                  <td>Vanguard S&P 500 ETF</td>
-                  <td><span class="badge badge-gray">ETF</span></td>
-                  <td class="td-num">US$ 12,0 mi</td>
-                  <td class="td-num">13,9%</td>
-                  <td class="td-num" style="color:var(--verde)">+1,41%</td>
-                  <td class="td-num" style="color:var(--verde)">+9,20%</td>
-                </tr>
-                <tr>
-                  <td>iShares EM Bond USD</td>
-                  <td><span class="badge badge-gray">ETF</span></td>
-                  <td class="td-num">US$ 8,2 mi</td>
-                  <td class="td-num">9,5%</td>
-                  <td class="td-num" style="color:var(--verde)">+0,64%</td>
-                  <td class="td-num" style="color:var(--verde)">+4,10%</td>
-                </tr>
-                <tr>
-                  <td>Cash / Money Market</td>
-                  <td><span class="badge badge-gray">Caixa</span></td>
-                  <td class="td-num">US$ 4,8 mi</td>
-                  <td class="td-num">5,6%</td>
-                  <td class="td-num" style="color:var(--text-muted)">+0,42%</td>
-                  <td class="td-num" style="color:var(--text-muted)">+2,10%</td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="card-title" id="fluxo-lista-titulo">Fluxo Detalhado</div>
+            <ul class="event-list" id="fluxo-lista-body">
+              <li style="padding:24px;text-align:center;color:var(--text-muted)">Carregando...</li>
+            </ul>
           </div>
-          <div style="display:flex;flex-direction:column;gap:16px">
-            <div class="card">
-              <div class="card-title">Alocação Offshore <span class="card-title-label">% USD</span></div>
-              <div class="chart-container" style="height:180px">
-                <canvas id="chart-offshore-donut"></canvas>
-              </div>
+
+          <!-- Histórico + Próximos -->
+          <div class="card">
+            <div class="card-title">Fluxo Histórico <span class="card-title-label">R$ mi / mês</span></div>
+            <div class="chart-container" style="height:190px">
+              <canvas id="chart-fluxo-bar"></canvas>
             </div>
-            <div class="card" style="padding:16px 20px">
-              <div class="card-title" style="margin-bottom:8px">Câmbio & Hedge</div>
-              <div style="font-size:12px;color:var(--text-secondary);line-height:2">
-                <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding:4px 0"><span>USD/BRL spot</span><span style="font-weight:500;color:var(--navy)">R$ 5,21</span></div>
-                <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding:4px 0"><span>Hedge cambial</span><span><span class="badge badge-navy">Parcial 40%</span></span></div>
-                <div style="display:flex;justify-content:space-between;padding:4px 0"><span>Exposição líquida</span><span style="font-weight:500;color:var(--navy)">US$ 51,7 mi</span></div>
-              </div>
+            <div class="divider"></div>
+            <div class="card-title" style="margin-bottom:10px">Próximos Eventos Previstos</div>
+            <div id="fluxo-proximos" style="font-size:12px;color:var(--text-secondary);line-height:2">
+              <div style="color:var(--text-muted);text-align:center;padding:8px">—</div>
             </div>
           </div>
         </div>
       </div>
     </div>
-
     <!-- ══ PÁGINA: CARTEIRA ADM OFFSHORE ══════════════ -->
     <div id="page-offshore-ca" class="page">
       <div class="top-bar">
@@ -3278,6 +3229,7 @@
   function renderizarPagina(id) {
     if (!CD) return; // sem dados ainda
     if (id === 'onshore-total') renderOnshoreTotal();
+    if (id === 'fluxo-onshore')  renderFluxoOnshore();
     if (id === 'iliquidos')     renderIliquidos();
     if (id === 'previdencia')   renderPrevidencia();
     // Outras páginas com dados reais podem ser adicionadas aqui
@@ -4181,6 +4133,214 @@
   }
 
 
+
+  // ── FLUXO DE CAIXA ONSHORE ────────────────────────────────────────
+  // Lê CD.movimentacoes — campos: Data, Carteira, Ativo, Evento, Status Evento, Quant, Valor Bruto
+
+  function renderFluxoOnshore() {
+    if (!CD || !CD.movimentacoes) return;
+
+    const mov = CD.movimentacoes;
+    const fmtMi = v => { const n=Math.abs(v); return n>=1e6?(n/1e6).toFixed(2)+' mi':n>=1e3?Math.round(n/1e3)+' mil':Math.round(n).toLocaleString('pt-BR'); };
+    const fmtBR = v => 'R$ '+fmtMi(v);
+
+    // Detecta mês/ano selecionado no select
+    const sel   = document.getElementById('fluxo-periodo-select');
+    const opt   = sel ? sel.value : '';
+    const ytd   = opt.includes('YTD');
+    let filtMes = null, filtAno = null;
+    if (!ytd && opt) {
+      const parts = opt.split(' '); // "Mai 2025"
+      const nomMes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+      filtMes = nomMes.indexOf(parts[0]) + 1; // 1-12
+      filtAno = parseInt(parts[1]);
+    }
+
+    // Popula o select com meses disponíveis nas movimentações
+    if (sel && sel.options.length <= 4) {
+      const mesesDisp = new Set();
+      mov.forEach(r => {
+        const d = String(r['Data']||'');
+        const m = d.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+        if (m) mesesDisp.add(m[2]+'/'+m[3]); // MM/YYYY
+      });
+      const nomMes2 = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+      const sorted = [...mesesDisp].sort((a,b)=>{
+        const [ma,ya]=[parseInt(a),parseInt(a.split('/')[1])];
+        const [mb,yb]=[parseInt(b),parseInt(b.split('/')[1])];
+        return ya!==yb?yb-ya:mb-ma; // desc
+      });
+      sel.innerHTML = sorted.map(mv => {
+        const [mm,yy] = mv.split('/');
+        return `<option>${nomMes2[parseInt(mm)-1]} ${yy}</option>`;
+      }).join('') + `<option>${new Date().getFullYear()} YTD</option>`;
+      // Re-read after populating
+      const opt2 = sel.value;
+      if (!ytd && opt2) {
+        const p2 = opt2.split(' ');
+        const nm2 = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+        filtMes = nm2.indexOf(p2[0]) + 1;
+        filtAno = parseInt(p2[1]);
+      }
+    }
+
+    // Filtra movimentações
+    const filtradas = mov.filter(r => {
+      const d = String(r['Data']||'');
+      const m = d.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+      if (!m) return false;
+      const mes = parseInt(m[2]), ano = parseInt(m[3]);
+      if (ytd) return ano === filtAno || (!filtAno && ano === new Date().getFullYear());
+      return mes === filtMes && ano === filtAno;
+    }).filter(r => {
+      const v = parseFloat(r['Valor Bruto']||0);
+      return v > 0; // só entradas
+    });
+
+    // Classifica eventos
+    const classEvento = ev => {
+      const e = String(ev||'').toLowerCase();
+      if (/juros|cupom|juro/.test(e)) return 'juros';
+      if (/amort/.test(e))            return 'amortizacao';
+      if (/divid/.test(e))            return 'dividendo';
+      if (/rend|cotiz/.test(e))       return 'rendimento';
+      return 'outro';
+    };
+
+    const iconEvento = tipo => {
+      const icons = {
+        juros:       '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>',
+        amortizacao: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+        dividendo:   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>',
+        rendimento:  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+        outro:       '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>'
+      };
+      return icons[tipo] || icons.outro;
+    };
+
+    const classCss = { juros:'ei-juros', amortizacao:'ei-amort', dividendo:'ei-div', rendimento:'ei-prev', outro:'ei-outro' };
+
+    // KPIs
+    let totalJuros=0, totalAmort=0, totalDiv=0, totalRend=0, totalGeral=0;
+    filtradas.forEach(r => {
+      const v = parseFloat(r['Valor Bruto']||0);
+      const tipo = classEvento(r['Evento']);
+      totalGeral += v;
+      if (tipo==='juros')       totalJuros += v;
+      if (tipo==='amortizacao') totalAmort += v;
+      if (tipo==='dividendo')   totalDiv   += v;
+      if (tipo==='rendimento')  totalRend  += v;
+    });
+
+    const nomMesLabel = filtMes ? ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][filtMes-1] : '';
+    const periodoLabel = ytd ? filtAno+' YTD' : nomMesLabel+'/'+String(filtAno).slice(-2);
+
+    const setTxt = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
+    const setHTML= (id,v) => { const e=document.getElementById(id); if(e) e.innerHTML=v; };
+
+    setTxt('fluxo-kpi1-label', 'Total Recebido — '+periodoLabel);
+    setTxt('fluxo-kpi1-val',   'R$ '+fmtMi(totalGeral));
+    setTxt('fluxo-kpi2-val',   'R$ '+fmtMi(totalJuros+totalRend));
+    setTxt('fluxo-kpi2-sub',   'Juros + Rendimentos');
+    setTxt('fluxo-kpi3-val',   'R$ '+fmtMi(totalAmort));
+    setTxt('fluxo-kpi3-sub',   filtradas.filter(r=>classEvento(r['Evento'])==='amortizacao').length+' parcel(as)');
+    setTxt('fluxo-lista-titulo','Fluxo Detalhado — '+periodoLabel);
+
+    // Lista de eventos
+    const listaHTML = filtradas.length === 0
+      ? '<li style="padding:20px;text-align:center;color:var(--text-muted)">Nenhum evento no período</li>'
+      : filtradas.sort((a,b)=>String(a['Data']).localeCompare(String(b['Data']))).map(r => {
+          const v    = parseFloat(r['Valor Bruto']||0);
+          const tipo = classEvento(r['Evento']);
+          const nome = String(r['Ativo']||'').replace(/ fif | fim | fic /gi,' ').substring(0,45);
+          const data = String(r['Data']||'');
+          return `<li class="event-item">
+            <div class="event-icon ${classCss[tipo]}">${iconEvento(tipo)}</div>
+            <div class="event-desc">
+              <div class="event-name">${String(r['Evento']||'')} — ${nome}</div>
+              <div class="event-detail">${data}</div>
+            </div>
+            <div class="event-value pos">+R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0})}</div>
+          </li>`;
+        }).join('');
+
+    setHTML('fluxo-lista-body', listaHTML);
+
+    // Gráfico histórico (últimos 6 meses)
+    const mesesHist = [];
+    const now = new Date();
+    for (let i=5; i>=0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+      mesesHist.push({ mes: d.getMonth()+1, ano: d.getFullYear(),
+        label: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][d.getMonth()] });
+    }
+    const histData = mesesHist.map(({mes,ano}) => {
+      const rows = mov.filter(r => {
+        const d=String(r['Data']||''); const m=d.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+        return m && parseInt(m[2])===mes && parseInt(m[3])===ano && parseFloat(r['Valor Bruto']||0)>0;
+      });
+      let j=0,a=0,dv=0;
+      rows.forEach(r => {
+        const v=parseFloat(r['Valor Bruto']||0), tp=classEvento(r['Evento']);
+        if(tp==='juros'||tp==='rendimento') j+=v;
+        else if(tp==='amortizacao') a+=v;
+        else dv+=v;
+      });
+      return { j:j/1e6, a:a/1e6, dv:dv/1e6 };
+    });
+
+    const ctxBar = document.getElementById('chart-fluxo-bar');
+    if (ctxBar) {
+      if (ctxBar._chartInst) ctxBar._chartInst.destroy();
+      ctxBar._chartInst = new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+          labels: mesesHist.map(m=>m.label),
+          datasets: [
+            { label:'Juros/Rend.',  data: histData.map(d=>d.j),  backgroundColor:'#1a6645', borderRadius:3, barThickness:12 },
+            { label:'Amortização',  data: histData.map(d=>d.a),  backgroundColor:'#c4913a', borderRadius:3, barThickness:12 },
+            { label:'Dividendos',   data: histData.map(d=>d.dv), backgroundColor:'#2a5a66', borderRadius:3, barThickness:12 }
+          ]
+        },
+        options: {
+          responsive:true, maintainAspectRatio:false,
+          plugins: {
+            legend:{display:true,position:'bottom',labels:{color:'#041924',font:{size:10},boxWidth:10,padding:12}},
+            tooltip:{backgroundColor:'#041924',callbacks:{label:c=>'R$'+c.raw.toFixed(2)+'mi'}}
+          },
+          scales:{
+            x:{stacked:true,grid:{display:false},ticks:{color:'#5b818b',font:{size:10}}},
+            y:{stacked:true,grid:{color:'rgba(4,25,36,0.05)'},ticks:{color:'#5b818b',font:{size:10},callback:v=>'R$'+v+'mi'}}
+          }
+        }
+      });
+    }
+
+    // Próximos eventos (mês seguinte)
+    const proxMes = filtMes===12?1:filtMes+1;
+    const proxAno = filtMes===12?filtAno+1:filtAno;
+    const proximos = mov.filter(r => {
+      const d=String(r['Data']||''); const m=d.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+      return m && parseInt(m[2])===proxMes && parseInt(m[3])===proxAno && parseFloat(r['Valor Bruto']||0)>0;
+    }).slice(0,5);
+
+    const nomMesProx = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][proxMes-1];
+    const proxHTML = proximos.length === 0
+      ? '<div style="color:var(--text-muted);text-align:center;padding:8px">—</div>'
+      : proximos.map(r => {
+          const v=parseFloat(r['Valor Bruto']||0);
+          const nome=String(r['Ativo']||'').substring(0,30);
+          return `<div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding:5px 0">
+            <span>${String(r['Evento']||'')} — ${nome}</span>
+            <span style="color:var(--verde)">+R$ ${fmtMi(v)} · ${nomMesProx}/${String(proxAno).slice(-2)}</span>
+          </div>`;
+        }).join('');
+    setHTML('fluxo-proximos', proxHTML);
+  }
+
+  window.renderFluxoOnshore = renderFluxoOnshore;
+
+
 })(); // fim IIFE
 
   /* ────── CHARTS ────── */
@@ -4336,32 +4496,8 @@
     // ILÍQUIDOS
     if (page === 'iliquidos') { renderIliquidos(); }
 
-    // FLUXO ONSHORE
-    if (page === 'fluxo-onshore') {
-      const ctxFB = document.getElementById('chart-fluxo-bar');
-      if (ctxFB) new Chart(ctxFB, {
-        type:'bar',
-        data:{
-          labels:['Jan','Fev','Mar','Abr','Mai'],
-          datasets:[
-            {label:'Juros',data:[2.4,2.5,2.6,2.7,2.82],backgroundColor:VERDE,borderRadius:4,barThickness:14},
-            {label:'Amortização',data:[0.98,0.98,1.0,1.0,1.44],backgroundColor:GOLD,borderRadius:4,barThickness:14},
-            {label:'Dividendos',data:[2.0,2.1,2.0,2.5,2.15],backgroundColor:NAVY_MID,borderRadius:4,barThickness:14}
-          ]
-        },
-        options:{
-          ...defaults,
-          plugins:{
-            ...defaults.plugins,
-            legend:{display:true,position:'bottom',labels:{color:NAVY,font:{size:10},boxWidth:10,padding:12}}
-          },
-          scales:{
-            x:{stacked:true,grid:{display:false},ticks:{color:MUTED,font:{size:10}}},
-            y:{stacked:true,grid:{color:'rgba(15,61,87,0.05)'},ticks:{color:MUTED,font:{size:10},callback:v=>'R$'+v+'mi'}}
-          }
-        }
-      });
-    }
+    // FLUXO ONSHORE — renderizado dinamicamente
+    if (page === 'fluxo-onshore') { renderFluxoOnshore(); }
 
     // OFFSHORE TOTAL
     if (page === 'offshore-total') {
