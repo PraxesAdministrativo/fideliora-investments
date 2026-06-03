@@ -2330,7 +2330,7 @@
       // Garante que movimentacoes onshore está acessível em CD
       if (principal.movimentacoes) CD.movimentacoes = principal.movimentacoes;
       console.log("✅ Principal carregado:", Object.keys(CD.tables));
-      if (CD.movimentacoes) console.log("   movimentacoes onshore:", CD.movimentacoes.length, "rows | cols:", CD.movimentacoes[0] ? Object.keys(CD.movimentacoes[0]) : []);
+
 
       // DEBUG estrutura das tabelas problemáticas
       ['tab2','tab5','tab6','tab8'].forEach(k => {
