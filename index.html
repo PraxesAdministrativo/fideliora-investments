@@ -2377,6 +2377,14 @@
       if (principal.error) throw new Error(principal.error);
       CD = principal;
       console.log("✅ Principal carregado:", Object.keys(CD.tables));
+      // DEBUG tab0 e tab6
+      const _t0 = CD.tables.tab0 || [];
+      const _t6 = CD.tables.tab6 || [];
+      console.log("DEBUG tab0 length:", _t0.length, "| keys[0]:", _t0[0] ? Object.keys(_t0[0]) : "EMPTY");
+      console.log("DEBUG tab0[0]:", _t0[0]);
+      console.log("DEBUG tab0[1]:", _t0[1]);
+      console.log("DEBUG tab6 length:", _t6.length, "| keys[0]:", _t6[0] ? Object.keys(_t6[0]) : "EMPTY");
+      console.log("DEBUG tab6[0]:", _t6[0]);
       // Debug: mostra primeiras chaves de cada tabela para facilitar diagnóstico
       Object.keys(CD.tables).forEach(k => {
         const tbl = CD.tables[k];
