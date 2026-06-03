@@ -2327,9 +2327,11 @@
 
       if (principal.error) throw new Error(principal.error);
       CD = principal;
+      // Garante que movimentacoes onshore está acessível em CD
+      if (principal.movimentacoes) CD.movimentacoes = principal.movimentacoes;
       console.log("✅ Principal carregado:", Object.keys(CD.tables));
-      console.log("   Principal root keys:", Object.keys(principal));
-      if (principal.movimentacoes) console.log("   movimentacoes:", principal.movimentacoes.length, "rows");
+      if (CD.movimentacoes) console.log("   movimentacoes onshore:", CD.movimentacoes.length, "rows | cols:", CD.movimentacoes[0] ? Object.keys(CD.movimentacoes[0]) : []);
+
       // DEBUG estrutura das tabelas problemáticas
       ['tab2','tab5','tab6','tab8'].forEach(k => {
         const tbl = CD.tables[k] || [];
