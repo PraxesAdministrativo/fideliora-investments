@@ -2328,6 +2328,8 @@
       if (principal.error) throw new Error(principal.error);
       CD = principal;
       console.log("✅ Principal carregado:", Object.keys(CD.tables));
+      console.log("   Principal root keys:", Object.keys(principal));
+      if (principal.movimentacoes) console.log("   movimentacoes:", principal.movimentacoes.length, "rows");
       // DEBUG estrutura das tabelas problemáticas
       ['tab2','tab5','tab6','tab8'].forEach(k => {
         const tbl = CD.tables[k] || [];
