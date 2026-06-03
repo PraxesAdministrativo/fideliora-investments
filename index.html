@@ -2422,6 +2422,11 @@
 
         const allKeys = [...Object.keys(mvTables), ...Object.keys(cvTables)];
         console.log("✅ Previdência carregada:", allKeys.length, "tabelas →", allKeys);
+        console.log("   Previdência keys (root):", Object.keys(previdencia));
+        console.log("   duration:", previdencia.duration ? previdencia.duration.length + " rows" : "NOT FOUND");
+        console.log("   yield_medio:", previdencia.yield_medio ? previdencia.yield_medio.length + " rows" : "NOT FOUND");
+        console.log("   mv_duration in CD.tables:", !!CD.tables.mv_duration);
+        console.log("   curva_yield in CD.tables:", !!CD.tables.curva_yield);
       } else {
         console.warn("⚠️ Previdência vazia:", previdencia && previdencia.error || "estrutura inesperada");
         console.log("   Estrutura recebida:", previdencia && Object.keys(previdencia));
