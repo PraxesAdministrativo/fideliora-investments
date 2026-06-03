@@ -4142,9 +4142,10 @@
   // Lê CD.movimentacoes — campos: Data, Carteira, Ativo, Evento, Status Evento, Quant, Valor Bruto
 
   function renderFluxoOnshore() {
-    if (!CD || !CD.movimentacoes) return;
+    if (!CD || !CD.movimentacoes) { console.warn('renderFluxoOnshore: CD.movimentacoes ausente'); return; }
 
     const mov = CD.movimentacoes;
+    console.log('renderFluxoOnshore chamado. mov.length=', mov.length, '| amostra[0]:', mov[0], '| amostra[1]:', mov[1]);
     const fmtMi = v => { const n=Math.abs(v); return n>=1e6?(n/1e6).toFixed(2)+' mi':n>=1e3?Math.round(n/1e3)+' mil':Math.round(n).toLocaleString('pt-BR'); };
     const fmtBR = v => 'R$ '+fmtMi(v);
 
@@ -4188,6 +4189,7 @@
       }
     }
 
+    console.log('filtro: ytd=', ytd, '| filtMes=', filtMes, '| filtAno=', filtAno, '| opt=', opt);
     // Filtra movimentações
     const filtradas = mov.filter(r => {
       const d = String(r['Data']||'');
