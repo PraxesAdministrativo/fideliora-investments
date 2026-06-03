@@ -2427,6 +2427,9 @@
         console.log("   yield_medio:", previdencia.yield_medio ? previdencia.yield_medio.length + " rows" : "NOT FOUND");
         console.log("   mv_duration in CD.tables:", !!CD.tables.mv_duration);
         console.log("   curva_yield in CD.tables:", !!CD.tables.curva_yield);
+        // Probe mercado sub-keys
+        if (previdencia.mercado) console.log("   mercado keys:", Object.keys(previdencia.mercado));
+        if (previdencia.curva)   console.log("   curva keys:",   Object.keys(previdencia.curva));
       } else {
         console.warn("⚠️ Previdência vazia:", previdencia && previdencia.error || "estrutura inesperada");
         console.log("   Estrutura recebida:", previdencia && Object.keys(previdencia));
