@@ -3362,28 +3362,6 @@
     const r6   = {};
     tab6.forEach(row => { r6[Object.values(row)[0]] = Object.values(row)[1]; });
 
-    // Calcula destaques a partir do tab2 (tab6 está vazia nesta planilha)
-    const mesesNomesAll = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-    let _todosVals = [];
-    Object.entries(anos).forEach(([ano, bloco]) => {
-      const cartR = bloco['Carteira'] || {};
-      mesesNomesAll.forEach(m => {
-        const v = cartR[m];
-        if (v !== undefined && v !== '' && v !== null) {
-          const n = parseFloat(v);
-          if (!isNaN(n)) _todosVals.push({ v: n, label: m + '/' + ano });
-        }
-      });
-    });
-    const _maiorObj = _todosVals.length ? _todosVals.reduce((a,b) => b.v > a.v ? b : a) : null;
-    const _menorObj = _todosVals.length ? _todosVals.reduce((a,b) => b.v < a.v ? b : a) : null;
-    const _mPos = _todosVals.filter(x => x.v >= 0).length;
-    const _mNeg = _todosVals.filter(x => x.v < 0).length;
-    const maiorMes = _maiorObj ? (_maiorObj.v*100).toFixed(2) + '% (' + _maiorObj.label + ')' : '';
-    const menorMes = _menorObj ? (_menorObj.v*100).toFixed(2) + '% (' + _menorObj.label + ')' : '';
-    const mesesPos = _mPos ? String(_mPos) : '';
-    const mesesNeg = _mNeg ? String(_mNeg) : '';
-    const plMedio  = '';  // não disponível sem tab6
 
     setText('ont-pl',            pl ? fmtBRL(pl) : '—');
     setText('ont-pl-sub',        pl ? (saldoFimKey ? saldoFimKey.replace(/saldo bruto /i,'').trim() : '31/03/2026') : '');
@@ -3500,6 +3478,29 @@
       anos[ano]['CDI']      = cdiRow;
       anos[ano]['%CDI']     = pctRow;
     }
+
+    // Calcula destaques a partir do tab2 (tab6 está vazia)
+    const mesesNomesAll = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    let _todosVals = [];
+    Object.entries(anos).forEach(([ano, bloco]) => {
+      const cartR = bloco['Carteira'] || {};
+      mesesNomesAll.forEach(m => {
+        const v = cartR[m];
+        if (v !== undefined && v !== '' && v !== null) {
+          const n = parseFloat(v);
+          if (!isNaN(n)) _todosVals.push({ v: n, label: m + '/' + ano });
+        }
+      });
+    });
+    const _maiorObj = _todosVals.length ? _todosVals.reduce((a,b) => b.v > a.v ? b : a) : null;
+    const _menorObj = _todosVals.length ? _todosVals.reduce((a,b) => b.v < a.v ? b : a) : null;
+    const _mPos = _todosVals.filter(x => x.v >= 0).length;
+    const _mNeg = _todosVals.filter(x => x.v < 0).length;
+    const maiorMes = _maiorObj ? (_maiorObj.v*100).toFixed(2) + '% (' + _maiorObj.label + ')' : '';
+    const menorMes = _menorObj ? (_menorObj.v*100).toFixed(2) + '% (' + _menorObj.label + ')' : '';
+    const mesesPos = _mPos ? String(_mPos) : '';
+    const mesesNeg = _mNeg ? String(_mNeg) : '';
+    const plMedio  = '';  // não disponível sem tab6
 
     const mesesNomes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez','Ano'];
     const mesesKeys  = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez','Ano'];
