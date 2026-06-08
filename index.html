@@ -711,6 +711,48 @@
     .mode-curva .prev-mode-curva{ display: block; }
 
 
+    /* ── HOME HERO STRIP ──────────────────────────────────── */
+    .hero-strip {
+      display: flex;
+      align-items: stretch;
+      background: var(--navy-deep, #03313e);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(42,90,102,0.25);
+    }
+    .hero-kpi {
+      flex: 1;
+      padding: 22px 24px;
+      min-width: 0;
+    }
+    .hero-divider {
+      width: 1px;
+      background: rgba(255,255,255,0.07);
+      flex-shrink: 0;
+    }
+    .hero-kpi-label {
+      font-size: 9.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: rgba(255,255,255,0.38);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    .hero-kpi-val {
+      font-size: 26px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin-bottom: 5px;
+    }
+    .hero-kpi-val.pos { color: #4ccd87; }
+    .hero-kpi-val.neg { color: #e06060; }
+    .hero-kpi-sub {
+      font-size: 11px;
+      color: rgba(255,255,255,0.32);
+    }
+
     /* ── FLUXO FILTROS ─────────────────────────────────────── */
     .fluxo-btn-tipo {
       padding: 4px 12px;
@@ -841,185 +883,137 @@
     <!-- ══ PÁGINA: HOME ══════════════════════════════ -->
     <div id="page-home" class="page active">
       <div class="top-bar">
-        <div class="page-title">Visão Geral</div>
+        <div class="page-title">Relatório Mensal — Onshore</div>
         <div class="top-bar-right">
-          <select class="period-select">
-            <option>Maio 2025</option>
-            <option>Abril 2025</option>
-            <option>2025 YTD</option>
-            <option>12 meses</option>
-          </select>
-          <button class="btn-export">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Exportar PDF
-          </button>
+          <div id="home-periodo-label" style="font-size:12px;color:var(--text-muted);padding:6px 12px;background:var(--surface-sunken,#ebe3d6);border:1px solid var(--border-strong);border-radius:6px"></div>
+          <button class="btn-export" onclick="window.print()">↓ Exportar PDF</button>
         </div>
       </div>
       <div class="content-wrapper">
-        <!-- Hero -->
-        <div class="dash-welcome">
-          <div class="dw-eyebrow">Posição consolidada · Mai 2025</div>
-          <div class="dw-name">Família Azevedo</div>
-          <div class="dw-date">Atualizado em 20 de maio de 2025</div>
-          <div class="dw-kpis">
-            <div class="dw-kpi">
-              <div class="dw-kpi-label">Patrimônio Total</div>
-              <div class="dw-kpi-val">R$ 1,23 bi</div>
-              <div class="dw-kpi-sub">+R$ 18,4 mi no mês</div>
-            </div>
-            <div class="dw-kpi">
-              <div class="dw-kpi-label">Rentabilidade YTD</div>
-              <div class="dw-kpi-val">+9,47%</div>
-              <div class="dw-kpi-sub">CDI 2025: +5,82%</div>
-            </div>
-            <div class="dw-kpi">
-              <div class="dw-kpi-label">Offshore (USD)</div>
-              <div class="dw-kpi-val">US$ 86,2 mi</div>
-              <div class="dw-kpi-sub">+2,3% no mês</div>
-            </div>
-            <div class="dw-kpi">
-              <div class="dw-kpi-label">Caixa / Liquidez Imediata</div>
-              <div class="dw-kpi-val">R$ 94,7 mi</div>
-              <div class="dw-kpi-sub">7,7% do patrimônio</div>
-            </div>
+
+        <!-- ── HERO STRIP ─────────────────────────────────────────── -->
+        <div class="hero-strip mb-20" id="home-hero">
+          <div class="hero-kpi">
+            <div class="hero-kpi-label">PL Final do Período</div>
+            <div class="hero-kpi-val" id="home-pl">—</div>
+            <div class="hero-kpi-sub" id="home-pl-sub"></div>
+          </div>
+          <div class="hero-divider"></div>
+          <div class="hero-kpi">
+            <div class="hero-kpi-label">Rentabilidade no Mês</div>
+            <div class="hero-kpi-val pos" id="home-rent-mes">—</div>
+            <div class="hero-kpi-sub" id="home-rent-mes-sub"></div>
+          </div>
+          <div class="hero-divider"></div>
+          <div class="hero-kpi">
+            <div class="hero-kpi-label">Rentabilidade 12 Meses</div>
+            <div class="hero-kpi-val pos" id="home-rent-12m">—</div>
+            <div class="hero-kpi-sub" id="home-rent-12m-sub"></div>
+          </div>
+          <div class="hero-divider"></div>
+          <div class="hero-kpi">
+            <div class="hero-kpi-label">Fluxo Recebido no Mês</div>
+            <div class="hero-kpi-val pos" id="home-fluxo-total">—</div>
+            <div class="hero-kpi-sub" id="home-fluxo-sub"></div>
+          </div>
+          <div class="hero-divider"></div>
+          <div class="hero-kpi">
+            <div class="hero-kpi-label">Sharpe no Período</div>
+            <div class="hero-kpi-val" id="home-sharpe">—</div>
+            <div class="hero-kpi-sub" id="home-sharpe-sub"></div>
           </div>
         </div>
 
-        <!-- KPIs rápidos -->
-        <div class="kpi-grid kpi-grid-4 mb-20">
-          <div class="kpi-card">
-            <div class="kpi-label">Onshore — Total</div>
-            <div class="kpi-val">R$ 782 mi</div>
-            <div class="kpi-change pos">▲ +1,6% no mês</div>
-          </div>
-          <div class="kpi-card accent">
-            <div class="kpi-label">Offshore — Total</div>
-            <div class="kpi-val">R$ 449 mi</div>
-            <div class="kpi-change pos">▲ +2,3% no mês</div>
-          </div>
-          <div class="kpi-card green">
-            <div class="kpi-label">Fluxo Recebido (mai/25)</div>
-            <div class="kpi-val">R$ 6,4 mi</div>
-            <div class="kpi-change">Juros + Amort + Div</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Rentab. mês (mai/25)</div>
-            <div class="kpi-val">+1,83%</div>
-            <div class="kpi-change pos">CDI mês: +0,83%</div>
-          </div>
-        </div>
+        <!-- ── LINHA 1: Fluxo breakdown + Performance ──────────────── -->
+        <div class="two-col mb-20">
 
-        <!-- Alocação + Evolução -->
-        <div class="col-2-3 mb-20">
+          <!-- Fluxo do mês -->
           <div class="card">
-            <div class="card-title">Alocação Global <span class="card-title-label">% do patrimônio</span></div>
+            <div class="card-title">Fluxo de Caixa do Mês <span class="card-title-label" id="home-fluxo-periodo"></span></div>
+            <div class="kpi-grid kpi-grid-3" style="margin-bottom:16px">
+              <div style="text-align:center;padding:12px;background:var(--verde-bg);border-radius:8px;border:1px solid rgba(26,102,69,.12)">
+                <div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--verde);margin-bottom:4px;font-weight:600">Juros</div>
+                <div style="font-size:20px;font-weight:700;color:var(--verde)" id="home-fluxo-juros">—</div>
+              </div>
+              <div style="text-align:center;padding:12px;background:var(--gold-pale);border-radius:8px;border:1px solid rgba(196,145,58,.15)">
+                <div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:4px;font-weight:600">Amortização</div>
+                <div style="font-size:20px;font-weight:700;color:var(--gold)" id="home-fluxo-amort">—</div>
+              </div>
+              <div style="text-align:center;padding:12px;background:rgba(42,90,102,.06);border-radius:8px;border:1px solid rgba(42,90,102,.12)">
+                <div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--navy-mid);margin-bottom:4px;font-weight:600">Div./Rend.</div>
+                <div style="font-size:20px;font-weight:700;color:var(--navy-mid)" id="home-fluxo-div">—</div>
+              </div>
+            </div>
+            <!-- Top 5 eventos -->
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:8px;font-weight:600">Principais Eventos</div>
+            <div id="home-fluxo-eventos" style="font-size:12px"></div>
+          </div>
+
+          <!-- Performance comparativa -->
+          <div class="card">
+            <div class="card-title">Performance Comparativa <span class="card-title-label">Carteira vs CDI</span></div>
             <table class="data-table">
-              <thead><tr><th>Classe</th><th>R$ Milhões</th><th>%</th><th style="width:100px"></th></tr></thead>
-              <tbody>
-                <tr>
-                  <td><span class="badge badge-gold">CRI</span> Recebíveis Imob.</td>
-                  <td class="td-num">R$ 214 mi</td>
-                  <td class="td-num">17,4%</td>
-                  <td><div class="alloc-bar-wrap"><div class="alloc-bar" style="width:87%"></div></div></td>
-                </tr>
-                <tr>
-                  <td><span class="badge badge-navy">FIP</span> Private Equity</td>
-                  <td class="td-num">R$ 186 mi</td>
-                  <td class="td-num">15,1%</td>
-                  <td><div class="alloc-bar-wrap"><div class="alloc-bar navy" style="width:76%"></div></div></td>
-                </tr>
-                <tr>
-                  <td><span class="badge badge-gray">Prev.</span> Fundo Previdência</td>
-                  <td class="td-num">R$ 142 mi</td>
-                  <td class="td-num">11,5%</td>
-                  <td><div class="alloc-bar-wrap"><div class="alloc-bar muted" style="width:58%"></div></div></td>
-                </tr>
-                <tr>
-                  <td>Renda Fixa Onshore</td>
-                  <td class="td-num">R$ 168 mi</td>
-                  <td class="td-num">13,7%</td>
-                  <td><div class="alloc-bar-wrap"><div class="alloc-bar" style="width:68%"></div></div></td>
-                </tr>
-                <tr>
-                  <td>Ilíquidos Onshore</td>
-                  <td class="td-num">R$ 72 mi</td>
-                  <td class="td-num">5,8%</td>
-                  <td><div class="alloc-bar-wrap"><div class="alloc-bar green" style="width:29%"></div></div></td>
-                </tr>
-                <tr>
-                  <td>Offshore — Total</td>
-                  <td class="td-num">R$ 449 mi</td>
-                  <td class="td-num">36,5%</td>
-                  <td><div class="alloc-bar-wrap"><div class="alloc-bar navy" style="width:100%"></div></div></td>
-                </tr>
+              <thead><tr>
+                <th>Indicador</th>
+                <th class="td-num">Carteira</th>
+                <th class="td-num">CDI</th>
+                <th class="td-num">Δ CDI</th>
+              </tr></thead>
+              <tbody id="home-perf-body">
+                <tr><td colspan="4" style="text-align:center;padding:16px;color:var(--text-muted)">—</td></tr>
               </tbody>
             </table>
           </div>
+        </div>
+
+        <!-- ── LINHA 2: Alocação por classe + Top holdings ─────────── -->
+        <div class="two-col mb-20">
+
+          <!-- Alocação por classe -->
           <div class="card">
-            <div class="card-title">Evolução Patrimonial <span class="card-title-label">12 meses</span></div>
-            <div class="chart-container" style="height:230px">
-              <canvas id="chart-home-evolucao"></canvas>
-            </div>
+            <div class="card-title">Alocação por Classe <span class="card-title-label">Saldo bruto 31/03/26</span></div>
+            <table class="data-table">
+              <thead><tr>
+                <th>Classe</th>
+                <th class="td-num">Saldo Final</th>
+                <th class="td-num">Rendimento</th>
+                <th class="td-num">%</th>
+              </tr></thead>
+              <tbody id="home-alloc-body">
+                <tr><td colspan="4" style="text-align:center;padding:16px;color:var(--text-muted)">—</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Top holdings -->
+          <div class="card">
+            <div class="card-title">Top Holdings <span class="card-title-label">Maiores posições</span></div>
+            <div id="home-holdings-body" style="font-size:12px"></div>
           </div>
         </div>
 
-        <!-- Fluxo recente + Rentabilidade por classe -->
-        <div class="two-col">
-          <div class="card">
-            <div class="card-title">Eventos Recentes <span class="card-title-label">Mai 2025</span></div>
-            <ul class="event-list">
-              <li class="event-item">
-                <div class="event-icon ei-juros">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-                </div>
-                <div class="event-desc">
-                  <div class="event-name">Juros — CRI Kinea II</div>
-                  <div class="event-detail">Recebido em 15/05/2025 · IPCA+7,2%</div>
-                </div>
-                <div class="event-value pos">+R$ 1.840.000</div>
-              </li>
-              <li class="event-item">
-                <div class="event-icon ei-amort">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7-7 7 7"/></svg>
-                </div>
-                <div class="event-desc">
-                  <div class="event-name">Amortização — CRI Brookfield</div>
-                  <div class="event-detail">Parcela 18/36 · 10/05/2025</div>
-                </div>
-                <div class="event-value pos">+R$ 980.000</div>
-              </li>
-              <li class="event-item">
-                <div class="event-icon ei-div">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                </div>
-                <div class="event-desc">
-                  <div class="event-name">Dividendo — FIP Capital III</div>
-                  <div class="event-detail">Distribuição trimestral · 05/05/2025</div>
-                </div>
-                <div class="event-value pos">+R$ 2.150.000</div>
-              </li>
-              <li class="event-item">
-                <div class="event-icon ei-prev">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                </div>
-                <div class="event-desc">
-                  <div class="event-name">Rendimento — Fundo Prev.</div>
-                  <div class="event-detail">Cotização mai/25 · PGBL Exclusivo</div>
-                </div>
-                <div class="event-value pos">+R$ 1.430.000</div>
-              </li>
-            </ul>
-          </div>
-          <div class="card">
-            <div class="card-title">Rentabilidade por Classe <span class="card-title-label">YTD 2025</span></div>
-            <div class="chart-container" style="height:200px">
-              <canvas id="chart-home-bar"></canvas>
-            </div>
+        <!-- ── LINHA 3: Rentabilidade mensal histórica (tabela) ─────── -->
+        <div class="card mb-20">
+          <div class="card-title">Rentabilidade Mensal <span class="card-title-label">Carteira vs CDI vs %CDI</span></div>
+          <div style="overflow-x:auto">
+            <table class="data-table" style="min-width:700px;font-size:11px">
+              <thead><tr>
+                <th>Ano</th><th>Indicador</th>
+                <th class="td-num">Jan</th><th class="td-num">Fev</th><th class="td-num">Mar</th>
+                <th class="td-num">Abr</th><th class="td-num">Mai</th><th class="td-num">Jun</th>
+                <th class="td-num">Jul</th><th class="td-num">Ago</th><th class="td-num">Set</th>
+                <th class="td-num">Out</th><th class="td-num">Nov</th><th class="td-num">Dez</th>
+                <th class="td-num" style="font-weight:700">Ano</th>
+              </tr></thead>
+              <tbody id="home-rentab-body">
+                <tr><td colspan="14" style="text-align:center;padding:16px;color:var(--text-muted)">—</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
+
       </div>
     </div>
-
     <!-- ══ PÁGINA: ONSHORE TOTAL ══════════════════════ -->
     <div id="page-onshore-total" class="page">
       <div class="top-bar">
@@ -2400,6 +2394,8 @@
         const id = paginaAtiva.id.replace('page-','');
         renderizarPagina(id);
       }
+      // Sempre atualiza home (relatório consolidado)
+      renderHome();
       // Pré-renderiza métricas PE/VC mesmo se não estiver na página de ilíquidos
       if (CD.tables['il_metricas']) renderMetricasIliquidos();
     } catch(e) {
@@ -3212,6 +3208,7 @@
 
   function renderizarPagina(id) {
     if (!CD) return; // sem dados ainda
+    if (id === 'home')          renderHome();
     if (id === 'onshore-total') renderOnshoreTotal();
     if (id === 'fluxo-onshore')  renderFluxoOnshore();
     if (id === 'iliquidos')     renderIliquidos();
@@ -4383,6 +4380,301 @@
   window.renderFluxoOnshore  = renderFluxoOnshore;
   window.fluxoFiltrarTipo    = fluxoFiltrarTipo;
 
+
+
+
+  // ── HOME — Relatório Mensal Consolidado ───────────────────────────
+
+  function renderHome() {
+    if (!CD) return;
+    const t = CD.tables || {};
+    if (!t.tab0 || t.tab0.length === 0) return;
+
+    const fmtPctDir = v => {
+      const n = parseFloat(v);
+      if (isNaN(n)) return '—';
+      return (n >= 0 ? '+' : '') + n.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2}) + '%';
+    };
+    const fmtPctDirN = v => {  // sem sinal
+      const n = parseFloat(v);
+      return isNaN(n) ? '—' : n.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2}) + '%';
+    };
+    const fmtM = v => {
+      const n = Math.abs(parseFloat(v) || 0), s = parseFloat(v) < 0 ? '−' : '';
+      if (n >= 1e6) return s + 'R$ ' + (n/1e6).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' mi';
+      if (n >= 1e3) return s + 'R$ ' + Math.round(n/1e3).toLocaleString('pt-BR') + ' mil';
+      return s + 'R$ ' + Math.round(n).toLocaleString('pt-BR');
+    };
+    const cor = v => parseFloat(v) >= 0 ? 'color:var(--verde)' : 'color:var(--vermelho)';
+    const setT = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
+    const setH = (id,v) => { const e=document.getElementById(id); if(e) e.innerHTML=v; };
+
+    // ── KPIs do topo (tab0 + tab8) ───────────────────────────────
+    const tab0 = t.tab0 || [];
+    const varRow = tab0[1] || {};
+    const cdiRow = tab0[2] || {};
+    const nomMes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+    // Detecta chaves
+    const keys = Object.keys(varRow);
+    const mesK = keys.find(k => /m[eê]s/i.test(k) && k.length <= 5) || keys[0];
+    const m12K = keys.find(k => k.includes('12')) || keys[2];
+    const perK = keys.find(k => /per|nop/i.test(k)) || keys[keys.length-1];
+
+    // PL de tab8
+    const tab8 = t.tab8 || [];
+    const saldoKeys8 = tab8[0] ? Object.keys(tab8[0]).filter(k => /saldo bruto/i.test(k)) : [];
+    const saldoFimK8 = saldoKeys8[1] || saldoKeys8[0] || '';
+    const saldoIniK8 = saldoKeys8[0] || '';
+    const pl = tab8.reduce((s,r) => s + (parseFloat(r[saldoFimK8])||0), 0);
+
+    // Período label a partir da chave de saldo
+    const periodoMatch = saldoFimK8.match(/(\d{2})\/(\d{2})\/(\d{2,4})/);
+    const periodoLabel = periodoMatch
+      ? `${nomMes[parseInt(periodoMatch[2])-1]}/${periodoMatch[3].slice(-2)}`
+      : '—';
+    setT('home-periodo-label', 'Período de referência: ' + saldoFimK8.replace(/saldo bruto /i,'').trim());
+
+    setT('home-pl', pl ? fmtM(pl) : '—');
+    setT('home-pl-sub', saldoFimK8 ? saldoFimK8.replace(/saldo bruto /i,'').trim() : '');
+
+    const rentMes = varRow[mesK];
+    const cdiMes  = cdiRow[mesK];
+    const elMes = document.getElementById('home-rent-mes');
+    if (elMes) {
+      elMes.textContent = fmtPctDir(rentMes);
+      elMes.className   = 'hero-kpi-val ' + (parseFloat(rentMes) >= 0 ? 'pos' : 'neg');
+    }
+    setT('home-rent-mes-sub', cdiMes != null ? 'CDI: ' + fmtPctDirN(cdiMes) : '');
+
+    const rent12 = varRow[m12K];
+    const cdi12  = cdiRow[m12K];
+    const el12 = document.getElementById('home-rent-12m');
+    if (el12) {
+      el12.textContent = fmtPctDir(rent12);
+      el12.className   = 'hero-kpi-val ' + (parseFloat(rent12) >= 0 ? 'pos' : 'neg');
+    }
+    setT('home-rent-12m-sub', cdi12 != null ? 'CDI 12m: ' + fmtPctDirN(cdi12) : '');
+
+    // Sharpe de tab5[4]
+    const tab5 = t.tab5 || [];
+    const sharpeCar = tab5[4] ? parseFloat(tab5[4]['Carteira']) : NaN;
+    const volatCar  = tab5[3] ? parseFloat(tab5[3]['Carteira']) : NaN;
+    setT('home-sharpe', isNaN(sharpeCar) ? '—' : sharpeCar.toFixed(2));
+    setT('home-sharpe-sub', isNaN(volatCar) ? '' : 'Volatilidade: ' + fmtPctDirN(volatCar));
+
+    // ── Fluxo do mês ─────────────────────────────────────────────
+    const mov = CD.movimentacoes || [];
+    // Detecta mês/ano de referência do saldo fim (ex: 31/03/26 → mar/2026)
+    let refMes = null, refAno = null;
+    if (periodoMatch) {
+      refMes = parseInt(periodoMatch[2]);
+      const y = periodoMatch[3];
+      refAno = y.length === 2 ? 2000 + parseInt(y) : parseInt(y);
+    }
+
+    // Se não conseguiu detectar, pega o mês mais recente com dados
+    if (!refMes && mov.length > 0) {
+      const mesesSet = new Set();
+      mov.forEach(r => {
+        const m = String(r['Data']||'').match(/(\d{2})\/(\d{2})\/(\d{4})/);
+        if (m) mesesSet.add(m[2] + '/' + m[3]);
+      });
+      const sorted = [...mesesSet].sort((a,b) => {
+        const [mA,yA] = a.split('/').map(Number);
+        const [mB,yB] = b.split('/').map(Number);
+        return yA !== yB ? yB - yA : mB - mA;
+      });
+      if (sorted[0]) {
+        const [mm,yy] = sorted[0].split('/').map(Number);
+        // Find first with data
+        for (const s of sorted) {
+          const [mm2,yy2] = s.split('/').map(Number);
+          if (mov.some(r => {
+            const m2 = String(r['Data']||'').match(/(\d{2})\/(\d{2})\/(\d{4})/);
+            return m2 && +m2[2]===mm2 && +m2[3]===yy2 && parseFloat(r['Valor Bruto']||0)>0;
+          })) { refMes = mm2; refAno = yy2; break; }
+        }
+      }
+    }
+
+    const movMes = refMes ? mov.filter(r => {
+      const m2 = String(r['Data']||'').match(/(\d{2})\/(\d{2})\/(\d{4})/);
+      return m2 && +m2[2]===refMes && +m2[3]===refAno && parseFloat(r['Valor Bruto']||0)>0;
+    }) : [];
+
+    let totFluxo=0, totJuros=0, totAmort=0, totDiv=0;
+    const _tipo = ev => {
+      const e = String(ev||'').toLowerCase();
+      if (/\bjuro|cupom/.test(e)) return 'juros';
+      if (/amort/.test(e))        return 'amort';
+      if (/divid|rend|cotiz/.test(e)) return 'div';
+      return 'outros';
+    };
+    movMes.forEach(r => {
+      const v = parseFloat(r['Valor Bruto']||0);
+      totFluxo += v;
+      const tp = _tipo(r['Evento']);
+      if (tp==='juros') totJuros += v;
+      if (tp==='amort') totAmort += v;
+      if (tp==='div')   totDiv   += v;
+    });
+
+    const fluxoPeriodo = refMes ? `${nomMes[refMes-1]}/${String(refAno).slice(-2)}` : '';
+    setT('home-fluxo-total',  totFluxo ? fmtM(totFluxo) : '—');
+    setT('home-fluxo-sub',    movMes.length + ' evento(s) · ' + fluxoPeriodo);
+    setT('home-fluxo-juros',  totJuros ? fmtM(totJuros) : '—');
+    setT('home-fluxo-amort',  totAmort ? fmtM(totAmort) : '—');
+    setT('home-fluxo-div',    totDiv   ? fmtM(totDiv)   : '—');
+    setT('home-fluxo-periodo', fluxoPeriodo);
+
+    // Top 5 eventos do mês
+    const top5 = [...movMes].sort((a,b) => parseFloat(b['Valor Bruto']||0) - parseFloat(a['Valor Bruto']||0)).slice(0,5);
+    const tipoCor = { juros:'var(--verde)', amort:'var(--gold)', div:'var(--navy-mid)', outros:'var(--text-muted)' };
+    setH('home-fluxo-eventos', top5.length === 0
+      ? '<div style="color:var(--text-muted);text-align:center;padding:12px">—</div>'
+      : top5.map(r => {
+          const v = parseFloat(r['Valor Bruto']||0);
+          const tp = _tipo(r['Evento']);
+          const nome = String(r['Ativo']||'').substring(0,38);
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">
+            <div>
+              <div style="font-size:12px;color:var(--navy);font-weight:500">${String(r['Evento']||'')} — ${nome}</div>
+              <div style="font-size:10.5px;color:var(--text-muted)">${r['Data']||''}</div>
+            </div>
+            <div style="font-size:13px;font-weight:700;color:${tipoCor[tp]||'var(--verde)'}">+${fmtM(v)}</div>
+          </div>`;
+        }).join('')
+    );
+
+    // ── Performance comparativa (tab5) ────────────────────────────
+    const lbls5 = ['Retorno no período','Retorno últimos 6m','Retorno últimos 12m','Volatilidade','Índice de Sharpe'];
+    let h5 = '';
+    lbls5.forEach((lbl, i) => {
+      const cartV = tab5[i] ? parseFloat(tab5[i]['Carteira']) : NaN;
+      const cdiV  = tab5[i] ? parseFloat(tab5[i]['CDI'])      : NaN;
+      const isMeta = i >= 3;
+      const fmt = v => isNaN(v) ? '—' : (isMeta ? v.toFixed(2) : (v>=0?'+':'')+v.toFixed(2)+'%');
+      const delta = (!isMeta && !isNaN(cartV) && !isNaN(cdiV)) ? cartV - cdiV : NaN;
+      const deltaStr = isNaN(delta) ? '—' : (delta>=0?'+':'')+delta.toFixed(2)+'%';
+      const deltaCol = isNaN(delta) ? '' : delta >= 0 ? 'color:var(--verde)' : 'color:var(--vermelho)';
+      const cartCol  = !isMeta && !isNaN(cartV) ? (cartV>=0?'color:var(--verde)':'color:var(--vermelho)') : '';
+      h5 += `<tr>
+        <td>${lbl}</td>
+        <td class="td-num" style="${cartCol};font-weight:600">${fmt(cartV)}</td>
+        <td class="td-num" style="color:var(--text-muted)">${fmt(cdiV)}</td>
+        <td class="td-num" style="${deltaCol}">${deltaStr}</td>
+      </tr>`;
+    });
+    setH('home-perf-body', h5 || '<tr><td colspan="4" style="text-align:center;padding:12px;color:var(--text-muted)">—</td></tr>');
+
+    // ── Alocação por classe (tab7) ─────────────────────────────────
+    const tab7 = t.tab7 || [];
+    const saldoFimK7 = tab7[0] ? Object.keys(tab7[0]).find(k => /saldo bruto.*31/i.test(k)) || Object.keys(tab7[0]).filter(k=>/saldo bruto/i.test(k))[1] : null;
+    let h7 = '', tot7 = 0;
+    const filtered7 = tab7.filter(r => r['Ativo'] && !/genérico|generico/i.test(String(r['Ativo'])));
+    filtered7.forEach(r => { tot7 += Math.abs(parseFloat(r[saldoFimK7]||r['Saldo Bruto 31/03/26'])||0); });
+    filtered7.forEach(row => {
+      const nome   = String(row['Ativo']).trim();
+      const saldoF = parseFloat(row[saldoFimK7]||row['Saldo Bruto 31/03/26']||0)||0;
+      const rend   = parseFloat(row['Rendimento Bruto']||0)||0;
+      const pct    = parseFloat(row['%']||0)||0;
+      h7 += `<tr>
+        <td><span class="badge ${/inflação|soberano/i.test(nome)?'badge-navy':/pós|bancário/i.test(nome)?'badge-gold':'badge-gray'}" style="font-size:9px">${nome}</span></td>
+        <td class="td-num">${fmtM(saldoF)}</td>
+        <td class="td-num" style="${cor(rend)}">${fmtM(rend)}</td>
+        <td class="td-num">
+          ${pct.toFixed(1)}%
+          <div style="height:3px;background:rgba(4,25,36,.07);border-radius:2px;margin-top:3px">
+            <div style="height:3px;border-radius:2px;background:var(--navy-mid);width:${Math.min(Math.abs(pct),100).toFixed(1)}%"></div>
+          </div>
+        </td>
+      </tr>`;
+    });
+    setH('home-alloc-body', h7 || '<tr><td colspan="4" style="text-align:center;padding:12px;color:var(--text-muted)">—</td></tr>');
+
+    // ── Top holdings (tab9) ────────────────────────────────────────
+    const tab9 = t.tab9 || [];
+    const saldoFimK9 = tab9[0] ? Object.keys(tab9[0]).find(k => /saldo bruto.*31/i.test(k)) || Object.keys(tab9[0]).filter(k=>/saldo bruto/i.test(k))[1] : null;
+    const SKIP9 = /^(genérico|generico|taxa de adm|taxa de previdência|inflação soberano|pós-fixado crédito|total)$/i;
+    const top9 = tab9
+      .filter(r => r['Ativo'] && !SKIP9.test(String(r['Ativo']).trim()))
+      .map(r => ({ nome: String(r['Ativo']).trim(), saldo: parseFloat(r[saldoFimK9]||r['Saldo Bruto 31/03/26']||0)||0, pct: parseFloat(r['%']||0)||0 }))
+      .filter(r => r.saldo > 0)
+      .sort((a,b) => b.saldo - a.saldo)
+      .slice(0, 10);
+    const totTop9 = top9.reduce((s,r) => s + r.saldo, 0);
+
+    setH('home-holdings-body', top9.length === 0
+      ? '<div style="color:var(--text-muted);text-align:center;padding:16px">—</div>'
+      : top9.map((r, i) => `
+        <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)">
+          <div style="width:18px;height:18px;border-radius:50%;background:var(--navy-pale);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--navy-mid);flex-shrink:0">${i+1}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:11.5px;font-weight:500;color:var(--navy);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.nome}">${r.nome}</div>
+            <div style="height:3px;background:rgba(4,25,36,.07);border-radius:2px;margin-top:3px">
+              <div style="height:3px;border-radius:2px;background:var(--navy-mid);width:${Math.min(totTop9>0?r.saldo/totTop9*100:0,100).toFixed(1)}%"></div>
+            </div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:12px;font-weight:700;color:var(--navy)">${fmtM(r.saldo)}</div>
+            <div style="font-size:10px;color:var(--text-muted)">${Math.abs(r.pct).toFixed(1)}%</div>
+          </div>
+        </div>`).join('')
+    );
+
+    // ── Rentabilidade mensal histórica (tab2) ─────────────────────
+    const tab2 = t.tab2 || [];
+    const _nG = Math.floor(tab2.length / 3);
+    const _anoI = new Date().getFullYear() - _nG + 1;
+    const mesesNomes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    let h2 = '';
+    for (let i = 0; i < tab2.length; i += 3) {
+      const ano  = _anoI + Math.floor(i/3);
+      const cR   = tab2[i]   || {};  // Carteira
+      const cdR  = tab2[i+1] || {};  // CDI
+      const pctR = tab2[i+2] || {};  // %CDI
+      const bb   = i < tab2.length - 3 ? 'border-bottom:2px solid var(--border-strong)' : '';
+      const anoV = parseFloat(cR['Ano']);
+      const anoS = !isNaN(anoV) && anoV>=0 ? 'color:var(--verde)' : 'color:var(--vermelho)';
+
+      const cellC = v => {
+        if (v===''||v==null) return `<td class="td-num" style="color:var(--text-muted)">—</td>`;
+        const n = parseFloat(v); if(isNaN(n)) return `<td class="td-num" style="color:var(--text-muted)">—</td>`;
+        const s = n>=0?'color:var(--verde)':'color:var(--vermelho)';
+        return `<td class="td-num" style="${s}">${(n*100).toFixed(2)}%</td>`;
+      };
+      const cellM = v => {
+        if (v===''||v==null) return `<td class="td-num" style="color:var(--text-muted)">—</td>`;
+        const n = parseFloat(v); if(isNaN(n)) return `<td class="td-num" style="color:var(--text-muted)">—</td>`;
+        return `<td class="td-num" style="color:var(--text-muted)">${(n*100).toFixed(2)}%</td>`;
+      };
+
+      h2 += `<tr>
+        <td rowspan="3" style="font-weight:700;vertical-align:middle;color:var(--navy)">${ano}</td>
+        <td style="font-weight:500;color:var(--navy)">Carteira</td>
+        ${mesesNomes.map(m=>cellC(cR[m])).join('')}
+        <td class="td-num" style="${anoS};font-weight:700">${!isNaN(anoV)?(anoV*100).toFixed(2)+'%':'—'}</td>
+      </tr><tr>
+        <td style="color:var(--text-muted)">CDI</td>
+        ${mesesNomes.map(m=>cellM(cdR[m])).join('')}
+        <td class="td-num" style="color:var(--text-muted);font-weight:600">${(()=>{const n=parseFloat(cdR['Ano']);return isNaN(n)?'—':(n*100).toFixed(2)+'%';})()}</td>
+      </tr><tr style="${bb}">
+        <td style="color:var(--text-muted)">%CDI</td>
+        ${mesesNomes.map(m => {
+          const v = pctR[m];
+          if (v===''||v==null) return `<td class="td-num" style="color:var(--text-muted)">—</td>`;
+          const n = parseFloat(v); if(isNaN(n)) return `<td class="td-num" style="color:var(--text-muted)">—</td>`;
+          const s = n>=1?'color:var(--verde)':'color:var(--vermelho)';
+          return `<td class="td-num" style="${s}">${(n*100).toFixed(1)}%</td>`;
+        }).join('')}
+        <td class="td-num" style="font-weight:600">${(()=>{const n=parseFloat(pctR['Ano']);return isNaN(n)?'—':(n*100).toFixed(1)+'%';})()}</td>
+      </tr>`;
+    }
+    setH('home-rentab-body', h2 || '<tr><td colspan="14" style="text-align:center;padding:16px;color:var(--text-muted)">—</td></tr>');
+  }
+
+  window.renderHome = renderHome;
 
 
 })(); // fim IIFE
