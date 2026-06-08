@@ -5307,16 +5307,49 @@
       // sf7 = último 'Saldo Bruto' = saldo FINAL (não o inicial 31/12/24)
       const _sf7keys = tab7[0]?Object.keys(tab7[0]).filter(k=>/saldo bruto/i.test(k)):[];
       const sf7 = _sf7keys[_sf7keys.length-1]||'';
+      // tab9 para Provisão IR e Saldo Líquido por classe
+      const tab9pdf = t.tab9||[];
+      const sf9keys = tab9pdf[0]?Object.keys(tab9pdf[0]).filter(k=>/saldo bruto/i.test(k)):[];
+      const sf9fin  = sf9keys[sf9keys.length-1]||'';
+      const si9keys = tab9pdf[0]?Object.keys(tab9pdf[0]).filter(k=>/saldo bruto/i.test(k)):[];
+      const si9ini  = si9keys[0]||'';
+      const provKey = tab9pdf[0]?Object.keys(tab9pdf[0]).find(k=>/provis|ir\+/i.test(k)):'';
+      const sliqKey = tab9pdf[0]?Object.keys(tab9pdf[0]).find(k=>/saldo l[íi]q/i.test(k)):'';
+      // Mapa ativo → provisão+saldo líq
+      const t9map = {};
+      tab9pdf.forEach(r=>{
+        const a = String(r['Ativo']||'').trim();
+        t9map[a] = {
+          prov: parseFloat(r[provKey]||0)||0,
+          sliq: parseFloat(r[sliqKey]||r[sf9fin]||0)||0
+        };
+      });
+      const _sf7ini = tab7[0]?Object.keys(tab7[0]).filter(k=>/saldo bruto/i.test(k))[0]:'';
       const allocRows = [];
       tab7.filter(r=>r['Ativo']&&!/genérico|generico/i.test(String(r['Ativo']))).forEach(r=>{
-        const nome  = String(r['Ativo']).trim();
-        const saldo = parseFloat(r[sf7]||r['Saldo Bruto 31/03/26']||0)||0;
-        if(saldo <= 0) return; // oculta classes zeradas
-        const rend  = parseFloat(r['Rendimento Bruto']||0)||0;
-        const pct   = parseFloat(r['%']||0)||0;
-        allocRows.push([nome.substring(0,28), fmtM(saldo), (rend>=0?'+':'')+fmtM(Math.abs(rend)), pct.toFixed(1)+'%']);
+        const nome   = String(r['Ativo']).trim();
+        const saldoF = parseFloat(r[sf7]||0)||0;
+        if(saldoF <= 0) return;
+        const saldoI = parseFloat(r[_sf7ini]||0)||0;
+        const rend   = parseFloat(r['Rendimento Bruto']||0)||0;
+        const pct    = parseFloat(r['%']||0)||0;
+        const t9     = t9map[nome]||{prov:0,sliq:0};
+        const provStr= t9.prov<0?'−'+fmtM(Math.abs(t9.prov)):t9.prov>0?'-'+fmtM(t9.prov):'—';
+        const sliqStr= t9.sliq>0?fmtM(t9.sliq):'—';
+        allocRows.push([
+          nome.substring(0,22),
+          fmtM(saldoI),
+          (rend>=0?'+':'')+fmtM(Math.abs(rend)),
+          fmtM(saldoF),
+          provStr,
+          sliqStr,
+          pct.toFixed(1)+'%'
+        ]);
       });
-      yL = drawTable(['Classe','Saldo Final','Rendimento','%'], allocRows, colL, yL, [55,32,32,23]);
+      yL = drawTable(
+        ['Classe','S. Inicial','Rendimento','S. Final','Prov. IR','S. Líquido','%'],
+        allocRows, colL, yL, [36,24,24,24,20,22,12]
+      );
 
       // ── COLUNA DIREITA: KPIs Rentabilidade + Performance ─────────
       let yR = bodyY;
@@ -5351,12 +5384,13 @@
       yR += 5;
 
       const tab5 = t.tab5||[];
-      const lbls = ['No período','Últimos 6m','Últimos 12m','Volatilidade','Sharpe'];
+      // Apenas retorno (sem volatilidade/sharpe)
+      const lbls = ['No período','Últimos 6m','Últimos 12m'];
       const perfR = lbls.map((l,i)=>{
         const cv = tab5[i]?parseFloat(tab5[i]['Carteira']):NaN;
         const dv = tab5[i]?parseFloat(tab5[i]['CDI']):NaN;
-        const delta = (!isNaN(cv)&&!isNaN(dv)&&i<3)?cv-dv:NaN;
-        const fmt = v => isNaN(v)?'—':(i>=3?v.toFixed(2):(v>=0?'+':'')+v.toFixed(2)+'%');
+        const delta = (!isNaN(cv)&&!isNaN(dv))?cv-dv:NaN;
+        const fmt = v => isNaN(v)?'—':(v>=0?'+':'')+v.toFixed(2)+'%';
         return [l, fmt(cv), fmt(dv), isNaN(delta)?'—':(delta>=0?'+':'')+delta.toFixed(2)+'%'];
       });
       yR = drawTable(['Indicador','Carteira','CDI','Δ CDI'], perfR, colR, yR, [42,24,22,24]);
@@ -5445,6 +5479,45 @@
           String(r['Status Evento']||'').substring(0,12),
         ]);
       yFL = drawTable(['Data','Ativo','Tipo','Valor','Status'], evRows, colL, yFL, [22,60,20,24,20]);
+
+      // ── Ilíquidos consolidado (abaixo dos eventos) ───────────────
+      if(yFL < H-30){
+        yFL += 5;
+        eyebrow('Carteira de Ilíquidos — Métricas por Fundo', colL, yFL);
+        yFL += 4;
+
+        const il10 = t.il_tab10||[];
+        // Detecta chaves TIR e outras métricas
+        const il10k = il10[0]?Object.keys(il10[0]):[];
+        const tirK   = il10k.find(k=>/tir/i.test(k))||il10k.find(k=>/ano/i.test(k))||'';
+        const moicK  = il10k.find(k=>/moic/i.test(k))||'';
+        const navK   = il10k.find(k=>/nav|saldo/i.test(k))||'';
+        const capK   = il10k.find(k=>/capital|chamado/i.test(k))||'';
+        const distK  = il10k.find(k=>/distrib/i.test(k))||'';
+        const statK  = il10k.find(k=>/status/i.test(k))||'';
+
+        const ilRows = il10
+          .filter(r=>r['Ativo']&&!/total|média/i.test(String(r['Ativo'])))
+          .slice(0,8)
+          .map(r=>{
+            const nome = String(r['Ativo']||'').substring(0,36);
+            const tir  = parseFloat(r[tirK]||0);
+            const moic = parseFloat(r[moicK]||0);
+            const nav  = parseFloat(r[navK]||0);
+            const tirStr  = isNaN(tir)||tir===0?'—':(tir>=0?'+':'')+tir.toFixed(1)+'%';
+            const moicStr = isNaN(moic)||moic===0?'—':moic.toFixed(2)+'×';
+            const navStr  = nav>0?fmtM(nav):'—';
+            const stat = statK?String(r[statK]||''):'';
+            return [nome, navStr, tirStr, moicStr, stat.substring(0,10)];
+          });
+
+        if(ilRows.length>0){
+          yFL = drawTable(
+            ['Fundo / Ativo','NAV Atual','TIR a.a.','MOIC','Status'],
+            ilRows, colL, yFL, [76,22,18,16,14]
+          );
+        }
+      }
 
       // ── COLUNA DIREITA PREVIDÊNCIA ────────────────────────────────
       let yPR = body2Y;
