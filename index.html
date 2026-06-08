@@ -6,6 +6,8 @@
   <title>Praxes — Ultra HNW · Família Azevedo</title>
   <link href="https://fonts.googleapis.com/css2?family=Urbanist:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     /* ── SISTEMA DE DESIGN PRAXES ULTRA HNW ───────────────────────
        Navy profundo + Ouro preciso + Superfícies frias
@@ -711,6 +713,112 @@
     .mode-curva .prev-mode-curva{ display: block; }
 
 
+    /* ── PDF EXPORT ───────────────────────────────────────────── */
+    #pdf-modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(4,25,36,0.65);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    }
+    #pdf-modal-overlay.open { display: flex; }
+    #pdf-modal {
+      background: var(--surface-1, #f5ede0);
+      border-radius: 14px;
+      padding: 36px 40px;
+      width: 460px;
+      box-shadow: 0 24px 64px rgba(4,25,36,0.28);
+      font-family: var(--font-body, 'Urbanist', sans-serif);
+    }
+    #pdf-modal h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--navy-deep, #03313e);
+      margin: 0 0 6px;
+    }
+    #pdf-modal p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin: 0 0 24px;
+    }
+    .pdf-field-group { margin-bottom: 16px; }
+    .pdf-field-group label {
+      display: block;
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .pdf-field-group input, .pdf-field-group select {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--border-strong);
+      border-radius: 7px;
+      background: #fff;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--navy-deep);
+      box-sizing: border-box;
+    }
+    .pdf-modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 28px;
+    }
+    #btn-pdf-cancelar {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid var(--border-strong);
+      background: transparent;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      color: var(--text-secondary);
+    }
+    #btn-pdf-gerar {
+      flex: 2;
+      padding: 10px;
+      background: var(--navy-deep, #03313e);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    #btn-pdf-gerar:disabled { opacity: .55; cursor: not-allowed; }
+    #pdf-progress {
+      display: none;
+      margin-top: 18px;
+      background: rgba(4,25,36,.07);
+      border-radius: 99px;
+      height: 4px;
+      overflow: hidden;
+    }
+    #pdf-progress-bar {
+      height: 4px;
+      background: var(--navy-mid, #2a5a66);
+      border-radius: 99px;
+      width: 0%;
+      transition: width .3s ease;
+    }
+    #pdf-status {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 8px;
+      text-align: center;
+      min-height: 16px;
+    }
+
     /* ── HOME HERO STRIP ──────────────────────────────────── */
     .hero-strip {
       display: flex;
@@ -886,7 +994,7 @@
         <div class="page-title">Relatório Mensal — Onshore</div>
         <div class="top-bar-right">
           <div id="home-periodo-label" style="font-size:12px;color:var(--text-muted);padding:6px 12px;background:var(--surface-sunken,#ebe3d6);border:1px solid var(--border-strong);border-radius:6px"></div>
-          <button class="btn-export" onclick="window.print()">↓ Exportar PDF</button>
+          <button class="btn-export" onclick="abrirModalPDF()">↓ Exportar PDF</button>
         </div>
       </div>
       <div class="content-wrapper">
@@ -4912,6 +5020,508 @@
   window.renderHome = renderHome;
 
 
+
+  // ── EXPORTAR PDF ──────────────────────────────────────────────────
+  function abrirModalPDF() {
+    // Pre-fill período from the page label
+    const periodoEl = document.getElementById('home-periodo-label');
+    if (periodoEl) {
+      const txt = periodoEl.textContent.replace('Período de referência:','').trim();
+      const inp = document.getElementById('pdf-periodo');
+      if (inp && txt) inp.value = txt;
+    }
+    document.getElementById('pdf-modal-overlay').classList.add('open');
+  }
+  window.abrirModalPDF = abrirModalPDF;
+
+  function fecharModalPDF() {
+    document.getElementById('pdf-modal-overlay').classList.remove('open');
+    document.getElementById('pdf-status').textContent = '';
+    document.getElementById('pdf-progress').style.display = 'none';
+    document.getElementById('pdf-progress-bar').style.width = '0%';
+    document.getElementById('btn-pdf-gerar').disabled = false;
+    document.getElementById('btn-pdf-gerar').innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Gerar PDF';
+  }
+  window.fecharModalPDF = fecharModalPDF;
+
+  async function gerarPDF() {
+    const { jsPDF } = window.jspdf;
+    const cliente = document.getElementById('pdf-cliente').value || 'Cliente';
+    const periodo = document.getElementById('pdf-periodo').value || '';
+    const gestor  = document.getElementById('pdf-gestor').value  || 'Praxes Gestão Patrimonial';
+
+    const btn     = document.getElementById('btn-pdf-gerar');
+    const progBar = document.getElementById('pdf-progress-bar');
+    const progEl  = document.getElementById('pdf-progress');
+    const status  = document.getElementById('pdf-status');
+
+    btn.disabled = true;
+    btn.textContent = 'Gerando...';
+    progEl.style.display = 'block';
+
+    const setProgress = (pct, msg) => {
+      progBar.style.width = pct + '%';
+      status.textContent  = msg;
+    };
+
+    try {
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const W = 210, H = 297;
+      const NAVY   = [3, 49, 62];
+      const TEAL   = [42, 90, 102];
+      const SAND   = [242, 221, 198];
+      const WHITE  = [255, 255, 255];
+      const MUTED  = [140, 160, 165];
+      const VERDE  = [26, 102, 69];
+      const GOLD   = [196, 145, 58];
+
+      // ── PÁGINA 1: CAPA ─────────────────────────────────────────
+      setProgress(5, 'Criando capa...');
+
+      // Fundo escuro
+      pdf.setFillColor(...NAVY);
+      pdf.rect(0, 0, W, H, 'F');
+
+      // Faixa decorativa teal
+      pdf.setFillColor(...TEAL);
+      pdf.rect(0, H * 0.55, W, 3, 'F');
+
+      // Acento areia
+      pdf.setFillColor(...SAND);
+      pdf.rect(0, H * 0.55 + 3, W, 1.2, 'F');
+
+      // Logo / marca
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(9);
+      pdf.setTextColor(...SAND);
+      pdf.text('PRAXES GESTÃO PATRIMONIAL', W / 2, 28, { align: 'center', charSpace: 3 });
+
+      // Linha separadora
+      pdf.setDrawColor(...TEAL);
+      pdf.setLineWidth(0.4);
+      pdf.line(W / 2 - 30, 32, W / 2 + 30, 32);
+
+      // Título do relatório
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(28);
+      pdf.setTextColor(...WHITE);
+      pdf.text('Relatório Mensal', W / 2, 110, { align: 'center' });
+
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(16);
+      pdf.setTextColor(180, 210, 215);
+      pdf.text('Gestão Patrimonial Onshore', W / 2, 122, { align: 'center' });
+
+      // Nome do cliente
+      pdf.setFillColor(...TEAL);
+      pdf.roundedRect(W / 2 - 55, 140, 110, 22, 3, 3, 'F');
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(14);
+      pdf.setTextColor(...WHITE);
+      pdf.text(cliente, W / 2, 154, { align: 'center' });
+
+      // Período
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(11);
+      pdf.setTextColor(...SAND);
+      pdf.text(periodo, W / 2, 172, { align: 'center' });
+
+      // Rodapé da capa
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(8);
+      pdf.setTextColor(...MUTED);
+      pdf.text('Documento confidencial. Uso exclusivo do cliente.', W / 2, H - 18, { align: 'center' });
+      pdf.text(gestor + '  ·  ' + new Date().toLocaleDateString('pt-BR'), W / 2, H - 12, { align: 'center' });
+
+      // ── HELPER: nova página com cabeçalho ───────────────────────
+      const novaSecao = (titulo, subtitulo) => {
+        pdf.addPage();
+        // Cabeçalho
+        pdf.setFillColor(...NAVY);
+        pdf.rect(0, 0, W, 16, 'F');
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(8);
+        pdf.setTextColor(...SAND);
+        pdf.text('PRAXES GESTÃO PATRIMONIAL', 14, 10, { charSpace: 1.5 });
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(160, 190, 195);
+        pdf.text(cliente + '  ·  ' + periodo, W - 14, 10, { align: 'right' });
+
+        // Linha teal
+        pdf.setFillColor(...TEAL);
+        pdf.rect(0, 16, W, 0.8, 'F');
+
+        // Título da seção
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(14);
+        pdf.setTextColor(...NAVY);
+        pdf.text(titulo, 14, 30);
+        if (subtitulo) {
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(9);
+          pdf.setTextColor(...MUTED);
+          pdf.text(subtitulo, 14, 37);
+        }
+        return subtitulo ? 46 : 40; // Y cursor
+      };
+
+      // ── HELPER: captura elemento como imagem ────────────────────
+      const capturaEl = async (id, escala) => {
+        const el = document.getElementById(id);
+        if (!el) return null;
+        return await html2canvas(el, {
+          scale: escala || 2.5,
+          useCORS: true,
+          backgroundColor: '#f5ede0',
+          logging: false
+        });
+      };
+
+      // ── HELPER: insere canvas no PDF ────────────────────────────
+      const insereCanvas = (canvas, y, margemL, larguraMM) => {
+        const imgData = canvas.toDataURL('image/jpeg', 0.92);
+        const ratio   = canvas.height / canvas.width;
+        const h = larguraMM * ratio;
+        pdf.addImage(imgData, 'JPEG', margemL, y, larguraMM, h);
+        return y + h + 4;
+      };
+
+      // ── HELPER: tabela simples ───────────────────────────────────
+      const tabelaSimples = (pdf, headers, rows, y, colWidths) => {
+        const x0    = 14;
+        const total = colWidths.reduce((a,b)=>a+b,0);
+        const rh    = 7;
+
+        // Header
+        pdf.setFillColor(...NAVY);
+        pdf.rect(x0, y, total, rh, 'F');
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(7);
+        pdf.setTextColor(...WHITE);
+        let xc = x0 + 2;
+        headers.forEach((h, i) => {
+          const align = i >= 2 ? 'right' : 'left';
+          const xh = align === 'right' ? xc + colWidths[i] - 4 : xc;
+          pdf.text(h, xh, y + 4.8, { align });
+          xc += colWidths[i];
+        });
+        y += rh;
+
+        // Rows
+        rows.forEach((row, ri) => {
+          if (ri % 2 === 0) {
+            pdf.setFillColor(247, 241, 232);
+            pdf.rect(x0, y, total, rh, 'F');
+          }
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(7.5);
+          let xr = x0 + 2;
+          row.forEach((cell, ci) => {
+            const isNum = ci >= 2;
+            const xCell = isNum ? xr + colWidths[ci] - 4 : xr;
+            // Color for % change cells
+            const txt = String(cell || '—');
+            if (isNum && (txt.startsWith('+') || (!txt.startsWith('−') && !txt.startsWith('-') && parseFloat(txt) > 0))) {
+              pdf.setTextColor(...VERDE);
+            } else if (isNum && (txt.startsWith('-') || txt.startsWith('−'))) {
+              pdf.setTextColor(180, 50, 50);
+            } else {
+              pdf.setTextColor(30, 55, 62);
+            }
+            pdf.text(txt, xCell, y + 4.8, { align: isNum ? 'right' : 'left' });
+            xr += colWidths[ci];
+          });
+          y += rh;
+        });
+
+        // Bottom border
+        pdf.setDrawColor(...TEAL);
+        pdf.setLineWidth(0.3);
+        pdf.line(x0, y, x0 + total, y);
+        return y + 4;
+      };
+
+      // ── PÁGINA 2: KPIs + Fluxo ─────────────────────────────────
+      setProgress(20, 'Capturando KPIs...');
+      let y = novaSecao('Resumo do Período', periodo);
+
+      // Hero KPIs como tabela de 5 colunas
+      const heroIds  = ['home-pl','home-rent-mes','home-rent-12m','home-fluxo-total','home-sharpe'];
+      const heroLbls = ['PL Final','Rentab. Mês','Rentab. 12m','Fluxo Mês','Sharpe'];
+      const heroSubs = ['home-pl-sub','home-rent-mes-sub','home-rent-12m-sub','home-fluxo-sub','home-sharpe-sub'];
+      const kpiW = (W - 28) / 5;
+      heroLbls.forEach((lbl, i) => {
+        const x  = 14 + i * kpiW;
+        const val = document.getElementById(heroIds[i])?.textContent || '—';
+        const sub = document.getElementById(heroSubs[i])?.textContent || '';
+
+        pdf.setFillColor(i === 0 ? TEAL[0] : NAVY[0], i === 0 ? TEAL[1] : NAVY[1], i === 0 ? TEAL[2] : NAVY[2]);
+        pdf.roundedRect(x, y, kpiW - 2, 24, 2, 2, 'F');
+
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(6);
+        pdf.setTextColor(180, 210, 215);
+        pdf.text(lbl.toUpperCase(), x + (kpiW-2)/2, y + 6, { align: 'center', charSpace: 0.5 });
+
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(10);
+        pdf.setTextColor(...WHITE);
+        pdf.text(val, x + (kpiW-2)/2, y + 14, { align: 'center' });
+
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(6.5);
+        pdf.setTextColor(160, 190, 195);
+        pdf.text(sub, x + (kpiW-2)/2, y + 21, { align: 'center' });
+      });
+      y += 30;
+
+      // Fluxo do mês
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(9);
+      pdf.setTextColor(...NAVY);
+      pdf.text('Fluxo de Caixa do Mês', 14, y);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(8);
+      pdf.setTextColor(...MUTED);
+      pdf.text(document.getElementById('home-fluxo-periodo')?.textContent || '', 14, y + 5);
+      y += 10;
+
+      const fluxoCards = [
+        ['Juros', document.getElementById('home-fluxo-juros')?.textContent||'—', VERDE],
+        ['Amortização', document.getElementById('home-fluxo-amort')?.textContent||'—', GOLD],
+        ['Div./Rend.', document.getElementById('home-fluxo-div')?.textContent||'—', TEAL],
+      ];
+      const cardW3 = (W - 28 - 8) / 3;
+      fluxoCards.forEach(([lbl, val, cor], i) => {
+        const xc = 14 + i * (cardW3 + 4);
+        pdf.setFillColor(247, 241, 232);
+        pdf.roundedRect(xc, y, cardW3, 18, 2, 2, 'F');
+        pdf.setDrawColor(...cor);
+        pdf.setLineWidth(0.5);
+        pdf.line(xc, y, xc, y + 18);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(6.5);
+        pdf.setTextColor(...MUTED);
+        pdf.text(lbl.toUpperCase(), xc + 5, y + 5.5, { charSpace: 0.3 });
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(11);
+        pdf.setTextColor(...cor);
+        pdf.text(val, xc + 5, y + 14);
+      });
+      y += 24;
+
+      // Top eventos
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(8);
+      pdf.setTextColor(...NAVY);
+      pdf.text('Principais Eventos', 14, y);
+      y += 6;
+      const eventosEl = document.getElementById('home-fluxo-eventos');
+      if (eventosEl) {
+        const items = eventosEl.querySelectorAll('div > div:first-child > div:first-child');
+        items.forEach((el, i) => {
+          if (i >= 5) return;
+          const txt = el.textContent.trim();
+          const val = el.parentElement?.nextElementSibling?.textContent?.trim() || '';
+          pdf.setFillColor(i%2===0?247:252, i%2===0?241:246, i%2===0?232:238);
+          pdf.rect(14, y, W-28, 7, 'F');
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(7.5);
+          pdf.setTextColor(30,55,62);
+          pdf.text(txt.substring(0,60), 16, y + 4.8);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setTextColor(...VERDE);
+          pdf.text(val, W-16, y + 4.8, { align:'right' });
+          y += 7;
+        });
+      }
+      y += 6;
+
+      // ── PÁGINA 3: Performance + Alocação ───────────────────────
+      setProgress(45, 'Capturando performance...');
+      y = novaSecao('Performance & Alocação', 'Carteira vs Benchmark');
+
+      // Performance comparativa
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(9);
+      pdf.setTextColor(...NAVY);
+      pdf.text('Performance Comparativa — Carteira vs CDI', 14, y);
+      y += 6;
+
+      const perfRows = [];
+      const perfBody = document.getElementById('home-perf-body');
+      if (perfBody) {
+        perfBody.querySelectorAll('tr').forEach(tr => {
+          const cells = [...tr.querySelectorAll('td')].map(td => td.textContent.trim());
+          if (cells.length >= 4) perfRows.push(cells);
+        });
+      }
+      y = tabelaSimples(pdf, ['Indicador','Carteira','CDI','Δ CDI'], perfRows, y, [68,36,36,36]);
+      y += 6;
+
+      // Alocação por classe
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(9);
+      pdf.setTextColor(...NAVY);
+      pdf.text('Alocação por Classe de Ativo', 14, y);
+      y += 6;
+
+      const allocRows = [];
+      document.getElementById('home-alloc-body')?.querySelectorAll('tr').forEach(tr => {
+        const cells = [...tr.querySelectorAll('td')].map(td => td.textContent.trim().replace(/\s+/g,' '));
+        if (cells.length >= 4) allocRows.push([cells[0], cells[1], cells[2], cells[3].replace(/[^\d.,\-%]/g,'').trim()]);
+      });
+      y = tabelaSimples(pdf, ['Classe','Saldo Final','Rendimento','%'], allocRows, y, [68,44,40,24]);
+      y += 6;
+
+      // Top Holdings
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(9);
+      pdf.setTextColor(...NAVY);
+      pdf.text('Top Holdings', 14, y);
+      y += 6;
+
+      const holdRows = [];
+      document.getElementById('home-holdings-body')?.querySelectorAll('div[style*="border-bottom"]').forEach((row, i) => {
+        const divs = row.querySelectorAll('div');
+        const nome = row.querySelector('[title]')?.textContent?.trim() || '';
+        const vals = [...row.querySelectorAll('div[style*="text-align:right"] div')].map(d=>d.textContent.trim());
+        if (nome) holdRows.push([`${i+1}. ${nome.substring(0,45)}`, vals[0]||'—', vals[1]||'—', '']);
+      });
+      y = tabelaSimples(pdf, ['Ativo','Saldo','%Cart.',''], holdRows.slice(0,8), y, [90,44,30,12]);
+
+      // ── PÁGINA 4: Rentabilidade mensal ─────────────────────────
+      setProgress(65, 'Capturando rentabilidade...');
+      y = novaSecao('Rentabilidade Mensal', 'Carteira vs CDI vs %CDI');
+
+      const rentBody = document.getElementById('home-rentab-body');
+      if (rentBody) {
+        const allRows = [...rentBody.querySelectorAll('tr')];
+        let anoAtual = '';
+        const rentRows = [];
+        allRows.forEach(tr => {
+          const cells = [...tr.querySelectorAll('td')].map(td=>td.textContent.trim());
+          if (cells.length >= 14) {
+            if (tr.querySelector('td[rowspan]')) anoAtual = cells[0];
+            const ind = tr.querySelector('td[rowspan]') ? cells[1] : cells[0];
+            const meses = tr.querySelector('td[rowspan]') ? cells.slice(2,14) : cells.slice(1,13);
+            const anoVal = tr.querySelector('td[rowspan]') ? cells[14] : cells[13];
+            rentRows.push([tr.querySelector('td[rowspan]') ? anoAtual : '', ind, ...meses, anoVal||'']);
+          }
+        });
+
+        // Headers: Ano, Ind, Jan..Dez, Ano
+        const rentH = ['Ano','',  'Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez','Ano'];
+        const rentW = [12, 18, 13,13,13,13,13,13,13,13,13,13,13,13,14];
+        y = tabelaSimples(pdf, rentH, rentRows, y, rentW);
+      }
+
+      // ── PÁGINA 5: Ilíquidos + Previdência ──────────────────────
+      setProgress(80, 'Capturando ilíquidos e previdência...');
+      y = novaSecao('Ilíquidos & Previdência Rio Bonito', '');
+
+      // Ilíquidos
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(9);
+      pdf.setTextColor(...NAVY);
+      pdf.text('Carteira de Ilíquidos', 14, y);
+      y += 7;
+
+      const ilCards = [
+        ['PL Total',       document.getElementById('home-il-pl')?.textContent||'—',  NAVY],
+        ['TIR Média Pond.', document.getElementById('home-il-tir')?.textContent||'—', VERDE],
+      ];
+      ilCards.forEach(([lbl,val,cor],i) => {
+        const xc = 14 + i * 50;
+        pdf.setFillColor(247,241,232);
+        pdf.roundedRect(xc,y,46,16,2,2,'F');
+        pdf.setDrawColor(...cor); pdf.setLineWidth(0.4);
+        pdf.line(xc,y,xc,y+16);
+        pdf.setFont('helvetica','bold'); pdf.setFontSize(6); pdf.setTextColor(...MUTED);
+        pdf.text(lbl.toUpperCase(), xc+4, y+5, {charSpace:0.3});
+        pdf.setFont('helvetica','bold'); pdf.setFontSize(10); pdf.setTextColor(...cor);
+        pdf.text(val, xc+4, y+13);
+      });
+
+      // Top 3 fundos TIR
+      const fundosEl = document.getElementById('home-il-fundos');
+      if (fundosEl) {
+        const fRows = [...fundosEl.querySelectorAll('div[style*="border-bottom"]')].map(row => {
+          const parts = row.textContent.trim().split('\n').map(s=>s.trim()).filter(Boolean);
+          return [parts[0]||'—', parts[1]||'—'];
+        });
+        y += 22;
+        y = tabelaSimples(pdf, ['Fundo','TIR a.a.','',''], fRows.map(([n,t])=>[n,t,'','']), y, [120,30,10,16]);
+      } else { y += 22; }
+
+      y += 8;
+
+      // Previdência
+      pdf.setFont('helvetica','bold'); pdf.setFontSize(9); pdf.setTextColor(...NAVY);
+      pdf.text('Previdência — Itaú Flexprev Rio Bonito', 14, y);
+      y += 7;
+
+      const prevCards4 = [
+        ['PL (Mercado)',    document.getElementById('home-prev-pl')?.textContent||'—',        TEAL ],
+        ['Rentab. Mês MV',  document.getElementById('home-prev-mv-mes')?.textContent||'—',    VERDE],
+        ['Rentab. Mês Curva',document.getElementById('home-prev-curva-mes')?.textContent||'—',GOLD ],
+        ['Duration Médio',  document.getElementById('home-prev-duration')?.textContent||'—',  NAVY ],
+      ];
+      const pcW = (W-28-12)/4;
+      prevCards4.forEach(([lbl,val,cor],i) => {
+        const xc = 14 + i*(pcW+4);
+        pdf.setFillColor(247,241,232);
+        pdf.roundedRect(xc,y,pcW,18,2,2,'F');
+        pdf.setDrawColor(...cor); pdf.setLineWidth(0.4);
+        pdf.line(xc,y,xc,y+18);
+        pdf.setFont('helvetica','bold'); pdf.setFontSize(6); pdf.setTextColor(...MUTED);
+        pdf.text(lbl.toUpperCase(), xc+4, y+5.5, {charSpace:0.2});
+        pdf.setFont('helvetica','bold'); pdf.setFontSize(10); pdf.setTextColor(...cor);
+        pdf.text(val, xc+4, y+14);
+      });
+      y += 24;
+
+      // Comparativo 12m previdência
+      const prev12Data = [
+        ['12m Mercado',  document.getElementById('home-prev-mv-12m')?.textContent||'—'],
+        ['12m Curva',    document.getElementById('home-prev-curva-12m')?.textContent||'—'],
+        ['CDI 12m',      document.getElementById('home-prev-cdi-12m')?.textContent||'—'],
+        ['YTM Médio',    document.getElementById('home-prev-ytm')?.textContent||'—'],
+      ];
+      y = tabelaSimples(pdf, ['Métrica','Valor','',''], prev12Data.map(([m,v])=>[m,v,'','']), y, [60,50,35,31]);
+
+      // ── RODAPÉ em todas as páginas ──────────────────────────────
+      setProgress(92, 'Finalizando...');
+      const totalPags = pdf.getNumberOfPages();
+      for (let p = 2; p <= totalPags; p++) {
+        pdf.setPage(p);
+        pdf.setFillColor(247,241,232);
+        pdf.rect(0, H-10, W, 10, 'F');
+        pdf.setDrawColor(...TEAL);
+        pdf.setLineWidth(0.3);
+        pdf.line(0, H-10, W, H-10);
+        pdf.setFont('helvetica','normal'); pdf.setFontSize(7); pdf.setTextColor(...MUTED);
+        pdf.text(gestor, 14, H-3.5);
+        pdf.text(`Página ${p-1} de ${totalPags-1}`, W-14, H-3.5, {align:'right'});
+        pdf.text('Confidencial', W/2, H-3.5, {align:'center'});
+      }
+
+      setProgress(100, 'Concluído!');
+      const nomeArquivo = `Relatorio_${cliente.replace(/\s+/g,'_')}_${periodo.replace(/[\s/]/g,'-')}.pdf`;
+      pdf.save(nomeArquivo);
+
+      setTimeout(() => fecharModalPDF(), 1200);
+
+    } catch (err) {
+      console.error('PDF error:', err);
+      document.getElementById('pdf-status').textContent = '❌ Erro ao gerar PDF: ' + err.message;
+      btn.disabled = false;
+      btn.textContent = 'Tentar novamente';
+    }
+  }
+  window.gerarPDF = gerarPDF;
+
+
 })(); // fim IIFE
 
   /* ────── CHARTS ────── */
@@ -5176,5 +5786,38 @@
     }, 2200);
   }
 </script>
+
+  <!-- ── PDF EXPORT MODAL ──────────────────────────────────────── -->
+  <div id="pdf-modal-overlay">
+    <div id="pdf-modal">
+      <h2>Exportar Relatório PDF</h2>
+      <p>Relatório Mensal Consolidado — Onshore</p>
+
+      <div class="pdf-field-group">
+        <label>Nome do Cliente</label>
+        <input type="text" id="pdf-cliente" placeholder="Ex: Família Silva" />
+      </div>
+      <div class="pdf-field-group">
+        <label>Mês de Referência</label>
+        <input type="text" id="pdf-periodo" placeholder="Ex: Março / 2026" />
+      </div>
+      <div class="pdf-field-group">
+        <label>Gestor Responsável</label>
+        <input type="text" id="pdf-gestor" value="Praxes Gestão Patrimonial" />
+      </div>
+
+      <div id="pdf-progress"><div id="pdf-progress-bar"></div></div>
+      <div id="pdf-status"></div>
+
+      <div class="pdf-modal-actions">
+        <button id="btn-pdf-cancelar" onclick="fecharModalPDF()">Cancelar</button>
+        <button id="btn-pdf-gerar" onclick="gerarPDF()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Gerar PDF
+        </button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
