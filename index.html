@@ -5278,6 +5278,7 @@
       tab8.filter(r=>r['Ativo']).forEach(r=>{
         const nome  = String(r['Ativo']).trim();
         const saldo = parseFloat(r[saldoFimK]||0)||0;
+        if(saldo <= 0) return; // oculta linhas zeradas
         const pct   = parseFloat(r['%']||0)||0;
         const rend  = parseFloat(r['Rendimento Bruto']||0)||0;
         custRows.push([nome, fmtM(saldo), (rend>=0?'+':'')+fmtM(Math.abs(rend)), pct.toFixed(1)+'%']);
@@ -5294,6 +5295,7 @@
       tab7.filter(r=>r['Ativo']&&!/genérico|generico/i.test(String(r['Ativo']))).forEach(r=>{
         const nome  = String(r['Ativo']).trim();
         const saldo = parseFloat(r[sf7]||r['Saldo Bruto 31/03/26']||0)||0;
+        if(saldo <= 0) return; // oculta classes zeradas
         const rend  = parseFloat(r['Rendimento Bruto']||0)||0;
         const pct   = parseFloat(r['%']||0)||0;
         allocRows.push([nome.substring(0,28), fmtM(saldo), (rend>=0?'+':'')+fmtM(Math.abs(rend)), pct.toFixed(1)+'%']);
