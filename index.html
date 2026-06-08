@@ -5062,6 +5062,9 @@
     const setP = (pct, msg) => { progBar.style.width = pct+'%'; status.textContent = msg; };
 
     try {
+      // Garante que a tabela de ilíquidos está renderizada antes de capturar
+      if (typeof renderIliquidos === 'function') renderIliquidos();
+
       // ── A4 PAISAGEM ─────────────────────────────────────────────
       const pdf = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
       const W = 297, H = 210;
@@ -5278,9 +5281,9 @@
       // ── CORPO: 2 COLUNAS ─────────────────────────────────────────
       const bodyY = 50;
       const colL  = 14;   // left col x
-      const colR  = 168;  // right col x
-      const colLW = 148;
-      const colRW = 115;
+      const colR  = 170;  // right col x
+      const colLW = 150;
+      const colRW = 113;
 
       // ── COLUNA ESQUERDA: Custodiante + Alocação ──────────────────
 
@@ -5347,8 +5350,8 @@
         ]);
       });
       yL = drawTable(
-        ['Classe','S. Inicial','Rendimento','S. Final','Prov. IR','S. Líquido','%'],
-        allocRows, colL, yL, [36,24,24,24,20,22,12]
+        ['Classe','S. Inicial','Rend.','S. Final','Prov. IR','S. Líquido','%'],
+        allocRows, colL, yL, [38,24,22,24,19,21,12]
       );
 
       // ── COLUNA DIREITA: KPIs Rentabilidade + Performance ─────────
@@ -5364,7 +5367,7 @@
       const m12K   = keys0.find(k=>k.includes('12'))||keys0[2];
       const perK   = keys0.find(k=>/per|nop/i.test(k))||keys0[keys0.length-1];
 
-      const kpiW4 = (colRW-3)/2;
+      const kpiW4 = (colRW-4)/2;
       const kpis1 = [
         { label:'Rentab. no Mês',   val: getEl('home-rent-mes'),  sub: 'CDI: '+getEl('home-rent-mes-sub').replace('CDI: ',''), color: C.teal },
         { label:'Rentab. 12 Meses', val: getEl('home-rent-12m'),  sub: getEl('home-rent-12m-sub'),                             color: C.teal },
@@ -5393,7 +5396,7 @@
         const fmt = v => isNaN(v)?'—':(v>=0?'+':'')+v.toFixed(2)+'%';
         return [l, fmt(cv), fmt(dv), isNaN(delta)?'—':(delta>=0?'+':'')+delta.toFixed(2)+'%'];
       });
-      yR = drawTable(['Indicador','Carteira','CDI','Δ CDI'], perfR, colR, yR, [42,24,22,24]);
+      yR = drawTable(['Indicador','Carteira','CDI','Δ CDI'], perfR, colR, yR, [43,24,22,24]);
 
       // Nº página
       pdf.setFont('helvetica','normal'); pdf.setFontSize(7); pdf.setTextColor(...C.muted);
@@ -5486,35 +5489,36 @@
         eyebrow('Carteira de Ilíquidos — Métricas por Fundo', colL, yFL);
         yFL += 4;
 
-        const il10 = t.il_tab10||[];
-        // Detecta chaves TIR e outras métricas
-        const il10k = il10[0]?Object.keys(il10[0]):[];
-        const tirK   = il10k.find(k=>/tir/i.test(k))||il10k.find(k=>/ano/i.test(k))||'';
-        const moicK  = il10k.find(k=>/moic/i.test(k))||'';
-        const navK   = il10k.find(k=>/nav|saldo/i.test(k))||'';
-        const capK   = il10k.find(k=>/capital|chamado/i.test(k))||'';
-        const distK  = il10k.find(k=>/distrib/i.test(k))||'';
-        const statK  = il10k.find(k=>/status/i.test(k))||'';
-
-        const ilRows = il10
-          .filter(r=>r['Ativo']&&!/total|média/i.test(String(r['Ativo'])))
-          .slice(0,8)
-          .map(r=>{
-            const nome = String(r['Ativo']||'').substring(0,36);
-            const tir  = parseFloat(r[tirK]||0);
-            const moic = parseFloat(r[moicK]||0);
-            const nav  = parseFloat(r[navK]||0);
-            const tirStr  = isNaN(tir)||tir===0?'—':(tir>=0?'+':'')+tir.toFixed(1)+'%';
-            const moicStr = isNaN(moic)||moic===0?'—':moic.toFixed(2)+'×';
-            const navStr  = nav>0?fmtM(nav):'—';
-            const stat = statK?String(r[statK]||''):'';
-            return [nome, navStr, tirStr, moicStr, stat.substring(0,10)];
+        // Lê métricas do DOM (tabela já renderizada na página Ilíquidos)
+        const ilMetricasTbody = document.getElementById('il-metricas-tabela');
+        const ilRows = [];
+        if(ilMetricasTbody){
+          ilMetricasTbody.querySelectorAll('tr').forEach(tr=>{
+            const cells = [...tr.querySelectorAll('td')].map(td=>td.textContent.trim());
+            if(cells.length>=5 && cells[0] && !/total|média|carregando|moviment/i.test(cells[0])){
+              ilRows.push([
+                cells[0].substring(0,38),
+                cells[3]||'—',
+                cells[4]||'—',
+                cells[5]||'—',
+                cells[10]||'—',
+              ]);
+            }
           });
-
+        }
+        if(ilRows.length===0){
+          const il8 = t.il_tab8||[];
+          const ilSK = il8[0]?Object.keys(il8[0]).filter(k=>/saldo bruto/i.test(k)).pop():'';
+          il8.filter(r=>r['Ativo']&&parseFloat(r[ilSK]||0)>0).slice(0,8).forEach(r=>{
+            const nome = String(r['Ativo']||'').substring(0,38);
+            const nav  = parseFloat(r[ilSK]||0);
+            ilRows.push([nome, fmtM(nav), '—', '—', '—']);
+          });
+        }
         if(ilRows.length>0){
           yFL = drawTable(
             ['Fundo / Ativo','NAV Atual','TIR a.a.','MOIC','Status'],
-            ilRows, colL, yFL, [76,22,18,16,14]
+            ilRows, colL, yFL, [74,22,18,16,16]
           );
         }
       }
