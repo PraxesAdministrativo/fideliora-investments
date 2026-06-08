@@ -5304,7 +5304,9 @@
       yL += 5;
 
       const tab7 = t.tab7||[];
-      const sf7  = tab7[0]?Object.keys(tab7[0]).find(k=>/saldo bruto.*31/i.test(k))||Object.keys(tab7[0]).filter(k=>/saldo bruto/i.test(k))[1]:'';
+      // sf7 = último 'Saldo Bruto' = saldo FINAL (não o inicial 31/12/24)
+      const _sf7keys = tab7[0]?Object.keys(tab7[0]).filter(k=>/saldo bruto/i.test(k)):[];
+      const sf7 = _sf7keys[_sf7keys.length-1]||'';
       const allocRows = [];
       tab7.filter(r=>r['Ativo']&&!/genérico|generico/i.test(String(r['Ativo']))).forEach(r=>{
         const nome  = String(r['Ativo']).trim();
