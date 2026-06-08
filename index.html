@@ -992,7 +992,77 @@
           </div>
         </div>
 
-        <!-- ── LINHA 3: Rentabilidade mensal histórica (tabela) ─────── -->
+        <!-- ── LINHA 3: Ilíquidos + Previdência ──────────────────────── -->
+        <div class="two-col mb-20" style="grid-template-columns:1fr 2fr">
+
+          <!-- Ilíquidos card -->
+          <div class="card" style="display:flex;flex-direction:column;gap:16px">
+            <div class="card-title">Ilíquidos <span class="card-title-label">Private Equity / Fundos</span></div>
+            <div style="display:flex;gap:12px">
+              <div style="flex:1;background:var(--surface-sunken,#ebe3d6);border-radius:8px;padding:14px;text-align:center">
+                <div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:6px;font-weight:600">PL Atual</div>
+                <div style="font-size:22px;font-weight:700;color:var(--navy)" id="home-il-pl">—</div>
+                <div style="font-size:10.5px;color:var(--text-muted);margin-top:3px" id="home-il-pl-sub"></div>
+              </div>
+              <div style="flex:1;background:var(--surface-sunken,#ebe3d6);border-radius:8px;padding:14px;text-align:center">
+                <div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:6px;font-weight:600">TIR Média Pond.</div>
+                <div style="font-size:22px;font-weight:700;color:var(--verde)" id="home-il-tir">—</div>
+                <div style="font-size:10.5px;color:var(--text-muted);margin-top:3px" id="home-il-tir-sub"></div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:8px;font-weight:600">Top Fundos por TIR</div>
+              <div id="home-il-fundos" style="font-size:12px"></div>
+            </div>
+          </div>
+
+          <!-- Rio Bonito (Previdência) card -->
+          <div class="card">
+            <div class="card-title">Previdência — Rio Bonito <span class="card-title-label">Itaú Flexprev</span></div>
+            <div class="kpi-grid kpi-grid-4" style="margin-bottom:16px">
+              <div style="text-align:center;padding:10px;background:var(--surface-sunken,#ebe3d6);border-radius:8px">
+                <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:4px;font-weight:600">PL</div>
+                <div style="font-size:16px;font-weight:700;color:var(--navy)" id="home-prev-pl">—</div>
+              </div>
+              <div style="text-align:center;padding:10px;background:var(--surface-sunken,#ebe3d6);border-radius:8px">
+                <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:4px;font-weight:600">Rentab. Mês MV</div>
+                <div style="font-size:16px;font-weight:700" id="home-prev-mv-mes">—</div>
+              </div>
+              <div style="text-align:center;padding:10px;background:var(--surface-sunken,#ebe3d6);border-radius:8px">
+                <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:4px;font-weight:600">Rentab. Mês Curva</div>
+                <div style="font-size:16px;font-weight:700" id="home-prev-curva-mes">—</div>
+              </div>
+              <div style="text-align:center;padding:10px;background:var(--surface-sunken,#ebe3d6);border-radius:8px">
+                <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:4px;font-weight:600">Duration Médio</div>
+                <div style="font-size:16px;font-weight:700;color:var(--navy)" id="home-prev-duration">—</div>
+              </div>
+            </div>
+            <!-- Gráfico Curva vs Mercado -->
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:8px;font-weight:600">Rentabilidade Mensal — Curva vs Mercado</div>
+            <div style="height:140px"><canvas id="chart-home-prev-bar"></canvas></div>
+            <!-- Comparativo 12m -->
+            <div style="display:flex;gap:12px;margin-top:14px">
+              <div style="flex:1;padding:10px;border:1px solid var(--border);border-radius:6px;text-align:center">
+                <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:3px">12m Mercado</div>
+                <div style="font-size:15px;font-weight:700" id="home-prev-mv-12m">—</div>
+              </div>
+              <div style="flex:1;padding:10px;border:1px solid var(--border);border-radius:6px;text-align:center">
+                <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:3px">12m Curva</div>
+                <div style="font-size:15px;font-weight:700" id="home-prev-curva-12m">—</div>
+              </div>
+              <div style="flex:1;padding:10px;border:1px solid var(--border);border-radius:6px;text-align:center">
+                <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:3px">CDI 12m</div>
+                <div style="font-size:15px;font-weight:700;color:var(--text-muted)" id="home-prev-cdi-12m">—</div>
+              </div>
+              <div style="flex:1;padding:10px;border:1px solid var(--border);border-radius:6px;text-align:center">
+                <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:3px">YTM Médio</div>
+                <div style="font-size:15px;font-weight:700;color:var(--navy)" id="home-prev-ytm">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── LINHA 4: Rentabilidade mensal histórica (tabela) ─────── -->
         <div class="card mb-20">
           <div class="card-title">Rentabilidade Mensal <span class="card-title-label">Carteira vs CDI vs %CDI</span></div>
           <div style="overflow-x:auto">
@@ -4672,6 +4742,171 @@
       </tr>`;
     }
     setH('home-rentab-body', h2 || '<tr><td colspan="14" style="text-align:center;padding:16px;color:var(--text-muted)">—</td></tr>');
+
+    // ── Ilíquidos ─────────────────────────────────────────────────
+    const ilTab8  = t.il_tab8  || [];
+    const ilTab10 = t.il_tab10 || [];
+
+    // PL ilíquidos: soma saldo final de il_tab8
+    const ilSaldoKey = ilTab8[0] ? Object.keys(ilTab8[0]).filter(k => /saldo bruto/i.test(k)).pop() : null;
+    const ilPL = ilTab8.reduce((s, r) => s + (parseFloat(r[ilSaldoKey]||0)||0), 0);
+
+    // TIR por ativo: de il_tab10 { Ativo, Mês, Ano, 03meses, 06meses, 12meses, Noperíodo }
+    // TIR anualizada = (1 + Noperíodo)^(12/nMeses) - 1
+    // Mas sem data de início disponível no tab10, usamos 12meses como proxy da TIR
+    const tirPorAtivo = [];
+    ilTab10.forEach(row => {
+      const ativo = String(row['Ativo']||'').trim();
+      if (!ativo || ativo.toLowerCase().includes('total') || ativo.toLowerCase().includes('carteira')) return;
+      // Usa Noperíodo se existir, senão 12meses
+      const perKey = Object.keys(row).find(k => /noper|período/i.test(k));
+      const valBruto = perKey ? parseFloat(row[perKey]) : parseFloat(row['12meses']||row['Ano']||0);
+      if (!isNaN(valBruto) && valBruto > 0) {
+        // Annualize assuming full period ≈ 12 months if using 12meses, else period TIR
+        const tir = valBruto * 100; // já em % ou decimal?
+        // il_tab10 values: from earlier console, they were decimal (0.129 = 12.9%)
+        tirPorAtivo.push({ ativo, tir: valBruto < 2 ? valBruto * 100 : valBruto });
+      }
+    });
+    tirPorAtivo.sort((a,b) => b.tir - a.tir);
+
+    // TIR média ponderada (pelo PL se disponível, senão simples)
+    const tirMedia = tirPorAtivo.length
+      ? tirPorAtivo.reduce((s,r) => s + r.tir, 0) / tirPorAtivo.length
+      : null;
+
+    setT('home-il-pl',      ilPL ? fmtM(ilPL) : '—');
+    setT('home-il-pl-sub',  ilSaldoKey ? ilSaldoKey.replace(/saldo bruto /i,'').trim() : '');
+    setT('home-il-tir',     tirMedia !== null ? '+' + tirMedia.toFixed(1) + '% a.a.' : '—');
+    setT('home-il-tir-sub', tirPorAtivo.length + ' ativo(s)');
+
+    const top3il = tirPorAtivo.slice(0, 3);
+    setH('home-il-fundos', top3il.length === 0
+      ? '<div style="color:var(--text-muted);text-align:center;padding:8px">—</div>'
+      : top3il.map((r,i) => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
+          <div style="font-size:11.5px;color:var(--navy);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70%" title="${r.ativo}">${i+1}. ${r.ativo.substring(0,40)}</div>
+          <span style="font-size:12px;font-weight:700;color:var(--verde);flex-shrink:0">+${r.tir.toFixed(1)}%</span>
+        </div>`).join('')
+    );
+
+    // ── Previdência — Rio Bonito ───────────────────────────────────
+    const mvT0    = t.mv_tab0    || [];
+    const curvaT0 = t.curva_tab0 || [];
+    const mvT8    = t.mv_tab8    || [];
+    const mvT2    = t.mv_tab2    || [];
+    const curvaT2 = t.curva_tab2 || [];
+    const durTab  = t.mv_duration || [];
+    const yldTab  = t.curva_yield || [];
+
+    // PL Mercado (mv_tab8)
+    const prevSaldoKey = mvT8[0] ? Object.keys(mvT8[0]).find(k => /saldo bruto.*31/i.test(k)) || Object.keys(mvT8[0]).filter(k=>/saldo bruto/i.test(k)).pop() : null;
+    const prevPL = mvT8.reduce((s,r) => s + (parseFloat(r[prevSaldoKey]||0)||0), 0);
+    setT('home-prev-pl', prevPL ? fmtM(prevPL) : '—');
+
+    // Rentab mês e 12m — mv_tab0 e curva_tab0
+    // tab0[1] = Var. Nominal (%), keys: {Mês, Ano, 12meses, ...}
+    const mvVar   = mvT0[1]    || {};
+    const curvaVar = curvaT0[1] || {};
+    const cdiPrev  = mvT0[2]   || {};
+    const prevKeys = Object.keys(mvVar);
+    const pMesK = prevKeys.find(k => /m[eê]s/i.test(k) && k.length <= 5) || prevKeys[0];
+    const p12mK = prevKeys.find(k => k.includes('12')) || prevKeys[2];
+
+    const mvMes    = parseFloat(mvVar[pMesK]);
+    const curvaMes = parseFloat(curvaVar[pMesK]);
+    const mv12m    = parseFloat(mvVar[p12mK]);
+    const curva12m = parseFloat(curvaVar[p12mK]);
+    const cdi12m   = parseFloat(cdiPrev[p12mK]);
+
+    const elMVMes = document.getElementById('home-prev-mv-mes');
+    if (elMVMes) { elMVMes.textContent = isNaN(mvMes)?'—':fmtPctDir(mvMes); elMVMes.style.color = isNaN(mvMes)?'':mvMes>=0?'var(--verde)':'var(--vermelho)'; }
+    const elCurvaMes = document.getElementById('home-prev-curva-mes');
+    if (elCurvaMes) { elCurvaMes.textContent = isNaN(curvaMes)?'—':fmtPctDir(curvaMes); elCurvaMes.style.color = isNaN(curvaMes)?'':curvaMes>=0?'var(--verde)':'var(--vermelho)'; }
+
+    const el12MV = document.getElementById('home-prev-mv-12m');
+    if (el12MV) { el12MV.textContent = isNaN(mv12m)?'—':fmtPctDir(mv12m); el12MV.style.color = isNaN(mv12m)?'':mv12m>=0?'var(--verde)':'var(--vermelho)'; }
+    const el12C = document.getElementById('home-prev-curva-12m');
+    if (el12C) { el12C.textContent = isNaN(curva12m)?'—':fmtPctDir(curva12m); el12C.style.color = isNaN(curva12m)?'':curva12m>=0?'var(--verde)':'var(--vermelho)'; }
+    setT('home-prev-cdi-12m', isNaN(cdi12m) ? '—' : fmtPctDir(cdi12m));
+
+    // Duration médio ponderado
+    let durTotSaldo=0, durTotW=0;
+    durTab.forEach(r => {
+      const d = parseFloat(r['duration(a,a,c)']); const s = parseFloat(r['Saldo Bruto']||r['Saldo Bruto 31/03/26']||0);
+      if (!isNaN(d) && !isNaN(s) && s > 0) { durTotSaldo += s; durTotW += d * s; }
+    });
+    const durMedio = durTotSaldo > 0 ? durTotW / durTotSaldo : null;
+    setT('home-prev-duration', durMedio !== null ? durMedio.toFixed(2) + ' anos' : '—');
+
+    // YTM médio ponderado
+    let ytmTotS=0, ytmTotW=0;
+    yldTab.forEach(r => {
+      const tx = parseFloat(r['Taxa Pré']); const s = parseFloat(r['Saldo Bruto']||0);
+      if (!isNaN(tx) && tx > 0 && s > 0) { ytmTotS += s; ytmTotW += tx * s; }
+    });
+    const ytmMedio = ytmTotS > 0 ? ytmTotW / ytmTotS : null;
+    setT('home-prev-ytm', ytmMedio !== null ? 'IPCA+' + ytmMedio.toFixed(2) + '%' : '—');
+
+    // Gráfico Curva vs Mercado — últimos 6 meses do tab2
+    // mv_tab2 e curva_tab2: grupos de 3 (Carteira/CDI/%CDI), valores decimais
+    const _getGrupos = (tab) => {
+      const grupos = [];
+      const nG = Math.floor(tab.length / 3);
+      const anoI2 = new Date().getFullYear() - nG + 1;
+      for (let i = 0; i < tab.length; i += 3) {
+        grupos.push({ ano: anoI2 + Math.floor(i/3), cart: tab[i]||{}, cdi: tab[i+1]||{} });
+      }
+      return grupos;
+    };
+    const mesesNP = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    const mvGrupos    = _getGrupos(mvT2);
+    const curvaGrupos = _getGrupos(curvaT2);
+
+    // Pega os últimos 6 meses com dados
+    const ultMeses = [];
+    const hojeD = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(hojeD.getFullYear(), hojeD.getMonth()-i, 1);
+      ultMeses.push({ mes: d.getMonth()+1, ano: d.getFullYear(), lbl: mesesNP[d.getMonth()] });
+    }
+
+    const getVal = (grupos, mes, ano) => {
+      const g = grupos.find(g => g.ano === ano);
+      if (!g) return null;
+      const k = mesesNP[mes-1];
+      const v = parseFloat(g.cart[k]);
+      return isNaN(v) ? null : v * 100; // converte de decimal para %
+    };
+
+    const mvVals    = ultMeses.map(m => getVal(mvGrupos,    m.mes, m.ano));
+    const curvaVals = ultMeses.map(m => getVal(curvaGrupos, m.mes, m.ano));
+
+    const ctxPrev = document.getElementById('chart-home-prev-bar');
+    if (ctxPrev) {
+      if (ctxPrev._inst) ctxPrev._inst.destroy();
+      ctxPrev._inst = new Chart(ctxPrev, {
+        type: 'bar',
+        data: {
+          labels: ultMeses.map(m => m.lbl),
+          datasets: [
+            { label: 'Mercado (MV)', data: mvVals,    backgroundColor: 'rgba(42,90,102,0.75)', borderRadius: 3, barThickness: 12 },
+            { label: 'Curva',        data: curvaVals, backgroundColor: 'rgba(196,145,58,0.75)', borderRadius: 3, barThickness: 12 }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true, position: 'bottom', labels: { color:'#041924', font:{size:9}, boxWidth:8, padding:8 } },
+            tooltip: { backgroundColor:'#041924', callbacks:{ label: c => (c.raw !== null ? c.raw.toFixed(2)+'%' : '—') } }
+          },
+          scales: {
+            x: { grid:{display:false}, ticks:{color:'#5b818b',font:{size:9}} },
+            y: { grid:{color:'rgba(4,25,36,0.05)'}, ticks:{color:'#5b818b',font:{size:9},callback:v=>v.toFixed(2)+'%'} }
+          }
+        }
+      });
+    }
   }
 
   window.renderHome = renderHome;
