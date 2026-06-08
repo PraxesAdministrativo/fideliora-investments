@@ -5227,38 +5227,52 @@
       const pctOn   = plTotal>0?(plOnshore/plTotal*100).toFixed(1):'—';
       const pctIl   = plTotal>0?(plIliq/plTotal*100).toFixed(1):'—';
 
-      // Patrimônio Total (centro)
+      // ── Faixa patrimônio: título topo + 5 colunas iguais ──────────
+      // Linha título
       pdf.setFont('helvetica','normal');
-      pdf.setFontSize(6.5);
+      pdf.setFontSize(6);
       pdf.setTextColor(...C.teal);
-      txt('PATRIMÔNIO TOTAL ONSHORE', W/2, stripY+7, {align:'center', charSpace:1.2});
-      pdf.setFont('helvetica','bold');
-      pdf.setFontSize(22);
-      pdf.setTextColor(...C.sand);
-      txt(fmtM(plTotal), W/2, stripY+19, {align:'center'});
+      txt('PATRIMÔNIO ONSHORE — VISÃO CONSOLIDADA', W/2, stripY+5, {align:'center', charSpace:1.4});
 
-      // Divisores e sub-itens
-      const strips = [
-        { label:'Carteira Líquida', val: fmtM(plOnshore), sub: pctOn+'% do total', x: W*0.18 },
-        { label:'Ilíquidos',        val: fmtM(plIliq),    sub: pctIl+'% do total', x: W*0.38 },
-        { label:'Offshore (USD)',   val: 'US$ —',          sub: 'Em construção',    x: W*0.58 },
-        { label:'Previdência',      val: getEl('home-prev-pl'), sub: 'Flexprev Rio Bonito', x: W*0.78 },
+      // Linha separadora fina
+      pdf.setDrawColor(42,90,102);
+      pdf.setLineWidth(0.15);
+      pdf.line(14, stripY+7.5, W-14, stripY+7.5);
+
+      // 5 colunas: PL Total | Líquida | Ilíquidos | Offshore | Prev
+      const stripItems = [
+        { label:'Total Onshore',   val: fmtM(plTotal),           sub: '100%' },
+        { label:'Carteira Líquida',val: fmtM(plOnshore),         sub: pctOn+'% do total' },
+        { label:'Ilíquidos',       val: fmtM(plIliq),            sub: pctIl+'% do total' },
+        { label:'Offshore (USD)',  val: 'Em configuração',        sub: '' },
+        { label:'Previdência',     val: getEl('home-prev-pl'),    sub: 'Flexprev Rio Bonito' },
       ];
-      strips.forEach(({label,val,sub,x})=>{
-        pdf.setFillColor(...C.teal);
-        pdf.rect(x-10, stripY+4, 0.3, 16, 'F');
-        pdf.setFont('helvetica','normal');
-        pdf.setFontSize(6);
-        pdf.setTextColor(180,210,215);
-        txt(label.toUpperCase(), x-7, stripY+9, {charSpace:0.8});
+      const sColW = (W - 28) / stripItems.length;
+      stripItems.forEach(({label,val,sub},i)=>{
+        const sx = 14 + i * sColW;
+        // Divisor vertical (exceto primeiro)
+        if(i>0){
+          pdf.setDrawColor(42,90,102); pdf.setLineWidth(0.2);
+          pdf.line(sx, stripY+8, sx, stripY+24);
+        }
+        // Highlight do total (primeiro)
+        if(i===0){
+          pdf.setFont('helvetica','bold'); pdf.setFontSize(5.5);
+          pdf.setTextColor(180,210,215);
+        } else {
+          pdf.setFont('helvetica','normal'); pdf.setFontSize(5.5);
+          pdf.setTextColor(160,195,200);
+        }
+        txt(label.toUpperCase(), sx+4, stripY+12, {charSpace:0.6});
         pdf.setFont('helvetica','bold');
-        pdf.setFontSize(10);
-        pdf.setTextColor(...C.sand);
-        txt(val, x-7, stripY+17);
-        pdf.setFont('helvetica','normal');
-        pdf.setFontSize(6.5);
-        pdf.setTextColor(...C.teal);
-        txt(sub, x-7, stripY+23);
+        pdf.setFontSize(i===0?11:9);
+        pdf.setTextColor(i===0?C.sand[0]:242, i===0?C.sand[1]:221, i===0?C.sand[2]:198);
+        txt(val, sx+4, stripY+20);
+        if(sub){
+          pdf.setFont('helvetica','normal'); pdf.setFontSize(6);
+          pdf.setTextColor(...C.teal);
+          txt(sub, sx+4, stripY+25.5);
+        }
       });
 
       // ── CORPO: 2 COLUNAS ─────────────────────────────────────────
@@ -5474,59 +5488,78 @@
         return null;
       };
 
-      // Mini bar chart manual
-      const chartX=colR, chartY=yPR, chartW=colRW, chartH=42;
+      // Mini bar chart — só meses com pelo menos um valor
+      const mesesComDados = ultM6.filter(({mes,ano})=>
+        getV(mvT2,mes,ano)!==null || getV(curvaT2,mes,ano)!==null
+      );
+      const chartX=colR, chartW=colRW;
+      const chartH = mesesComDados.length>0 ? 48 : 20;
       pdf.setFillColor(...C.paper);
-      pdf.roundedRect(chartX,chartY,chartW,chartH,2,2,'F');
+      pdf.roundedRect(chartX,yPR,chartW,chartH,2,2,'F');
 
-      const bW=8, bGap=3;
-      const groupW=bW*2+bGap;
-      const nGroups=ultM6.length;
-      const totalBW=nGroups*(groupW+4);
-      const bX0=chartX+(chartW-totalBW)/2;
+      if(mesesComDados.length>0){
+        const bW=7, bPad=2;
+        const groupW = bW*2+bPad+2;
+        const totalBW = mesesComDados.length*groupW + (mesesComDados.length-1)*3;
+        const bX0 = chartX + (chartW-totalBW)/2;
+        const labelH = 8, legendH = 9;
+        const plotH = chartH - labelH - legendH - 4;
 
-      // Find max for scale
-      let maxV=0;
-      ultM6.forEach(({mes,ano})=>{
-        const mv=Math.abs(getV(mvT2,mes,ano)||0);
-        const cv=Math.abs(getV(curvaT2,mes,ano)||0);
-        if(mv>maxV)maxV=mv; if(cv>maxV)maxV=cv;
-      });
-      const scale = maxV>0?(chartH-18)/maxV:1;
-      const baseY = chartY+chartH-8;
+        let maxV=0.01;
+        mesesComDados.forEach(({mes,ano})=>{
+          const mv=Math.abs(getV(mvT2,mes,ano)||0);
+          const cv=Math.abs(getV(curvaT2,mes,ano)||0);
+          if(mv>maxV)maxV=mv; if(cv>maxV)maxV=cv;
+        });
+        const scale = plotH / maxV;
+        const baseY  = yPR + chartH - labelH - legendH - 2;
 
-      ultM6.forEach(({mes,ano,lbl},gi)=>{
-        const gx = bX0 + gi*(groupW+4);
-        const mvV  = getV(mvT2,mes,ano);
-        const cvV  = getV(curvaT2,mes,ano);
+        mesesComDados.forEach(({mes,ano,lbl},gi)=>{
+          const gx  = bX0 + gi*(groupW+3);
+          const mvV = getV(mvT2,mes,ano);
+          const cvV = getV(curvaT2,mes,ano);
 
-        if(mvV!==null){
-          const bh=Math.abs(mvV)*scale;
-          pdf.setFillColor(...C.teal);
-          pdf.rect(gx, baseY-bh, bW, bh, 'F');
-          pdf.setFont('helvetica','bold'); pdf.setFontSize(5.5); pdf.setTextColor(...C.abyss);
-          txt((mvV>=0?'+':'')+mvV.toFixed(2)+'%', gx+bW/2, baseY-bh-1.5, {align:'center'});
-        }
-        if(cvV!==null){
-          const bh=Math.abs(cvV)*scale;
-          pdf.setFillColor(...C.gold);
-          pdf.rect(gx+bW+2, baseY-bh, bW, bh, 'F');
+          // Barra MV
+          if(mvV!==null){
+            const bh = Math.max(Math.abs(mvV)*scale, 1);
+            const by = mvV>=0 ? baseY-bh : baseY;
+            pdf.setFillColor(...C.teal);
+            pdf.rect(gx, by, bW, bh, 'F');
+            // Label só se barra alta o suficiente
+            if(bh>6){
+              pdf.setFont('helvetica','bold'); pdf.setFontSize(5); pdf.setTextColor(...C.abyss);
+              txt((mvV>=0?'+':'')+mvV.toFixed(2)+'%', gx+bW/2, by-1.5, {align:'center'});
+            }
+          }
+          // Barra Curva
+          if(cvV!==null){
+            const bh = Math.max(Math.abs(cvV)*scale, 1);
+            const by = cvV>=0 ? baseY-bh : baseY;
+            pdf.setFillColor(...C.gold);
+            pdf.rect(gx+bW+bPad, by, bW, bh, 'F');
+            if(bh>6){
+              pdf.setFont('helvetica','normal'); pdf.setFontSize(5); pdf.setTextColor(...C.muted);
+              txt((cvV>=0?'+':'')+cvV.toFixed(2)+'%', gx+bW+bPad+bW/2, by-1.5, {align:'center'});
+            }
+          }
+          // Label mês (abaixo das barras)
           pdf.setFont('helvetica','normal'); pdf.setFontSize(5.5); pdf.setTextColor(...C.muted);
-          txt((cvV>=0?'+':'')+cvV.toFixed(2)+'%', gx+bW+2+bW/2, baseY-bh-1.5, {align:'center'});
-        }
-        // Mês label
-        pdf.setFont('helvetica','normal'); pdf.setFontSize(6); pdf.setTextColor(...C.muted);
-        txt(lbl, gx+bW+1, baseY+4, {align:'center'});
-      });
+          txt(lbl, gx+bW+bPad/2, baseY+5, {align:'center'});
+        });
 
-      // Legenda
-      pdf.setFillColor(...C.teal); pdf.rect(colR+2, chartY+chartH-6, 5, 3, 'F');
-      pdf.setFont('helvetica','normal'); pdf.setFontSize(6); pdf.setTextColor(...C.muted);
-      txt('Mercado (MV)', colR+9, chartY+chartH-3.5);
-      pdf.setFillColor(...C.gold); pdf.rect(colR+52, chartY+chartH-6, 5, 3, 'F');
-      txt('Curva', colR+59, chartY+chartH-3.5);
+        // Legenda
+        const legY = yPR+chartH-7;
+        pdf.setFillColor(...C.teal); pdf.rect(chartX+4, legY, 5, 3, 'F');
+        pdf.setFont('helvetica','normal'); pdf.setFontSize(5.5); pdf.setTextColor(...C.muted);
+        txt('Mercado (MV)', chartX+11, legY+2.8);
+        pdf.setFillColor(...C.gold); pdf.rect(chartX+50, legY, 5, 3, 'F');
+        txt('Curva', chartX+57, legY+2.8);
+      } else {
+        pdf.setFont('helvetica','normal'); pdf.setFontSize(7); pdf.setTextColor(...C.muted);
+        txt('Sem dados disponíveis', chartX+chartW/2, yPR+12, {align:'center'});
+      }
 
-      yPR = chartY+chartH+5;
+      yPR = yPR+chartH+5;
 
       // Métricas 12m + YTM
       const met12 = [
