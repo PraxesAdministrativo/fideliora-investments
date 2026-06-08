@@ -710,6 +710,23 @@
     .mode-curva .prev-mode-mv   { display: none; }
     .mode-curva .prev-mode-curva{ display: block; }
 
+
+    /* ── FLUXO FILTROS ─────────────────────────────────────── */
+    .fluxo-btn-tipo {
+      padding: 4px 12px;
+      border-radius: var(--r-pill, 999px);
+      border: 1px solid var(--border-strong);
+      background: transparent;
+      font-family: var(--font-body, 'Urbanist', sans-serif);
+      font-size: 11.5px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all .15s;
+      white-space: nowrap;
+    }
+    .fluxo-btn-tipo:hover  { background: var(--navy-pale); color: var(--navy); }
+    .fluxo-btn-tipo.active { background: var(--navy-deep); color: #fff; border-color: var(--navy-deep); }
+
   </style>
 </head>
 <body>
@@ -1651,54 +1668,94 @@
       <div class="top-bar">
         <div class="page-title">Onshore — Fluxo de Caixa</div>
         <div class="top-bar-right">
-          <select class="period-select" id="fluxo-periodo-select" onchange="renderFluxoOnshore()">
-            <option>Mai 2025</option><option>Abr 2025</option><option>Mar 2025</option><option>2025 YTD</option>
-          </select>
-          <button class="btn-export">Exportar PDF</button>
+          <select class="period-select" id="fluxo-select-periodo" onchange="renderFluxoOnshore()"></select>
+          <button class="btn-export">↓ Exportar PDF</button>
         </div>
       </div>
       <div class="content-wrapper">
-        <!-- KPIs -->
-        <div class="kpi-grid kpi-grid-3 mb-20">
+
+        <!-- KPI strip -->
+        <div class="kpi-grid kpi-grid-4 mb-20">
           <div class="kpi-card green">
-            <div class="kpi-label" id="fluxo-kpi1-label">Total Recebido</div>
-            <div class="kpi-val" id="fluxo-kpi1-val">—</div>
-            <div class="kpi-change" id="fluxo-kpi1-sub"></div>
+            <div class="kpi-label" id="fluxo-lbl-total">Total Recebido</div>
+            <div class="kpi-val" id="fluxo-val-total">—</div>
+            <div class="kpi-change" id="fluxo-sub-total"></div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">Juros Totais</div>
-            <div class="kpi-val" id="fluxo-kpi2-val">—</div>
-            <div class="kpi-change" id="fluxo-kpi2-sub"></div>
+            <div class="kpi-label">Juros</div>
+            <div class="kpi-val" id="fluxo-val-juros">—</div>
+            <div class="kpi-change" id="fluxo-sub-juros"></div>
           </div>
           <div class="kpi-card">
             <div class="kpi-label">Amortizações</div>
-            <div class="kpi-val" id="fluxo-kpi3-val">—</div>
-            <div class="kpi-change" id="fluxo-kpi3-sub"></div>
+            <div class="kpi-val" id="fluxo-val-amort">—</div>
+            <div class="kpi-change" id="fluxo-sub-amort"></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Dividendos / Rendimentos</div>
+            <div class="kpi-val" id="fluxo-val-div">—</div>
+            <div class="kpi-change" id="fluxo-sub-div"></div>
           </div>
         </div>
 
-        <div class="col-2-3 mb-20">
-          <!-- Eventos do mês -->
-          <div class="card">
-            <div class="card-title" id="fluxo-lista-titulo">Fluxo Detalhado</div>
-            <ul class="event-list" id="fluxo-lista-body">
-              <li style="padding:24px;text-align:center;color:var(--text-muted)">Carregando...</li>
-            </ul>
+        <div class="two-col mb-20" style="grid-template-columns:2fr 1fr">
+
+          <!-- Tabela de eventos -->
+          <div class="card" style="padding:0;overflow:hidden">
+            <!-- Filtros de tipo -->
+            <div style="display:flex;gap:6px;padding:16px 20px 10px;border-bottom:1px solid var(--border);flex-wrap:wrap;align-items:center">
+              <span style="font-size:11px;color:var(--text-muted);margin-right:4px;font-weight:600;text-transform:uppercase;letter-spacing:.06em">Filtrar:</span>
+              <button class="fluxo-btn-tipo active" data-tipo="todos"   onclick="fluxoFiltrarTipo(this)">Todos</button>
+              <button class="fluxo-btn-tipo"        data-tipo="juros"   onclick="fluxoFiltrarTipo(this)">Juros</button>
+              <button class="fluxo-btn-tipo"        data-tipo="amort"   onclick="fluxoFiltrarTipo(this)">Amortização</button>
+              <button class="fluxo-btn-tipo"        data-tipo="div"     onclick="fluxoFiltrarTipo(this)">Dividendo</button>
+              <button class="fluxo-btn-tipo"        data-tipo="rend"    onclick="fluxoFiltrarTipo(this)">Rendimento</button>
+              <button class="fluxo-btn-tipo"        data-tipo="resgate" onclick="fluxoFiltrarTipo(this)">Resgate</button>
+              <button class="fluxo-btn-tipo"        data-tipo="outros"  onclick="fluxoFiltrarTipo(this)">Outros</button>
+              <div style="margin-left:auto;font-size:11px;color:var(--text-muted)" id="fluxo-count"></div>
+            </div>
+            <div style="overflow-x:auto;max-height:500px;overflow-y:auto">
+              <table class="data-table" style="min-width:600px">
+                <thead style="position:sticky;top:0;background:var(--surface-2);z-index:1">
+                  <tr>
+                    <th style="padding:10px 12px">Data</th>
+                    <th>Ativo</th>
+                    <th>Tipo</th>
+                    <th class="td-num">Valor</th>
+                    <th class="td-num">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="fluxo-tabela-body">
+                  <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted)">Carregando...</td></tr>
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          <!-- Histórico + Próximos -->
-          <div class="card">
-            <div class="card-title">Fluxo Histórico <span class="card-title-label">R$ mi / mês</span></div>
-            <div class="chart-container" style="height:190px">
-              <canvas id="chart-fluxo-bar"></canvas>
+          <!-- Coluna direita: histórico + próximos -->
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div class="card">
+              <div class="card-title">Histórico <span class="card-title-label">R$ mi / mês</span></div>
+              <div style="height:180px"><canvas id="chart-fluxo-hist"></canvas></div>
             </div>
-            <div class="divider"></div>
-            <div class="card-title" style="margin-bottom:10px">Próximos Eventos Previstos</div>
-            <div id="fluxo-proximos" style="font-size:12px;color:var(--text-secondary);line-height:2">
-              <div style="color:var(--text-muted);text-align:center;padding:8px">—</div>
+            <div class="card">
+              <div class="card-title">Por Ativo <span class="card-title-label">% do total</span></div>
+              <div id="fluxo-por-ativo" style="font-size:12px"></div>
             </div>
           </div>
         </div>
+
+        <!-- Próximos eventos -->
+        <div class="card mb-20">
+          <div class="card-title">Próximos Eventos Esperados <span class="card-title-label">mês seguinte ao período</span></div>
+          <table class="data-table">
+            <thead><tr><th>Data Prev.</th><th>Ativo</th><th>Tipo</th><th class="td-num">Valor Histórico</th></tr></thead>
+            <tbody id="fluxo-proximos-body">
+              <tr><td colspan="4" style="text-align:center;padding:16px;color:var(--text-muted)">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+
       </div>
     </div>
     <!-- ══ PÁGINA: CARTEIRA ADM OFFSHORE ══════════════ -->
@@ -4063,229 +4120,269 @@
 
 
 
+
   // ── FLUXO DE CAIXA ONSHORE ────────────────────────────────────────
-  // Lê CD.movimentacoes — campos: Data, Carteira, Ativo, Evento, Status Evento, Quant, Valor Bruto
+  let _fluxoCache   = [];   // all movimentacoes for current period
+  let _fluxoTipo    = 'todos'; // active tipo filter
+
+  const _tipoEvento = ev => {
+    const e = String(ev || '').toLowerCase();
+    if (/\bjuro|cupom/.test(e))         return 'juros';
+    if (/amort/.test(e))                return 'amort';
+    if (/divid/.test(e))                return 'div';
+    if (/rend|cotiz/.test(e))           return 'rend';
+    if (/resgate|venda/.test(e))        return 'resgate';
+    return 'outros';
+  };
+  const _tipoLabel = { juros:'Juros', amort:'Amortização', div:'Dividendo', rend:'Rendimento', resgate:'Resgate', outros:'Outro' };
+  const _tipoCor   = { juros:'var(--verde)', amort:'var(--gold)', div:'var(--navy-mid)', rend:'#1e4a82', resgate:'var(--vermelho)', outros:'var(--text-muted)' };
+
+  const _fmtBRL = v => {
+    const n = Math.abs(parseFloat(v) || 0);
+    if (n >= 1e6) return 'R$ ' + (n/1e6).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' mi';
+    if (n >= 1e3) return 'R$ ' + Math.round(n/1e3).toLocaleString('pt-BR') + ' mil';
+    return 'R$ ' + Math.round(n).toLocaleString('pt-BR');
+  };
 
   function renderFluxoOnshore() {
     if (!CD || !CD.movimentacoes) return;
-
     const mov = CD.movimentacoes;
-    const fmtMi = v => { const n=Math.abs(v); return n>=1e6?(n/1e6).toFixed(2)+' mi':n>=1e3?Math.round(n/1e3)+' mil':Math.round(n).toLocaleString('pt-BR'); };
-    const fmtBR = v => 'R$ '+fmtMi(v);
+    const nomMes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    const sel = document.getElementById('fluxo-select-periodo');
+    if (!sel) return;
 
-    // Lê o select — período será determinado após eventual repopulação (ver abaixo)
-    const sel = document.getElementById('fluxo-periodo-select');
+    // ── Popula select com meses reais das movimentações ──────────
+    const mesesSet = new Set();
+    mov.forEach(r => {
+      const m = String(r['Data']||'').match(/(\d{2})\/(\d{2})\/(\d{4})/);
+      if (m) mesesSet.add(m[2] + '/' + m[3]); // MM/YYYY
+    });
+    const mesesSorted = [...mesesSet].sort((a,b) => {
+      const [mA,yA] = a.split('/').map(Number);
+      const [mB,yB] = b.split('/').map(Number);
+      return yA !== yB ? yB - yA : mB - mA;
+    });
 
-    // Popula o select com meses reais das movimentações (só na primeira vez)
-    const nomMes3 = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-    if (sel) {
-      const mesesDisp = new Set();
-      mov.forEach(r => {
-        const d = String(r['Data']||'');
-        const m = d.match(/(\d{2})\/(\d{2})\/(\d{4})/);
-        if (m) mesesDisp.add(m[2]+'/'+m[3]); // MM/YYYY
-      });
-      // Ordena desc: ano desc, mês desc
-      const sorted = [...mesesDisp].sort((a,b) => {
-        const [mA, yA] = a.split('/').map(Number);
-        const [mB, yB] = b.split('/').map(Number);
-        return yA !== yB ? yB - yA : mB - mA;
-      });
-      // Só repopula se os anos não batem (select estava com dados hardcoded)
-      const primeiroAnoDisp = sorted[0] ? parseInt(sorted[0].split('/')[1]) : 0;
-      const primeiroAnoSel  = sel.options[0] ? parseInt(sel.options[0].value.split(' ')[1]) : 0;
-      if (sorted.length > 0 && primeiroAnoDisp !== primeiroAnoSel) {
-        const anosDisp = [...new Set(sorted.map(s => s.split('/')[1]))];
-        sel.innerHTML = sorted.map(mv => {
-          const [mm, yy] = mv.split('/');
-          return `<option value="${nomMes3[parseInt(mm)-1]} ${yy}">${nomMes3[parseInt(mm)-1]} ${yy}</option>`;
-        }).join('') + anosDisp.map(y => `<option value="${y} YTD">${y} YTD</option>`).join('');
+    // Obtém anos disponíveis para opções YTD
+    const anosDisp = [...new Set(mesesSorted.map(s => s.split('/')[1]))];
 
-        // Seleciona o mês mais recente que tenha eventos reais
-        for (const mv of sorted) {
-          const [mm2, yy2] = mv.split('/').map(Number);
-          const hasData = mov.some(r => {
-            const d = String(r['Data']||''); const m2 = d.match(/(\d{2})\/(\d{2})\/(\d{4})/);
-            return m2 && parseInt(m2[2])===mm2 && parseInt(m2[3])===yy2 && parseFloat(r['Valor Bruto']||0)>0;
-          });
-          if (hasData) {
-            sel.value = `${nomMes3[mm2-1]} ${yy2}`;
-            break;
-          }
-        }
+    // Re-popula apenas se necessário (first load or stale)
+    if (sel.dataset.populated !== '1') {
+      sel.innerHTML =
+        mesesSorted.map(mv => {
+          const [mm,yy] = mv.split('/');
+          const lbl = `${nomMes[parseInt(mm)-1]} ${yy}`;
+          return `<option value="${lbl}">${lbl}</option>`;
+        }).join('') +
+        anosDisp.map(y => `<option value="${y} YTD">${y} YTD</option>`).join('');
+
+      // Seleciona o mês mais recente com dados reais (Valor Bruto > 0)
+      for (const mv of mesesSorted) {
+        const [mm2,yy2] = mv.split('/').map(Number);
+        if (mov.some(r => {
+          const m2 = String(r['Data']||'').match(/(\d{2})\/(\d{2})\/(\d{4})/);
+          return m2 && +m2[2]===mm2 && +m2[3]===yy2 && parseFloat(r['Valor Bruto']||0) > 0;
+        })) { sel.value = `${nomMes[mm2-1]} ${yy2}`; break; }
       }
+      sel.dataset.populated = '1';
     }
-    // Lê período do select APÓS eventual repopulação
-    const optFinal = sel ? sel.value : '';
-    const ytdFinal = optFinal.includes('YTD');
-    let filtMesFinal = null, filtAnoFinal = null;
-    if (!ytdFinal && optFinal) {
-      const pf = optFinal.split(' ');
-      const nomMes4 = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-      filtMesFinal = nomMes4.indexOf(pf[0]) + 1;
-      filtAnoFinal = parseInt(pf[1]);
-    } else if (ytdFinal && optFinal) {
-      filtAnoFinal = parseInt(optFinal.split(' ')[0]);
-    }
-    // Usa os valores finais para o filtro
-    const filtMes = filtMesFinal, filtAno = filtAnoFinal;
-    const ytd = ytdFinal;
 
-    // Filtra movimentações
-    const filtradas = mov.filter(r => {
-      const d = String(r['Data']||'');
-      const m = d.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+    // ── Detecta período selecionado ──────────────────────────────
+    const opt    = sel.value || '';
+    const isYTD  = opt.includes('YTD');
+    let filtMes  = null, filtAno = null;
+    if (isYTD) {
+      filtAno = parseInt(opt);
+    } else {
+      const parts = opt.split(' ');
+      filtMes = nomMes.indexOf(parts[0]) + 1;
+      filtAno = parseInt(parts[1]);
+    }
+
+    // ── Filtra movimentações ────────────────────────────────────
+    _fluxoCache = mov.filter(r => {
+      const m = String(r['Data']||'').match(/(\d{2})\/(\d{2})\/(\d{4})/);
       if (!m) return false;
-      const mes = parseInt(m[2]), ano = parseInt(m[3]);
-      if (ytd) return ano === filtAno || (!filtAno && ano === new Date().getFullYear());
-      return mes === filtMes && ano === filtAno;
-    }).filter(r => {
-      const v = parseFloat(r['Valor Bruto']||0);
-      return v > 0; // só entradas
+      const mes = +m[2], ano = +m[3];
+      return isYTD ? ano === filtAno : mes === filtMes && ano === filtAno;
     });
 
-    // Classifica eventos
-    const classEvento = ev => {
-      const e = String(ev||'').toLowerCase();
-      if (/juros|cupom|juro/.test(e)) return 'juros';
-      if (/amort/.test(e))            return 'amortizacao';
-      if (/divid/.test(e))            return 'dividendo';
-      if (/rend|cotiz/.test(e))       return 'rendimento';
-      return 'outro';
-    };
-
-    const iconEvento = tipo => {
-      const icons = {
-        juros:       '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>',
-        amortizacao: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
-        dividendo:   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>',
-        rendimento:  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
-        outro:       '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>'
-      };
-      return icons[tipo] || icons.outro;
-    };
-
-    const classCss = { juros:'ei-juros', amortizacao:'ei-amort', dividendo:'ei-div', rendimento:'ei-prev', outro:'ei-outro' };
-
-    // KPIs
-    let totalJuros=0, totalAmort=0, totalDiv=0, totalRend=0, totalGeral=0;
-    filtradas.forEach(r => {
-      const v = parseFloat(r['Valor Bruto']||0);
-      const tipo = classEvento(r['Evento']);
-      totalGeral += v;
-      if (tipo==='juros')       totalJuros += v;
-      if (tipo==='amortizacao') totalAmort += v;
-      if (tipo==='dividendo')   totalDiv   += v;
-      if (tipo==='rendimento')  totalRend  += v;
+    // ── KPIs ────────────────────────────────────────────────────
+    let totGeral=0, totJuros=0, totAmort=0, totDiv=0, totRend=0, totResgate=0, nEvents=0;
+    const porAtivo = {};
+    _fluxoCache.forEach(r => {
+      const v    = parseFloat(r['Valor Bruto'] || 0);
+      const tipo = _tipoEvento(r['Evento']);
+      const ativo = String(r['Ativo'] || '').substring(0, 35);
+      if (v > 0) {
+        totGeral   += v; nEvents++;
+        if (tipo==='juros')   totJuros   += v;
+        if (tipo==='amort')   totAmort   += v;
+        if (tipo==='div')     totDiv     += v;
+        if (tipo==='rend')    totRend    += v;
+        if (tipo==='resgate') totResgate += v;
+        porAtivo[ativo] = (porAtivo[ativo] || 0) + v;
+      }
     });
 
-    const nomMesLabel = filtMes ? ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][filtMes-1] : '';
-    const periodoLabel = ytd ? filtAno+' YTD' : nomMesLabel+'/'+String(filtAno).slice(-2);
+    const periodoLbl = isYTD ? filtAno + ' YTD' : `${nomMes[(filtMes||1)-1]}/${String(filtAno).slice(-2)}`;
+    const setT = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
 
-    const setTxt = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
-    const setHTML= (id,v) => { const e=document.getElementById(id); if(e) e.innerHTML=v; };
+    setT('fluxo-lbl-total', `Total Recebido — ${periodoLbl}`);
+    setT('fluxo-val-total', totGeral ? _fmtBRL(totGeral) : '—');
+    setT('fluxo-sub-total', nEvents + ' evento' + (nEvents !== 1 ? 's' : ''));
+    setT('fluxo-val-juros', totJuros ? _fmtBRL(totJuros) : '—');
+    setT('fluxo-sub-juros', _fluxoCache.filter(r=>_tipoEvento(r['Evento'])==='juros'&&parseFloat(r['Valor Bruto']||0)>0).length + ' evento(s)');
+    setT('fluxo-val-amort', totAmort ? _fmtBRL(totAmort) : '—');
+    setT('fluxo-sub-amort', _fluxoCache.filter(r=>_tipoEvento(r['Evento'])==='amort'&&parseFloat(r['Valor Bruto']||0)>0).length + ' parcel(as)');
+    setT('fluxo-val-div', (totDiv+totRend) ? _fmtBRL(totDiv+totRend) : '—');
+    setT('fluxo-sub-div', _fluxoCache.filter(r=>['div','rend'].includes(_tipoEvento(r['Evento']))&&parseFloat(r['Valor Bruto']||0)>0).length + ' evento(s)');
 
-    setTxt('fluxo-kpi1-label', 'Total Recebido — '+periodoLabel);
-    setTxt('fluxo-kpi1-val',   'R$ '+fmtMi(totalGeral));
-    setTxt('fluxo-kpi2-val',   'R$ '+fmtMi(totalJuros+totalRend));
-    setTxt('fluxo-kpi2-sub',   'Juros + Rendimentos');
-    setTxt('fluxo-kpi3-val',   'R$ '+fmtMi(totalAmort));
-    setTxt('fluxo-kpi3-sub',   filtradas.filter(r=>classEvento(r['Evento'])==='amortizacao').length+' parcel(as)');
-    setTxt('fluxo-lista-titulo','Fluxo Detalhado — '+periodoLabel);
+    // ── Renderiza tabela ────────────────────────────────────────
+    _fluxoTipo = _fluxoTipo || 'todos';
+    _renderFluxoTabela();
 
-    // Lista de eventos
-    const listaHTML = filtradas.length === 0
-      ? '<li style="padding:20px;text-align:center;color:var(--text-muted)">Nenhum evento no período</li>'
-      : filtradas.sort((a,b)=>String(a['Data']).localeCompare(String(b['Data']))).map(r => {
-          const v    = parseFloat(r['Valor Bruto']||0);
-          const tipo = classEvento(r['Evento']);
-          const nome = String(r['Ativo']||'').replace(/ fif | fim | fic /gi,' ').substring(0,45);
-          const data = String(r['Data']||'');
-          return `<li class="event-item">
-            <div class="event-icon ${classCss[tipo]}">${iconEvento(tipo)}</div>
-            <div class="event-desc">
-              <div class="event-name">${String(r['Evento']||'')} — ${nome}</div>
-              <div class="event-detail">${data}</div>
-            </div>
-            <div class="event-value pos">+R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0})}</div>
-          </li>`;
-        }).join('');
-
-    setHTML('fluxo-lista-body', listaHTML);
-
-    // Gráfico histórico (últimos 6 meses)
-    const mesesHist = [];
-    const now = new Date();
-    for (let i=5; i>=0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
-      mesesHist.push({ mes: d.getMonth()+1, ano: d.getFullYear(),
-        label: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][d.getMonth()] });
+    // ── Gráfico histórico ────────────────────────────────────────
+    const histMeses = [];
+    const hoje = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+      histMeses.push({ mes: d.getMonth()+1, ano: d.getFullYear(), lbl: nomMes[d.getMonth()] });
     }
-    const histData = mesesHist.map(({mes,ano}) => {
-      const rows = mov.filter(r => {
-        const d=String(r['Data']||''); const m=d.match(/(\d{2})\/(\d{2})\/(\d{4})/);
-        return m && parseInt(m[2])===mes && parseInt(m[3])===ano && parseFloat(r['Valor Bruto']||0)>0;
+    const histData = histMeses.map(({mes,ano}) => {
+      let j=0,a=0,d=0;
+      mov.forEach(r => {
+        const m2 = String(r['Data']||'').match(/(\d{2})\/(\d{2})\/(\d{4})/);
+        if (!m2 || +m2[2]!==mes || +m2[3]!==ano) return;
+        const v = parseFloat(r['Valor Bruto']||0); if(v<=0) return;
+        const tp = _tipoEvento(r['Evento']);
+        if (tp==='juros'||tp==='rend') j+=v;
+        else if (tp==='amort')         a+=v;
+        else if (tp==='div')           d+=v;
       });
-      let j=0,a=0,dv=0;
-      rows.forEach(r => {
-        const v=parseFloat(r['Valor Bruto']||0), tp=classEvento(r['Evento']);
-        if(tp==='juros'||tp==='rendimento') j+=v;
-        else if(tp==='amortizacao') a+=v;
-        else dv+=v;
-      });
-      return { j:j/1e6, a:a/1e6, dv:dv/1e6 };
+      return { j:j/1e6, a:a/1e6, d:d/1e6 };
     });
 
-    const ctxBar = document.getElementById('chart-fluxo-bar');
-    if (ctxBar) {
-      if (ctxBar._chartInst) ctxBar._chartInst.destroy();
-      ctxBar._chartInst = new Chart(ctxBar, {
+    const ctx = document.getElementById('chart-fluxo-hist');
+    if (ctx) {
+      if (ctx._inst) ctx._inst.destroy();
+      ctx._inst = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: mesesHist.map(m=>m.label),
+          labels: histMeses.map(m=>m.lbl),
           datasets: [
-            { label:'Juros/Rend.',  data: histData.map(d=>d.j),  backgroundColor:'#1a6645', borderRadius:3, barThickness:12 },
-            { label:'Amortização',  data: histData.map(d=>d.a),  backgroundColor:'#c4913a', borderRadius:3, barThickness:12 },
-            { label:'Dividendos',   data: histData.map(d=>d.dv), backgroundColor:'#2a5a66', borderRadius:3, barThickness:12 }
+            { label:'Juros/Rend', data: histData.map(d=>d.j), backgroundColor:'#1a6645', borderRadius:3, barThickness:10 },
+            { label:'Amort.',     data: histData.map(d=>d.a), backgroundColor:'#c4913a', borderRadius:3, barThickness:10 },
+            { label:'Dividendos', data: histData.map(d=>d.d), backgroundColor:'#2a5a66', borderRadius:3, barThickness:10 }
           ]
         },
         options: {
           responsive:true, maintainAspectRatio:false,
           plugins: {
-            legend:{display:true,position:'bottom',labels:{color:'#041924',font:{size:10},boxWidth:10,padding:12}},
-            tooltip:{backgroundColor:'#041924',callbacks:{label:c=>'R$'+c.raw.toFixed(2)+'mi'}}
+            legend:{ display:true, position:'bottom', labels:{color:'#041924',font:{size:9},boxWidth:8,padding:8} },
+            tooltip:{ backgroundColor:'#041924', callbacks:{ label:c=>'R$'+c.raw.toFixed(2)+'mi' } }
           },
-          scales:{
-            x:{stacked:true,grid:{display:false},ticks:{color:'#5b818b',font:{size:10}}},
-            y:{stacked:true,grid:{color:'rgba(4,25,36,0.05)'},ticks:{color:'#5b818b',font:{size:10},callback:v=>'R$'+v+'mi'}}
+          scales: {
+            x:{ stacked:true, grid:{display:false}, ticks:{color:'#5b818b',font:{size:9}} },
+            y:{ stacked:true, grid:{color:'rgba(4,25,36,0.05)'}, ticks:{color:'#5b818b',font:{size:9},callback:v=>'R$'+v+'mi'} }
           }
         }
       });
     }
 
-    // Próximos eventos (mês seguinte)
-    const proxMes = filtMes===12?1:filtMes+1;
-    const proxAno = filtMes===12?filtAno+1:filtAno;
-    const proximos = mov.filter(r => {
-      const d=String(r['Data']||''); const m=d.match(/(\d{2})\/(\d{2})\/(\d{4})/);
-      return m && parseInt(m[2])===proxMes && parseInt(m[3])===proxAno && parseFloat(r['Valor Bruto']||0)>0;
-    }).slice(0,5);
+    // ── Por ativo breakdown ─────────────────────────────────────
+    const ativoEl = document.getElementById('fluxo-por-ativo');
+    if (ativoEl && totGeral > 0) {
+      const sorted = Object.entries(porAtivo).sort((a,b)=>b[1]-a[1]).slice(0,8);
+      ativoEl.innerHTML = sorted.map(([nome,val]) => {
+        const pct = (val/totGeral*100).toFixed(1);
+        return `<div style="margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:3px">
+            <span style="color:var(--navy);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:65%">${nome}</span>
+            <span style="font-weight:600;color:var(--navy)">${pct}%</span>
+          </div>
+          <div style="height:4px;background:rgba(4,25,36,0.07);border-radius:2px">
+            <div style="height:4px;border-radius:2px;background:var(--navy-mid);width:${pct}%"></div>
+          </div>
+        </div>`;
+      }).join('');
+    } else if (ativoEl) {
+      ativoEl.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:12px">—</div>';
+    }
 
-    const nomMesProx = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][proxMes-1];
-    const proxHTML = proximos.length === 0
-      ? '<div style="color:var(--text-muted);text-align:center;padding:8px">—</div>'
-      : proximos.map(r => {
-          const v=parseFloat(r['Valor Bruto']||0);
-          const nome=String(r['Ativo']||'').substring(0,30);
-          return `<div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding:5px 0">
-            <span>${String(r['Evento']||'')} — ${nome}</span>
-            <span style="color:var(--verde)">+R$ ${fmtMi(v)} · ${nomMesProx}/${String(proxAno).slice(-2)}</span>
-          </div>`;
-        }).join('');
-    setHTML('fluxo-proximos', proxHTML);
+    // ── Próximos eventos (mês seguinte) ─────────────────────────
+    const proxMes = filtMes === 12 ? 1 : (filtMes||1) + 1;
+    const proxAno = filtMes === 12 ? filtAno + 1 : filtAno;
+    const proxRows = mov.filter(r => {
+      const m2 = String(r['Data']||'').match(/(\d{2})\/(\d{2})\/(\d{4})/);
+      return m2 && +m2[2]===proxMes && +m2[3]===proxAno;
+    }).sort((a,b)=>String(a['Data']).localeCompare(String(b['Data'])));
+
+    const proxBody = document.getElementById('fluxo-proximos-body');
+    if (proxBody) {
+      proxBody.innerHTML = proxRows.length === 0
+        ? `<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--text-muted)">—</td></tr>`
+        : proxRows.map(r => {
+            const v = parseFloat(r['Valor Bruto']||0);
+            const tipo = _tipoEvento(r['Evento']);
+            const vs = v > 0 ? 'color:var(--verde)' : 'color:var(--vermelho)';
+            const sinal = v > 0 ? '+' : '';
+            return `<tr>
+              <td style="font-size:11.5px">${r['Data']||'—'}</td>
+              <td style="font-size:11.5px">${String(r['Ativo']||'').substring(0,40)}</td>
+              <td><span class="badge badge-gray" style="font-size:9px;color:${_tipoCor[tipo]}">${_tipoLabel[tipo]}</span></td>
+              <td class="td-num" style="${vs}">${sinal}${_fmtBRL(Math.abs(v))}</td>
+            </tr>`;
+          }).join('');
+    }
   }
 
-  window.renderFluxoOnshore = renderFluxoOnshore;
+  function fluxoFiltrarTipo(btn) {
+    document.querySelectorAll('.fluxo-btn-tipo').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    _fluxoTipo = btn.dataset.tipo;
+    _renderFluxoTabela();
+  }
+
+  function _renderFluxoTabela() {
+    const body = document.getElementById('fluxo-tabela-body');
+    const countEl = document.getElementById('fluxo-count');
+    if (!body) return;
+
+    const rows = _fluxoTipo === 'todos'
+      ? _fluxoCache
+      : _fluxoCache.filter(r => _tipoEvento(r['Evento']) === _fluxoTipo);
+
+    const sorted = [...rows].sort((a,b) => String(a['Data']).localeCompare(String(b['Data'])));
+    if (countEl) countEl.textContent = sorted.length + ' registro' + (sorted.length !== 1 ? 's' : '');
+
+    if (sorted.length === 0) {
+      body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted)">Nenhum evento no período</td></tr>';
+      return;
+    }
+
+    body.innerHTML = sorted.map(r => {
+      const v    = parseFloat(r['Valor Bruto'] || 0);
+      const tipo = _tipoEvento(r['Evento']);
+      const vs   = v > 0 ? 'color:var(--verde)' : v < 0 ? 'color:var(--vermelho)' : '';
+      const sinal = v > 0 ? '+' : '';
+      const status = String(r['Status Evento'] || '');
+      const statusBadge = status.toLowerCase().includes('realiz')
+        ? `<span class="badge badge-green" style="font-size:9px">✓ Realizado</span>`
+        : `<span class="badge badge-gray"  style="font-size:9px">${status||'—'}</span>`;
+      return `<tr>
+        <td style="font-size:11.5px;color:var(--text-muted);white-space:nowrap">${r['Data']||'—'}</td>
+        <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r['Ativo']||''}">${String(r['Ativo']||'').substring(0,45)}</td>
+        <td><span class="badge badge-gray" style="font-size:9px;color:${_tipoCor[tipo]}">${_tipoLabel[tipo]}</span></td>
+        <td class="td-num" style="${vs};font-weight:600">${sinal}${_fmtBRL(Math.abs(v))}</td>
+        <td class="td-num">${statusBadge}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  window.renderFluxoOnshore  = renderFluxoOnshore;
+  window.fluxoFiltrarTipo    = fluxoFiltrarTipo;
+
 
 
 })(); // fim IIFE
