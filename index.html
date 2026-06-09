@@ -5390,21 +5390,20 @@
       y+=34;
 
       eyebrow('Detalhamento dos Eventos', ML, y); y+=5;
-      const evRows=[...movMes]
-        .sort((a,b)=>parseFloat(b['Valor Bruto']||0)-parseFloat(a['Valor Bruto']||0))
-        .slice(0,18)
-        .map(r=>{
-          const v=parseFloat(r['Valor Bruto']||0);
-          const tp=_tipo(r['Evento']);
-          const tpL={juros:'Juros',amort:'Amortização',div:'Dividendo',resgate:'Resgate',outro:'Outro'}[tp];
-          return[
-            String(r['Data']||'').substring(0,10),
-            String(r['Ativo']||'').substring(0,50),
-            tpL,
-            '+'+fmtR(v),
-            String(r['Status Evento']||'—').substring(0,12)
-          ];
-        });
+      // Agrupa por Ativo + Tipo, soma valores
+      const evMap={};
+      movMes.forEach(r=>{
+        const ativo=String(r['Ativo']||'').trim();
+        const tp=_tipo(r['Evento']);
+        const tpL={juros:'Juros',amort:'Amortização',div:'Dividendo',resgate:'Resgate',outro:'Outro'}[tp];
+        const key=ativo+'||'+tpL;
+        if(!evMap[key]) evMap[key]={data:String(r['Data']||'').substring(0,10),ativo,tipo:tpL,valor:0,status:String(r['Status Evento']||'—')};
+        evMap[key].valor+=parseFloat(r['Valor Bruto']||0);
+      });
+      const evRows=Object.values(evMap)
+        .sort((a,b)=>b.valor-a.valor)
+        .slice(0,20)
+        .map(r=>[r.data, r.ativo.substring(0,50), r.tipo, '+'+fmtR(r.valor), r.status.substring(0,12)]);
       y=cleanTable(['Data','Ativo','Tipo','Valor','Status'], evRows, ML, y, [22,84,22,26,20]);
 
       footer(3, 6);
