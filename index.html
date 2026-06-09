@@ -1089,7 +1089,8 @@
         </div>
 
         <!-- ── LINHA 3: Ilíquidos + Previdência ──────────────────────── -->
-        <div class="two-col mb-20" style="grid-template-columns:1fr 2fr">
+        <!-- Ilíquidos — tabela full width -->
+        <div class="mb-20">
 
           <!-- Ilíquidos card — tabela completa -->
           <div class="card" style="padding:0;overflow:hidden">
@@ -1109,7 +1110,16 @@
               </div>
             </div>
             <div style="overflow-x:auto">
-              <table class="data-table" style="font-size:11.5px">
+              <table class="data-table" style="font-size:11.5px;min-width:700px;table-layout:fixed">
+                <colgroup>
+                  <col style="width:32%">
+                  <col style="width:13%">
+                  <col style="width:12%">
+                  <col style="width:12%">
+                  <col style="width:10%">
+                  <col style="width:10%">
+                  <col style="width:11%">
+                </colgroup>
                 <thead>
                   <tr>
                     <th>Fundo / Ativo</th>
@@ -1129,7 +1139,10 @@
             <div id="home-il-fundos" style="display:none"></div>
           </div>
 
-          <!-- Rio Bonito (Previdência) card -->
+        </div>
+
+        <!-- Rio Bonito (Previdência) -->
+        <div class="two-col mb-20" style="grid-template-columns:1fr 1fr">
           <div class="card">
             <div class="card-title">Previdência — Rio Bonito <span class="card-title-label">Itaú Flexprev</span></div>
             <div class="kpi-grid kpi-grid-4" style="margin-bottom:16px">
@@ -1174,6 +1187,8 @@
             </div>
           </div>
         </div>
+
+        </div><!-- end previdência two-col -->
 
         <!-- ── LINHA 4: Rentabilidade mensal histórica (tabela) ─────── -->
         <div class="card mb-20">
@@ -4854,7 +4869,7 @@
           const boldStyle = isTotal ? 'font-weight:700;border-top:2px solid var(--border-strong)' : '';
           const tCol = c[4]&&c[4].startsWith('+')?'color:var(--verde)':c[4]&&c[4].startsWith('-')?'color:var(--vermelho)':'';
           rows.push('<tr style="'+boldStyle+'">'
-            +'<td style="font-size:11px">'+c[0]+'</td>'
+            +'<td style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0" title="'+c[0]+'">'+c[0]+'</td>'
             +'<td class="td-num" style="font-size:11px">'+(c[1]||'—')+'</td>'
             +'<td class="td-num" style="font-size:11px">'+(c[2]||'—')+'</td>'
             +'<td class="td-num" style="font-size:11px">'+(c[3]||'—')+'</td>'
