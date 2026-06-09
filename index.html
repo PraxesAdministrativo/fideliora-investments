@@ -1075,7 +1075,7 @@
         </div>
 
         <!-- ── LINHA 2: Alocação por classe + Top holdings ─────────── -->
-        <div class="two-col mb-20">
+        <div class="mb-20">
 
           <!-- Alocação por classe -->
           <div class="card">
@@ -1093,11 +1093,7 @@
             </table>
           </div>
 
-          <!-- Top holdings -->
-          <div class="card">
-            <div class="card-title">Top Holdings <span class="card-title-label">Maiores posições</span></div>
-            <div id="home-holdings-body" style="font-size:12px"></div>
-          </div>
+
         </div>
 
         <!-- ── LINHA 3: Ilíquidos + Previdência ──────────────────────── -->
@@ -4755,6 +4751,7 @@
     filtered7.forEach(row => {
       const nome   = String(row['Ativo']).trim();
       const saldoF = parseFloat(row[saldoFimK7]||row['Saldo Bruto 31/03/26']||0)||0;
+      if (saldoF <= 0) return; // oculta classes com saldo final zerado
       const rend   = parseFloat(row['Rendimento Bruto']||0)||0;
       const pct    = parseFloat(row['%']||0)||0;
       h7 += `<tr>
@@ -4771,35 +4768,7 @@
     });
     setH('home-alloc-body', h7 || '<tr><td colspan="4" style="text-align:center;padding:12px;color:var(--text-muted)">—</td></tr>');
 
-    // ── Top holdings (tab9) ────────────────────────────────────────
-    const tab9 = t.tab9 || [];
-    const saldoFimK9 = tab9[0] ? Object.keys(tab9[0]).find(k => /saldo bruto.*31/i.test(k)) || Object.keys(tab9[0]).filter(k=>/saldo bruto/i.test(k))[1] : null;
-    const SKIP9 = /^(genérico|generico|taxa de adm|taxa de previdência|inflação soberano|pós-fixado crédito|total)$/i;
-    const top9 = tab9
-      .filter(r => r['Ativo'] && !SKIP9.test(String(r['Ativo']).trim()))
-      .map(r => ({ nome: String(r['Ativo']).trim(), saldo: parseFloat(r[saldoFimK9]||r['Saldo Bruto 31/03/26']||0)||0, pct: parseFloat(r['%']||0)||0 }))
-      .filter(r => r.saldo > 0)
-      .sort((a,b) => b.saldo - a.saldo)
-      .slice(0, 10);
-    const totTop9 = top9.reduce((s,r) => s + r.saldo, 0);
-
-    setH('home-holdings-body', top9.length === 0
-      ? '<div style="color:var(--text-muted);text-align:center;padding:16px">—</div>'
-      : top9.map((r, i) => `
-        <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)">
-          <div style="width:18px;height:18px;border-radius:50%;background:var(--navy-pale);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--navy-mid);flex-shrink:0">${i+1}</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:11.5px;font-weight:500;color:var(--navy);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.nome}">${r.nome}</div>
-            <div style="height:3px;background:rgba(4,25,36,.07);border-radius:2px;margin-top:3px">
-              <div style="height:3px;border-radius:2px;background:var(--navy-mid);width:${Math.min(totTop9>0?r.saldo/totTop9*100:0,100).toFixed(1)}%"></div>
-            </div>
-          </div>
-          <div style="text-align:right;flex-shrink:0">
-            <div style="font-size:12px;font-weight:700;color:var(--navy)">${fmtM(r.saldo)}</div>
-            <div style="font-size:10px;color:var(--text-muted)">${Math.abs(r.pct).toFixed(1)}%</div>
-          </div>
-        </div>`).join('')
-    );
+    // Top Holdings removido
 
     // ── Rentabilidade mensal histórica (tab2) ─────────────────────
     const tab2 = t.tab2 || [];
@@ -4852,43 +4821,31 @@
     setH('home-rentab-body', h2 || '<tr><td colspan="14" style="text-align:center;padding:16px;color:var(--text-muted)">—</td></tr>');
 
     // ── Ilíquidos ─────────────────────────────────────────────────
-    const ilTab8  = t.il_tab8  || [];
-    const ilTab10 = t.il_tab10 || [];
-
-    // PL ilíquidos: soma saldo final de il_tab8
+    const ilTab8 = t.il_tab8 || [];
     const ilSaldoKey = ilTab8[0] ? Object.keys(ilTab8[0]).filter(k => /saldo bruto/i.test(k)).pop() : null;
     const ilPL = ilTab8.reduce((s, r) => s + (parseFloat(r[ilSaldoKey]||0)||0), 0);
 
-    // TIR por ativo: de il_tab10 { Ativo, Mês, Ano, 03meses, 06meses, 12meses, Noperíodo }
-    // TIR anualizada = (1 + Noperíodo)^(12/nMeses) - 1
-    // Mas sem data de início disponível no tab10, usamos 12meses como proxy da TIR
-    const tirPorAtivo = [];
-    ilTab10.forEach(row => {
-      const ativo = String(row['Ativo']||'').trim();
-      if (!ativo || ativo.toLowerCase().includes('total') || ativo.toLowerCase().includes('carteira')) return;
-      // Usa Noperíodo se existir, senão 12meses
-      const perKey = Object.keys(row).find(k => /noper|período/i.test(k));
-      const valBruto = perKey ? parseFloat(row[perKey]) : parseFloat(row['12meses']||row['Ano']||0);
-      if (!isNaN(valBruto) && valBruto > 0) {
-        // Annualize assuming full period ≈ 12 months if using 12meses, else period TIR
-        const tir = valBruto * 100; // já em % ou decimal?
-        // il_tab10 values: from earlier console, they were decimal (0.129 = 12.9%)
-        tirPorAtivo.push({ ativo, tir: valBruto < 2 ? valBruto * 100 : valBruto });
-      }
-    });
-    tirPorAtivo.sort((a,b) => b.tir - a.tir);
-
-    // TIR média ponderada (pelo PL se disponível, senão simples)
-    const tirMedia = tirPorAtivo.length
-      ? tirPorAtivo.reduce((s,r) => s + r.tir, 0) / tirPorAtivo.length
-      : null;
+    // TIR: lê do DOM da tabela de ilíquidos (já calculada corretamente por renderIliquidos)
+    const ilMetBody = document.getElementById('il-metricas-tabela');
+    const tirRows = [];
+    if (ilMetBody) {
+      ilMetBody.querySelectorAll('tr').forEach(tr => {
+        const c = [...tr.querySelectorAll('td')].map(td => td.textContent.trim());
+        if (c.length >= 5 && c[0] && !/total|média|carregando/i.test(c[0])) {
+          const tir = parseFloat(c[4].replace(/[+%]/g,'').replace(',','.'));
+          if (!isNaN(tir) && tir > 0) tirRows.push({ ativo: c[0], tir });
+        }
+      });
+    }
+    tirRows.sort((a,b) => b.tir - a.tir);
+    const tirMedia = tirRows.length ? tirRows.reduce((s,r) => s + r.tir, 0) / tirRows.length : null;
 
     setT('home-il-pl',      ilPL ? fmtM(ilPL) : '—');
     setT('home-il-pl-sub',  ilSaldoKey ? ilSaldoKey.replace(/saldo bruto /i,'').trim() : '');
     setT('home-il-tir',     tirMedia !== null ? '+' + tirMedia.toFixed(1) + '% a.a.' : '—');
-    setT('home-il-tir-sub', tirPorAtivo.length + ' ativo(s)');
+    setT('home-il-tir-sub', tirRows.length + ' fundo(s)');
 
-    const top3il = tirPorAtivo.slice(0, 3);
+    const top3il = tirRows.slice(0, 3);
     setH('home-il-fundos', top3il.length === 0
       ? '<div style="color:var(--text-muted);text-align:center;padding:8px">—</div>'
       : top3il.map((r,i) => `
@@ -5421,9 +5378,9 @@
       rule(y); y+=12;
 
       // 2 KPIs
-      const ikw=(W-ML*2-4)/2;
-      kpiCard(ML,       y, ikw, 22, 'PL Total Ilíquidos',  fmtR(plIl),                    sfin8.replace(/saldo bruto /i,'').trim());
-      kpiCard(ML+ikw+4, y, ikw, 22, 'TIR Média Ponderada', (()=>{
+      const ikw=(W-ML-MR-4)/2;
+      kpiCard(ML,       y, ikw, 26, 'PL Total Ilíquidos',  fmtR(plIl),                    sfin8.replace(/saldo bruto /i,'').trim());
+      kpiCard(ML+ikw+4, y, ikw, 26, 'TIR Média Ponderada', (()=>{
           const rows=[];
           const bod=document.getElementById('il-metricas-tabela');
           if(bod) bod.querySelectorAll('tr').forEach(tr=>{
@@ -5437,7 +5394,7 @@
           const avg=rows.reduce((a,b)=>a+b,0)/rows.length;
           return (avg>=0?'+':'')+avg.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'% a.a.';
         })(), (()=>{ const b=document.getElementById('il-metricas-tabela'); return b?b.querySelectorAll('tr').length+' fundo(s)':''; })());
-      y+=30;
+      y+=34;
 
       const ilBody=document.getElementById('il-metricas-tabela');
       const ilRows=[];
