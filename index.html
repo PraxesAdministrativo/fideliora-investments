@@ -1018,18 +1018,6 @@
             <div class="hero-kpi-val pos" id="home-rent-12m">—</div>
             <div class="hero-kpi-sub" id="home-rent-12m-sub"></div>
           </div>
-          <div class="hero-divider"></div>
-          <div class="hero-kpi">
-            <div class="hero-kpi-label">Fluxo Recebido no Mês</div>
-            <div class="hero-kpi-val pos" id="home-fluxo-total">—</div>
-            <div class="hero-kpi-sub" id="home-fluxo-sub"></div>
-          </div>
-          <div class="hero-divider"></div>
-          <div class="hero-kpi">
-            <div class="hero-kpi-label">Sharpe no Período</div>
-            <div class="hero-kpi-val" id="home-sharpe">—</div>
-            <div class="hero-kpi-sub" id="home-sharpe-sub"></div>
-          </div>
         </div>
 
         <!-- ── LINHA 1: Fluxo breakdown + Performance ──────────────── -->
@@ -1071,6 +1059,10 @@
                 <tr><td colspan="4" style="text-align:center;padding:16px;color:var(--text-muted)">—</td></tr>
               </tbody>
             </table>
+            <div id="home-sharpe" style="display:none"></div>
+            <div id="home-sharpe-sub" style="display:none"></div>
+            <div id="home-fluxo-total" style="display:none"></div>
+            <div id="home-fluxo-sub" style="display:none"></div>
           </div>
         </div>
 
@@ -1099,25 +1091,42 @@
         <!-- ── LINHA 3: Ilíquidos + Previdência ──────────────────────── -->
         <div class="two-col mb-20" style="grid-template-columns:1fr 2fr">
 
-          <!-- Ilíquidos card -->
-          <div class="card" style="display:flex;flex-direction:column;gap:16px">
-            <div class="card-title">Ilíquidos <span class="card-title-label">Private Equity / Fundos</span></div>
-            <div style="display:flex;gap:12px">
-              <div style="flex:1;background:var(--surface-sunken,#ebe3d6);border-radius:8px;padding:14px;text-align:center">
-                <div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:6px;font-weight:600">PL Atual</div>
-                <div style="font-size:22px;font-weight:700;color:var(--navy)" id="home-il-pl">—</div>
-                <div style="font-size:10.5px;color:var(--text-muted);margin-top:3px" id="home-il-pl-sub"></div>
-              </div>
-              <div style="flex:1;background:var(--surface-sunken,#ebe3d6);border-radius:8px;padding:14px;text-align:center">
-                <div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:6px;font-weight:600">TIR Média Pond.</div>
-                <div style="font-size:22px;font-weight:700;color:var(--verde)" id="home-il-tir">—</div>
-                <div style="font-size:10.5px;color:var(--text-muted);margin-top:3px" id="home-il-tir-sub"></div>
+          <!-- Ilíquidos card — tabela completa -->
+          <div class="card" style="padding:0;overflow:hidden">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px 10px">
+              <div class="card-title" style="margin:0">Ilíquidos <span class="card-title-label">Private Equity / Fundos</span></div>
+              <div style="display:flex;gap:20px">
+                <div style="text-align:right">
+                  <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);font-weight:600">PL Atual</div>
+                  <div style="font-size:14px;font-weight:700;color:var(--navy)" id="home-il-pl">—</div>
+                  <div style="font-size:10px;color:var(--text-muted)" id="home-il-pl-sub"></div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);font-weight:600">TIR Média</div>
+                  <div style="font-size:14px;font-weight:700;color:var(--verde)" id="home-il-tir">—</div>
+                  <div style="font-size:10px;color:var(--text-muted)" id="home-il-tir-sub"></div>
+                </div>
               </div>
             </div>
-            <div>
-              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:8px;font-weight:600">Top Fundos por TIR</div>
-              <div id="home-il-fundos" style="font-size:12px"></div>
+            <div style="overflow-x:auto">
+              <table class="data-table" style="font-size:11.5px">
+                <thead>
+                  <tr>
+                    <th>Fundo / Ativo</th>
+                    <th class="td-num">Cap. Chamado</th>
+                    <th class="td-num">Distribuído</th>
+                    <th class="td-num">NAV Atual</th>
+                    <th class="td-num">TIR a.a.</th>
+                    <th class="td-num">MOIC</th>
+                    <th class="td-num">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="home-il-metricas">
+                  <tr><td colspan="7" style="text-align:center;padding:16px;color:var(--text-muted)">Carregando...</td></tr>
+                </tbody>
+              </table>
             </div>
+            <div id="home-il-fundos" style="display:none"></div>
           </div>
 
           <!-- Rio Bonito (Previdência) card -->
@@ -4722,7 +4731,7 @@
     );
 
     // ── Performance comparativa (tab5) ────────────────────────────
-    const lbls5 = ['Retorno no período','Retorno últimos 6m','Retorno últimos 12m','Volatilidade','Índice de Sharpe'];
+    const lbls5 = ['Retorno no período','Retorno últimos 6m','Retorno últimos 12m'];
     let h5 = '';
     lbls5.forEach((lbl, i) => {
       const cartV = tab5[i] ? parseFloat(tab5[i]['Carteira']) : NaN;
@@ -4827,35 +4836,44 @@
     const ilSaldoKey = ilTab8[0] ? Object.keys(ilTab8[0]).filter(k => /saldo bruto/i.test(k)).pop() : null;
     const ilPL = ilTab8.reduce((s, r) => s + (parseFloat(r[ilSaldoKey]||0)||0), 0);
 
-    // TIR: lê do DOM da tabela de ilíquidos (já calculada corretamente por renderIliquidos)
-    const ilMetBody = document.getElementById('il-metricas-tabela');
-    const tirRows = [];
-    if (ilMetBody) {
-      ilMetBody.querySelectorAll('tr').forEach(tr => {
+    setT('home-il-pl',     ilPL ? fmtM(ilPL) : '—');
+    setT('home-il-pl-sub', ilSaldoKey ? ilSaldoKey.replace(/saldo bruto /i,'').trim() : '');
+
+    // Copia a tabela de métricas já renderizada pelo renderIliquidos
+    const ilSrc  = document.getElementById('il-metricas-tabela');
+    const ilDest = document.getElementById('home-il-metricas');
+    if (ilSrc && ilDest) {
+      const rows = [];
+      let tirSum = 0, tirCount = 0;
+      ilSrc.querySelectorAll('tr').forEach(tr => {
         const c = [...tr.querySelectorAll('td')].map(td => td.textContent.trim());
-        if (c.length >= 5 && c[0] && !/total|média|carregando/i.test(c[0])) {
+        if (c.length >= 5 && c[0] && !/carregando/i.test(c[0])) {
+          const isTotal = /total|média/i.test(c[0]);
           const tir = parseFloat(c[4].replace(/[+%]/g,'').replace(',','.'));
-          if (!isNaN(tir) && tir > 0) tirRows.push({ ativo: c[0], tir });
+          if (!isTotal && !isNaN(tir) && tir > 0) { tirSum += tir; tirCount++; }
+          const boldStyle = isTotal ? 'font-weight:700;border-top:2px solid var(--border-strong)' : '';
+          const tCol = c[4]&&c[4].startsWith('+')?'color:var(--verde)':c[4]&&c[4].startsWith('-')?'color:var(--vermelho)':'';
+          rows.push('<tr style="'+boldStyle+'">'
+            +'<td style="font-size:11px">'+c[0]+'</td>'
+            +'<td class="td-num" style="font-size:11px">'+(c[1]||'—')+'</td>'
+            +'<td class="td-num" style="font-size:11px">'+(c[2]||'—')+'</td>'
+            +'<td class="td-num" style="font-size:11px">'+(c[3]||'—')+'</td>'
+            +'<td class="td-num" style="font-size:11px;'+tCol+'">'+(c[4]||'—')+'</td>'
+            +'<td class="td-num" style="font-size:11px">'+(c[5]||'—')+'</td>'
+            +'<td class="td-num" style="font-size:11px">'+(c[10]||'—')+'</td>'
+            +'</tr>');
         }
       });
+      ilDest.innerHTML = rows.length > 0
+        ? rows.join('')
+        : '<tr><td colspan="7" style="text-align:center;padding:16px;color:var(--text-muted)">Navegue até Ilíquidos para carregar os dados</td></tr>';
+      const tirMedia = tirCount > 0 ? tirSum / tirCount : null;
+      setT('home-il-tir',     tirMedia !== null ? '+' + tirMedia.toFixed(1) + '% a.a.' : '—');
+      setT('home-il-tir-sub', tirCount + ' fundo(s)');
+    } else {
+      setT('home-il-tir',     '—');
+      setT('home-il-tir-sub', '0 fundo(s)');
     }
-    tirRows.sort((a,b) => b.tir - a.tir);
-    const tirMedia = tirRows.length ? tirRows.reduce((s,r) => s + r.tir, 0) / tirRows.length : null;
-
-    setT('home-il-pl',      ilPL ? fmtM(ilPL) : '—');
-    setT('home-il-pl-sub',  ilSaldoKey ? ilSaldoKey.replace(/saldo bruto /i,'').trim() : '');
-    setT('home-il-tir',     tirMedia !== null ? '+' + tirMedia.toFixed(1) + '% a.a.' : '—');
-    setT('home-il-tir-sub', tirRows.length + ' fundo(s)');
-
-    const top3il = tirRows.slice(0, 3);
-    setH('home-il-fundos', top3il.length === 0
-      ? '<div style="color:var(--text-muted);text-align:center;padding:8px">—</div>'
-      : top3il.map((r,i) => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
-          <div style="font-size:11.5px;color:var(--navy);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70%" title="${r.ativo}">${i+1}. ${r.ativo.substring(0,40)}</div>
-          <span style="font-size:12px;font-weight:700;color:var(--verde);flex-shrink:0">+${r.tir.toFixed(1)}%</span>
-        </div>`).join('')
-    );
 
     // ── Previdência — Rio Bonito ───────────────────────────────────
     const mvT0    = t.mv_tab0    || [];
