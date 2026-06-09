@@ -4744,7 +4744,9 @@
 
     // ── Alocação por classe (tab7) ─────────────────────────────────
     const tab7 = t.tab7 || [];
-    const saldoFimK7 = tab7[0] ? Object.keys(tab7[0]).find(k => /saldo bruto.*31/i.test(k)) || Object.keys(tab7[0]).filter(k=>/saldo bruto/i.test(k))[1] : null;
+    // saldoFimK7 = último 'Saldo Bruto' = saldo FINAL (não o inicial 31/12/24)
+    const _sk7home = tab7[0] ? Object.keys(tab7[0]).filter(k => /saldo bruto/i.test(k)) : [];
+    const saldoFimK7 = _sk7home[_sk7home.length - 1] || null;
     let h7 = '', tot7 = 0;
     const filtered7 = tab7.filter(r => r['Ativo'] && !/genérico|generico/i.test(String(r['Ativo'])));
     filtered7.forEach(r => { tot7 += Math.abs(parseFloat(r[saldoFimK7]||r['Saldo Bruto 31/03/26'])||0); });
