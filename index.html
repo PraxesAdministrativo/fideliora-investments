@@ -5053,681 +5053,484 @@
     const btn    = document.getElementById('btn-pdf-gerar');
     const progEl = document.getElementById('pdf-progress');
     const progBar= document.getElementById('pdf-progress-bar');
-    const status = document.getElementById('pdf-status');
-
-    btn.disabled = true;
-    btn.textContent = 'Gerando...';
+    const statusEl = document.getElementById('pdf-status');
+    btn.disabled = true; btn.textContent = 'Gerando...';
     progEl.style.display = 'block';
+    const setP = (p,m) => { progBar.style.width=p+'%'; statusEl.textContent=m; };
 
-    const setP = (pct, msg) => { progBar.style.width = pct+'%'; status.textContent = msg; };
+    // Pré-renderiza ilíquidos para ter dados no DOM
+    if (typeof renderIliquidos === 'function') renderIliquidos();
 
     try {
-      // Garante que a tabela de ilíquidos está renderizada antes de capturar
-      if (typeof renderIliquidos === 'function') renderIliquidos();
-
-      // ── A4 PAISAGEM ─────────────────────────────────────────────
       const pdf = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
       const W = 297, H = 210;
 
-      // ── PALETA ───────────────────────────────────────────────────
-      const C = {
-        abyss:  [4,  25,  36],
-        deep:   [3,  49,  62],
-        teal:   [42, 90,  102],
-        teal40: [91, 129, 139],
-        sand:   [242,221,198],
-        paper:  [250,246,240],
-        shell:  [235,227,214],
-        white:  [255,255,255],
-        verde:  [26, 102, 69],
-        red:    [192,57,  43],
-        gold:   [180,140,70],
-        muted:  [140,160,165],
-        line:   [220,215,208],
-      };
+      // ── PALETA ──────────────────────────────────────────────────
+      const NAVY  = [3,49,62];
+      const TEAL  = [42,90,102];
+      const SAND  = [242,221,198];
+      const PAPER = [250,246,240];
+      const SHELL = [235,227,214];
+      const WHITE = [255,255,255];
+      const VERDE = [26,102,69];
+      const VERD2 = [210,240,225];
+      const RED   = [180,50,40];
+      const GOLD  = [180,140,60];
+      const MUTED = [130,155,160];
+      const LINE  = [215,208,198];
 
-      // ── HELPERS ───────────────────────────────────────────────────
-      const txt = (t,x,y,opts={}) => pdf.text(String(t??''),x,y,opts);
-      const getEl= id => document.getElementById(id)?.textContent?.trim()||'—';
+      const t   = (window._CD||CD)?.tables||{};
+      const mov = (window._CD||CD)?.movimentacoes||[];
 
-      const fmtM = v => {
-        const n=Math.abs(parseFloat(v)||0),s=parseFloat(v)<0?'−':'';
+      // ── HELPERS ─────────────────────────────────────────────────
+      const T = (s,x,y,o={}) => pdf.text(String(s??''),x,y,o);
+      const getEl = id => document.getElementById(id)?.textContent?.trim()||'—';
+
+      const fmtR = v => {
+        const n=Math.abs(parseFloat(v)||0), s=parseFloat(v)<0?'−':'';
         if(n>=1e9) return s+'R$ '+(n/1e9).toFixed(2)+' bi';
-        if(n>=1e6) return s+'R$ '+(n/1e6).toFixed(2)+' mi';
+        if(n>=1e6) return s+'R$ '+(n/1e6).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+' mi';
         if(n>=1e3) return s+'R$ '+Math.round(n/1e3).toLocaleString('pt-BR')+' mil';
         return s+'R$ '+Math.round(n).toLocaleString('pt-BR');
       };
 
-      // Header de página (reusável)
-      const drawHeader = () => {
-        pdf.setFillColor(...C.abyss);
-        pdf.rect(0,0,W,14,'F');
-        // Logo text
-        pdf.setFont('helvetica','bold');
-        pdf.setFontSize(7.5);
-        pdf.setTextColor(...C.sand);
-        txt('PRAXES GESTÃO PATRIMONIAL',14,9,{charSpace:1.8});
-        // Cliente + período
-        pdf.setFont('helvetica','normal');
-        pdf.setFontSize(7.5);
-        pdf.setTextColor(...C.muted);
-        txt(cliente+'  ·  '+periodo, W/2, 9, {align:'center'});
-        // Confidencial
-        pdf.setFontSize(6.5);
-        txt('CONFIDENCIAL', W-14, 9, {align:'right', charSpace:1});
-        // Linha teal
-        pdf.setFillColor(...C.teal);
-        pdf.rect(0,14,W,0.8,'F');
+      const fmtPct = v => {
+        const n = parseFloat(v);
+        if(isNaN(n)) return '—';
+        return (n>=0?'+':'')+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
       };
 
-      // Linha separadora
-      const hRule = (y,x0=14,x1=W-14,alpha=0.15) => {
-        pdf.setDrawColor(...C.teal);
-        pdf.setLineWidth(0.25);
-        pdf.line(x0,y,x1,y);
+      // ── HEADER (reutilizável) ────────────────────────────────────
+      const header = () => {
+        pdf.setFillColor(...NAVY); pdf.rect(0,0,W,13,'F');
+        pdf.setFillColor(...TEAL); pdf.rect(0,13,W,0.7,'F');
+        pdf.setFont('helvetica','bold'); pdf.setFontSize(7);
+        pdf.setTextColor(...SAND);
+        T('PRAXES GESTÃO PATRIMONIAL',14,9,{charSpace:1.5});
+        pdf.setFont('helvetica','normal'); pdf.setFontSize(7);
+        pdf.setTextColor(...MUTED);
+        T(cliente+' · '+periodo, W/2, 9, {align:'center'});
+        pdf.setFontSize(6.5); T('CONFIDENCIAL',W-14,9,{align:'right',charSpace:0.8});
       };
 
-      // Section eyebrow label
-      const eyebrow = (t,x,y) => {
-        pdf.setFont('helvetica','bold');
-        pdf.setFontSize(6);
-        pdf.setTextColor(...C.teal40);
-        txt(t.toUpperCase(),x,y,{charSpace:1.2});
+      // ── SECTION LABEL ────────────────────────────────────────────
+      const label = (txt,x,y) => {
+        pdf.setFont('helvetica','bold'); pdf.setFontSize(5.8);
+        pdf.setTextColor(...TEAL);
+        T(txt.toUpperCase(),x,y,{charSpace:1.1});
       };
 
-      // Section title
-      const sectionTitle = (t,x,y) => {
-        pdf.setFont('helvetica','bold');
-        pdf.setFontSize(10);
-        pdf.setTextColor(...C.abyss);
-        txt(t,x,y);
+      // ── KPI CARD ────────────────────────────────────────────────
+      const kpi = (x,y,w,h,lbl,val,sub,accent,valColor) => {
+        pdf.setFillColor(...PAPER); pdf.roundedRect(x,y,w,h,1.5,1.5,'F');
+        pdf.setFillColor(...accent); pdf.rect(x,y,1.2,h,'F');
+        pdf.setFont('helvetica','bold'); pdf.setFontSize(5.5);
+        pdf.setTextColor(...MUTED); T(lbl.toUpperCase(),x+4,y+5.5,{charSpace:0.4});
+        pdf.setFont('helvetica','bold'); pdf.setFontSize(valColor?12:11);
+        pdf.setTextColor(...(valColor||NAVY)); T(val,x+4,y+13.5);
+        if(sub){ pdf.setFont('helvetica','normal'); pdf.setFontSize(6);
+          pdf.setTextColor(...MUTED); T(sub,x+4,y+h-2.5); }
       };
 
-      // KPI card
-      const kpiCard = (x,y,w,h,label,value,sub,accentColor) => {
-        pdf.setFillColor(...C.paper);
-        pdf.roundedRect(x,y,w,h,2,2,'F');
-        pdf.setFillColor(...accentColor);
-        pdf.rect(x,y,1.5,h,'F');
-        pdf.setFont('helvetica','bold');
-        pdf.setFontSize(5.5);
-        pdf.setTextColor(...C.muted);
-        txt(label.toUpperCase(),x+4,y+5.5,{charSpace:0.5});
-        pdf.setFont('helvetica','bold');
-        pdf.setFontSize(11);
-        pdf.setTextColor(...C.abyss);
-        txt(value,x+4,y+13.5);
-        if(sub){
-          pdf.setFont('helvetica','normal');
-          pdf.setFontSize(6.5);
-          pdf.setTextColor(...C.muted);
-          txt(sub,x+4,y+18.5);
-        }
-      };
-
-      // Table helper
-      const drawTable = (headers, rows, x, y, colW, rowH=6.5) => {
-        const totW = colW.reduce((a,b)=>a+b,0);
-        // Header
-        pdf.setFillColor(...C.abyss);
-        pdf.rect(x,y,totW,rowH+1,'F');
-        pdf.setFont('helvetica','bold');
-        pdf.setFontSize(6);
-        pdf.setTextColor(...C.sand);
-        let cx = x+2;
+      // ── TABLE ────────────────────────────────────────────────────
+      const table = (headers,rows,x,y,cw,rh=6.2) => {
+        const tw=cw.reduce((a,b)=>a+b,0);
+        // header row
+        pdf.setFillColor(...NAVY); pdf.rect(x,y,tw,rh,'F');
+        pdf.setFont('helvetica','bold'); pdf.setFontSize(5.8); pdf.setTextColor(...SAND);
+        let cx=x+2;
         headers.forEach((h,i)=>{
-          const isNum = i>=2;
-          txt(h.toUpperCase(), isNum ? cx+colW[i]-3 : cx, y+rowH-0.5, {align:isNum?'right':'left', charSpace:0.4});
-          cx+=colW[i];
+          const r=i>0; const xh=r?cx+cw[i]-3:cx;
+          T(h,xh,y+rh-1.2,{align:r?'right':'left',charSpace:0.3}); cx+=cw[i];
         });
-        y += rowH+1;
+        y+=rh;
         rows.forEach((row,ri)=>{
-          if(ri%2===0){ pdf.setFillColor(...C.shell); pdf.rect(x,y,totW,rowH,'F'); }
-          else { pdf.setFillColor(255,253,249); pdf.rect(x,y,totW,rowH,'F'); }
-          pdf.setFont('helvetica','normal');
-          pdf.setFontSize(7);
-          let rx = x+2;
-          row.forEach((cell,ci)=>{
-            const isNum = ci>=2;
-            const s = String(cell??'—');
-            const isPos = isNum && (s.startsWith('+')||(!s.startsWith('-')&&!s.startsWith('−')&&parseFloat(s)>0&&s.includes('%')));
-            const isNeg = isNum && (s.startsWith('-')||s.startsWith('−'));
-            pdf.setTextColor(...(isPos?C.verde:isNeg?C.red:C.abyss));
-            txt(s.substring(0,40), isNum?rx+colW[ci]-3:rx, y+rowH-1.5, {align:isNum?'right':'left'});
-            rx+=colW[ci];
+          pdf.setFillColor(...(ri%2===0?SHELL:[255,252,247]));
+          pdf.rect(x,y,tw,rh,'F');
+          pdf.setFont('helvetica','normal'); pdf.setFontSize(6.5);
+          let rx=x+2;
+          row.forEach((c,ci)=>{
+            const isN=ci>0;
+            const s=String(c??'—');
+            const pos=isN&&(s.startsWith('+')||(parseFloat(s)>0&&s.includes('%')&&!s.startsWith('-')));
+            const neg=isN&&(s.startsWith('-')||s.startsWith('−'));
+            pdf.setTextColor(...(pos?VERDE:neg?RED:NAVY));
+            T(s.substring(0,ci===0?34:20),isN?rx+cw[ci]-3:rx,y+rh-1.5,{align:isN?'right':'left'});
+            rx+=cw[ci];
           });
-          y+=rowH;
+          y+=rh;
         });
-        pdf.setDrawColor(...C.teal);
-        pdf.setLineWidth(0.2);
-        pdf.line(x,y,x+totW,y);
+        pdf.setDrawColor(...TEAL); pdf.setLineWidth(0.18); pdf.line(x,y,x+tw,y);
         return y+3;
       };
 
-      // ══════════════════════════════════════════════════════════════
-      // PÁGINA 1 — PATRIMÔNIO TOTAL + ONSHORE POSIÇÃO
-      // ══════════════════════════════════════════════════════════════
-      setP(8,'Página 1 — Patrimônio...');
-      drawHeader();
-
-      // ── FAIXA DE PATRIMÔNIO ──────────────────────────────────────
-      const stripY = 18;
-      pdf.setFillColor(...C.deep);
-      pdf.rect(0, stripY, W, 26, 'F');
-
-      // Pega PL onshore do CD
-      const t = (window._CD||CD)?.tables||{};
-      const tab8 = t.tab8||[];
-      const saldoFimK = tab8[0]?Object.keys(tab8[0]).filter(k=>/saldo bruto/i.test(k))[1]||Object.keys(tab8[0]).filter(k=>/saldo bruto/i.test(k))[0]:'';
-      const plOnshore = tab8.reduce((s,r)=>s+(parseFloat(r[saldoFimK]||0)||0),0);
-
-      // Ilíquidos PL
-      const il8 = t.il_tab8||[];
-      const ilKey = il8[0]?Object.keys(il8[0]).filter(k=>/saldo bruto/i.test(k)).pop():'';
-      const plIliq = il8.reduce((s,r)=>s+(parseFloat(r[ilKey]||0)||0),0);
-
-      const plTotal = plOnshore + plIliq; // offshore = 0 por enquanto
-      const pctOn   = plTotal>0?(plOnshore/plTotal*100).toFixed(1):'—';
-      const pctIl   = plTotal>0?(plIliq/plTotal*100).toFixed(1):'—';
-
-      // ── Faixa patrimônio: título topo + 5 colunas iguais ──────────
-      // Linha título
-      pdf.setFont('helvetica','normal');
-      pdf.setFontSize(6);
-      pdf.setTextColor(...C.teal);
-      txt('PATRIMÔNIO ONSHORE — VISÃO CONSOLIDADA', W/2, stripY+5, {align:'center', charSpace:1.4});
-
-      // Linha separadora fina
-      pdf.setDrawColor(42,90,102);
-      pdf.setLineWidth(0.15);
-      pdf.line(14, stripY+7.5, W-14, stripY+7.5);
-
-      // 5 colunas: PL Total | Líquida | Ilíquidos | Offshore | Prev
-      const stripItems = [
-        { label:'Total Onshore',   val: fmtM(plTotal),           sub: '100%' },
-        { label:'Carteira Líquida',val: fmtM(plOnshore),         sub: pctOn+'% do total' },
-        { label:'Ilíquidos',       val: fmtM(plIliq),            sub: pctIl+'% do total' },
-        { label:'Offshore (USD)',  val: 'Em configuração',        sub: '' },
-        { label:'Previdência',     val: getEl('home-prev-pl'),    sub: 'Flexprev Rio Bonito' },
-      ];
-      const sColW = (W - 28) / stripItems.length;
-      stripItems.forEach(({label,val,sub},i)=>{
-        const sx = 14 + i * sColW;
-        // Divisor vertical (exceto primeiro)
-        if(i>0){
-          pdf.setDrawColor(42,90,102); pdf.setLineWidth(0.2);
-          pdf.line(sx, stripY+8, sx, stripY+24);
-        }
-        // Highlight do total (primeiro)
-        if(i===0){
-          pdf.setFont('helvetica','bold'); pdf.setFontSize(5.5);
-          pdf.setTextColor(180,210,215);
-        } else {
-          pdf.setFont('helvetica','normal'); pdf.setFontSize(5.5);
-          pdf.setTextColor(160,195,200);
-        }
-        txt(label.toUpperCase(), sx+4, stripY+12, {charSpace:0.6});
-        pdf.setFont('helvetica','bold');
-        pdf.setFontSize(i===0?11:9);
-        pdf.setTextColor(i===0?C.sand[0]:242, i===0?C.sand[1]:221, i===0?C.sand[2]:198);
-        txt(val, sx+4, stripY+20);
-        if(sub){
-          pdf.setFont('helvetica','normal'); pdf.setFontSize(6);
-          pdf.setTextColor(...C.teal);
-          txt(sub, sx+4, stripY+25.5);
-        }
-      });
-
-      // ── CORPO: 2 COLUNAS ─────────────────────────────────────────
-      const bodyY = 50;
-      const colL  = 14;   // left col x
-      const colR  = 170;  // right col x
-      const colLW = 150;
-      const colRW = 113;
-
-      // ── COLUNA ESQUERDA: Custodiante + Alocação ──────────────────
-
-      // Posição por Custodiante (tab8)
-      eyebrow('Posição por Custodiante', colL, bodyY);
-      let yL = bodyY + 5;
-
-      const custRows = [];
-      tab8.filter(r=>r['Ativo']).forEach(r=>{
-        const nome  = String(r['Ativo']).trim();
-        const saldo = parseFloat(r[saldoFimK]||0)||0;
-        if(saldo <= 0) return; // oculta linhas zeradas
-        const pct   = parseFloat(r['%']||0)||0;
-        const rend  = parseFloat(r['Rendimento Bruto']||0)||0;
-        custRows.push([nome, fmtM(saldo), (rend>=0?'+':'')+fmtM(Math.abs(rend)), pct.toFixed(1)+'%']);
-      });
-      yL = drawTable(['Custodiante','Saldo','Rendimento','%'], custRows, colL, yL, [52,34,34,22]);
-
-      yL += 4;
-      eyebrow('Alocação por Classe de Ativo', colL, yL);
-      yL += 5;
-
-      const tab7 = t.tab7||[];
-      // sf7 = último 'Saldo Bruto' = saldo FINAL (não o inicial 31/12/24)
-      const _sf7keys = tab7[0]?Object.keys(tab7[0]).filter(k=>/saldo bruto/i.test(k)):[];
-      const sf7 = _sf7keys[_sf7keys.length-1]||'';
-      // tab9 para Provisão IR e Saldo Líquido por classe
-      const tab9pdf = t.tab9||[];
-      const sf9keys = tab9pdf[0]?Object.keys(tab9pdf[0]).filter(k=>/saldo bruto/i.test(k)):[];
-      const sf9fin  = sf9keys[sf9keys.length-1]||'';
-      const si9keys = tab9pdf[0]?Object.keys(tab9pdf[0]).filter(k=>/saldo bruto/i.test(k)):[];
-      const si9ini  = si9keys[0]||'';
-      const provKey = tab9pdf[0]?Object.keys(tab9pdf[0]).find(k=>/provis|ir\+/i.test(k)):'';
-      const sliqKey = tab9pdf[0]?Object.keys(tab9pdf[0]).find(k=>/saldo l[íi]q/i.test(k)):'';
-      // Mapa ativo → provisão+saldo líq
-      const t9map = {};
-      tab9pdf.forEach(r=>{
-        const a = String(r['Ativo']||'').trim();
-        t9map[a] = {
-          prov: parseFloat(r[provKey]||0)||0,
-          sliq: parseFloat(r[sliqKey]||r[sf9fin]||0)||0
-        };
-      });
-      const _sf7ini = tab7[0]?Object.keys(tab7[0]).filter(k=>/saldo bruto/i.test(k))[0]:'';
-      const allocRows = [];
-      tab7.filter(r=>r['Ativo']&&!/genérico|generico/i.test(String(r['Ativo']))).forEach(r=>{
-        const nome   = String(r['Ativo']).trim();
-        const saldoF = parseFloat(r[sf7]||0)||0;
-        if(saldoF <= 0) return;
-        const saldoI = parseFloat(r[_sf7ini]||0)||0;
-        const rend   = parseFloat(r['Rendimento Bruto']||0)||0;
-        const pct    = parseFloat(r['%']||0)||0;
-        const t9     = t9map[nome]||{prov:0,sliq:0};
-        const provStr= t9.prov<0?'−'+fmtM(Math.abs(t9.prov)):t9.prov>0?'-'+fmtM(t9.prov):'—';
-        const sliqStr= t9.sliq>0?fmtM(t9.sliq):'—';
-        allocRows.push([
-          nome.substring(0,22),
-          fmtM(saldoI),
-          (rend>=0?'+':'')+fmtM(Math.abs(rend)),
-          fmtM(saldoF),
-          provStr,
-          sliqStr,
-          pct.toFixed(1)+'%'
-        ]);
-      });
-      yL = drawTable(
-        ['Classe','S. Inicial','Rend.','S. Final','Prov. IR','S. Líquido','%'],
-        allocRows, colL, yL, [38,24,22,24,19,21,12]
-      );
-
-      // ── COLUNA DIREITA: KPIs Rentabilidade + Performance ─────────
-      let yR = bodyY;
-      eyebrow('Rentabilidade', colR, yR);
-      yR += 5;
-
-      const tab0   = t.tab0||[];
-      const varRow = tab0[1]||{};
-      const cdiRow = tab0[2]||{};
-      const keys0  = Object.keys(varRow);
-      const mesK   = keys0.find(k=>/m[eê]s/i.test(k)&&k.length<=5)||keys0[0];
-      const m12K   = keys0.find(k=>k.includes('12'))||keys0[2];
-      const perK   = keys0.find(k=>/per|nop/i.test(k))||keys0[keys0.length-1];
-
-      const kpiW4 = (colRW-4)/2;
-      const kpis1 = [
-        { label:'Rentab. no Mês',   val: getEl('home-rent-mes'),  sub: 'CDI: '+getEl('home-rent-mes-sub').replace('CDI: ',''), color: C.teal },
-        { label:'Rentab. 12 Meses', val: getEl('home-rent-12m'),  sub: getEl('home-rent-12m-sub'),                             color: C.teal },
-        { label:'PL Final',         val: getEl('home-pl'),        sub: getEl('home-pl-sub'),                                   color: C.deep },
-        { label:'Sharpe',           val: getEl('home-sharpe'),    sub: getEl('home-sharpe-sub'),                               color: C.deep },
-      ];
-      kpis1.forEach(({label,val,sub,color},i)=>{
-        const x = colR + (i%2)*(kpiW4+3);
-        const y = yR   + Math.floor(i/2)*24;
-        kpiCard(x,y,kpiW4,21,label,val,sub,color);
-      });
-      yR += 51;
-
-      hRule(yR, colR, colR+colRW);
-      yR += 4;
-      eyebrow('Performance vs CDI', colR, yR);
-      yR += 5;
-
-      const tab5 = t.tab5||[];
-      // Apenas retorno (sem volatilidade/sharpe)
-      const lbls = ['No período','Últimos 6m','Últimos 12m'];
-      const perfR = lbls.map((l,i)=>{
-        const cv = tab5[i]?parseFloat(tab5[i]['Carteira']):NaN;
-        const dv = tab5[i]?parseFloat(tab5[i]['CDI']):NaN;
-        const delta = (!isNaN(cv)&&!isNaN(dv))?cv-dv:NaN;
-        const fmt = v => isNaN(v)?'—':(v>=0?'+':'')+v.toFixed(2)+'%';
-        return [l, fmt(cv), fmt(dv), isNaN(delta)?'—':(delta>=0?'+':'')+delta.toFixed(2)+'%'];
-      });
-      yR = drawTable(['Indicador','Carteira','CDI','Δ CDI'], perfR, colR, yR, [43,24,22,24]);
-
-      // Nº página
-      pdf.setFont('helvetica','normal'); pdf.setFontSize(7); pdf.setTextColor(...C.muted);
-      txt('1', W/2, H-4, {align:'center'});
-
-      // ══════════════════════════════════════════════════════════════
-      // PÁGINA 2 — FLUXO DE CAIXA + PREVIDÊNCIA
-      // ══════════════════════════════════════════════════════════════
-      setP(40,'Página 2 — Fluxo de Caixa...');
-      pdf.addPage();
-      drawHeader();
-
-      // Faixa contexto
-      pdf.setFillColor(...C.deep);
-      pdf.rect(0,14,W,12,'F');
-      pdf.setFont('helvetica','bold'); pdf.setFontSize(8); pdf.setTextColor(...C.sand);
-      txt('Fluxo de Caixa & Previdência', 14, 22);
-      pdf.setFont('helvetica','normal'); pdf.setFontSize(7); pdf.setTextColor(...C.teal);
-
-      // Total fluxo
-      const fluxoTotal = getEl('home-fluxo-total');
-      const fluxoPer   = getEl('home-fluxo-periodo');
-      txt('Total recebido '+fluxoPer+': '+fluxoTotal, W-14, 22, {align:'right'});
-
-      const body2Y = 32;
-
-      // ── COLUNA ESQUERDA FLUXO ────────────────────────────────────
-      let yFL = body2Y;
-      eyebrow('Movimentações do Mês — '+fluxoPer, colL, yFL);
-      yFL += 4;
-
-      // KPIs Juros / Amortização / Dividendos — destaque
-      const fluxoKpis = [
-        { label:'Juros Recebidos',   val: getEl('home-fluxo-juros'), color: C.verde },
-        { label:'Amortizações',      val: getEl('home-fluxo-amort'), color: C.gold  },
-        { label:'Dividendos/Rend.',  val: getEl('home-fluxo-div'),   color: C.teal  },
-      ];
-      const fkW = (colLW - 6) / 3;
-      fluxoKpis.forEach(({label,val,color},i)=>{
-        const x = colL + i*(fkW+3);
-        pdf.setFillColor(...C.paper);
-        pdf.roundedRect(x,yFL,fkW,18,2,2,'F');
-        // acento colorido no topo
-        pdf.setFillColor(...color);
-        pdf.rect(x,yFL,fkW,1.5,'F');
-        pdf.setFont('helvetica','bold'); pdf.setFontSize(6); pdf.setTextColor(...C.muted);
-        txt(label.toUpperCase(), x+fkW/2, yFL+7, {align:'center', charSpace:0.4});
-        pdf.setFont('helvetica','bold'); pdf.setFontSize(12); pdf.setTextColor(...color);
-        txt(val, x+fkW/2, yFL+15, {align:'center'});
-      });
-      yFL += 23;
-
-      // Tabela de eventos
-      eyebrow('Detalhamento dos Eventos', colL, yFL);
-      yFL += 4;
-
-      const mov = (window._CD||CD)?.movimentacoes||[];
-      // Detecta mês/ano de referência
-      let refMes=null, refAno=null;
-      if(saldoFimK){
-        const pm = saldoFimK.match(/(\d{2})\/(\d{2})\/(\d{2,4})/);
-        if(pm){ refMes=parseInt(pm[2]); refAno=pm[3].length===2?2000+parseInt(pm[3]):parseInt(pm[3]); }
-      }
-      if(!refMes&&mov.length){
-        const ms=new Set();
-        mov.forEach(r=>{const m=String(r['Data']||'').match(/(\d{2})\/(\d{2})\/(\d{4})/);if(m)ms.add(m[2]+'/'+m[3]);});
-        const sorted=[...ms].sort((a,b)=>{const[mA,yA]=a.split('/').map(Number);const[mB,yB]=b.split('/').map(Number);return yA!==yB?yB-yA:mB-mA;});
-        if(sorted[0]){const[mm,yy]=sorted[0].split('/').map(Number);refMes=mm;refAno=yy;}
-      }
-      const movMes = refMes?mov.filter(r=>{
-        const m=String(r['Data']||'').match(/(\d{2})\/(\d{2})\/(\d{4})/);
-        return m&&+m[2]===refMes&&+m[3]===refAno&&parseFloat(r['Valor Bruto']||0)>0;
-      }):[];
-      const _tipo=ev=>{const e=String(ev||'').toLowerCase();if(/\bjuro|cupom/.test(e))return'Juros';if(/amort/.test(e))return'Amort.';if(/divid/.test(e))return'Dividendo';if(/rend|cotiz/.test(e))return'Rendimento';if(/resgate/.test(e))return'Resgate';return'Outro';};
-      const evRows = [...movMes]
-        .sort((a,b)=>parseFloat(b['Valor Bruto']||0)-parseFloat(a['Valor Bruto']||0))
-        .slice(0,12)
-        .map(r=>[
-          String(r['Data']||'').substring(0,10),
-          String(r['Ativo']||'').substring(0,32),
-          _tipo(r['Evento']),
-          '+'+fmtM(parseFloat(r['Valor Bruto']||0)),
-          String(r['Status Evento']||'').substring(0,12),
-        ]);
-      yFL = drawTable(['Data','Ativo','Tipo','Valor','Status'], evRows, colL, yFL, [22,60,20,24,20]);
-
-      // ── Ilíquidos consolidado (abaixo dos eventos) ───────────────
-      if(yFL < H-30){
-        yFL += 5;
-        eyebrow('Carteira de Ilíquidos — Métricas por Fundo', colL, yFL);
-        yFL += 4;
-
-        // Lê métricas do DOM (tabela já renderizada na página Ilíquidos)
-        const ilMetricasTbody = document.getElementById('il-metricas-tabela');
-        const ilRows = [];
-        if(ilMetricasTbody){
-          ilMetricasTbody.querySelectorAll('tr').forEach(tr=>{
-            const cells = [...tr.querySelectorAll('td')].map(td=>td.textContent.trim());
-            if(cells.length>=5 && cells[0] && !/total|média|carregando|moviment/i.test(cells[0])){
-              ilRows.push([
-                cells[0].substring(0,38),
-                cells[3]||'—',
-                cells[4]||'—',
-                cells[5]||'—',
-                cells[10]||'—',
-              ]);
-            }
-          });
-        }
-        if(ilRows.length===0){
-          const il8 = t.il_tab8||[];
-          const ilSK = il8[0]?Object.keys(il8[0]).filter(k=>/saldo bruto/i.test(k)).pop():'';
-          il8.filter(r=>r['Ativo']&&parseFloat(r[ilSK]||0)>0).slice(0,8).forEach(r=>{
-            const nome = String(r['Ativo']||'').substring(0,38);
-            const nav  = parseFloat(r[ilSK]||0);
-            ilRows.push([nome, fmtM(nav), '—', '—', '—']);
-          });
-        }
-        if(ilRows.length>0){
-          yFL = drawTable(
-            ['Fundo / Ativo','NAV Atual','TIR a.a.','MOIC','Status'],
-            ilRows, colL, yFL, [74,22,18,16,16]
-          );
-        }
-      }
-
-      // ── COLUNA DIREITA PREVIDÊNCIA ────────────────────────────────
-      let yPR = body2Y;
-      eyebrow('Previdência — Itaú Flexprev Rio Bonito', colR, yPR);
-      yPR += 5;
-
-      // 4 KPIs prev
-      const prevKpis = [
-        { label:'PL (Mercado)',     val: getEl('home-prev-pl'),         color: C.deep  },
-        { label:'Rentab. Mês MV',  val: getEl('home-prev-mv-mes'),      color: C.teal  },
-        { label:'Rentab. Mês Curva',val:getEl('home-prev-curva-mes'),   color: C.gold  },
-        { label:'Duration Médio',  val: getEl('home-prev-duration'),    color: C.deep  },
-      ];
-      const pkW2 = (colRW - 3) / 2;
-      prevKpis.forEach(({label,val,color},i)=>{
-        const x = colR + (i%2)*(pkW2+3);
-        const y = yPR  + Math.floor(i/2)*23;
-        kpiCard(x,y,pkW2,20,label,val,'',color);
-      });
-      yPR += 50;
-
-      // Comparativo Curva vs MV
-      hRule(yPR, colR, colR+colRW);
-      yPR += 4;
-      eyebrow('Rentabilidade Comparada — Curva vs Mercado', colR, yPR);
-      yPR += 5;
-
-      // Gráfico Curva vs Mercado — barras inline simples em PDF
-      const mvT2    = t.mv_tab2||[];
-      const curvaT2 = t.curva_tab2||[];
-      const nomMesPDF = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-      const hoje = new Date();
-      const ultM6 = [];
-      for(let i=5;i>=0;i--){const d=new Date(hoje.getFullYear(),hoje.getMonth()-i,1);ultM6.push({mes:d.getMonth()+1,ano:d.getFullYear(),lbl:nomMesPDF[d.getMonth()]});}
-
-      const getV=(tab,mes,ano)=>{
-        const nG=Math.floor(tab.length/3);
-        const aI=new Date().getFullYear()-nG+1;
-        for(let i=0;i<tab.length;i+=3){
-          const a=aI+Math.floor(i/3);
-          if(a===ano){const r=tab[i]||{};const v=parseFloat(r[nomMesPDF[mes-1]]);return isNaN(v)?null:v*100;}
-        }
-        return null;
+      // ── HORIZONTAL RULE ─────────────────────────────────────────
+      const hr = (y,x0=14,x1=W-14) => {
+        pdf.setDrawColor(...LINE); pdf.setLineWidth(0.2); pdf.line(x0,y,x1,y);
       };
 
-      // Mini bar chart — só meses com pelo menos um valor
-      const mesesComDados = ultM6.filter(({mes,ano})=>
-        getV(mvT2,mes,ano)!==null || getV(curvaT2,mes,ano)!==null
-      );
-      const chartX=colR, chartW=colRW;
-      const chartH = mesesComDados.length>0 ? 48 : 20;
-      pdf.setFillColor(...C.paper);
-      pdf.roundedRect(chartX,yPR,chartW,chartH,2,2,'F');
+      // ════════════════════════════════════════════════════════════
+      // PÁGINA 1 — PATRIMÔNIO + POSIÇÃO ONSHORE
+      // ════════════════════════════════════════════════════════════
+      setP(8,'Construindo página 1...');
+      header();
 
-      if(mesesComDados.length>0){
-        const bW=7, bPad=2;
-        const groupW = bW*2+bPad+2;
-        const totalBW = mesesComDados.length*groupW + (mesesComDados.length-1)*3;
-        const bX0 = chartX + (chartW-totalBW)/2;
-        const labelH = 8, legendH = 9;
-        const plotH = chartH - labelH - legendH - 4;
+      // ── Faixa patrimônio ─────────────────────────────────────────
+      const stripY=16, stripH=28;
+      pdf.setFillColor(...NAVY); pdf.rect(0,stripY,W,stripH,'F');
 
-        let maxV=0.01;
-        mesesComDados.forEach(({mes,ano})=>{
-          const mv=Math.abs(getV(mvT2,mes,ano)||0);
-          const cv=Math.abs(getV(curvaT2,mes,ano)||0);
-          if(mv>maxV)maxV=mv; if(cv>maxV)maxV=cv;
-        });
-        const scale = plotH / maxV;
-        const baseY  = yPR + chartH - labelH - legendH - 2;
+      // Dados
+      const tab8  = t.tab8||[];
+      const sk8   = tab8[0]?Object.keys(tab8[0]).filter(k=>/saldo bruto/i.test(k)):[];
+      const sfin8 = sk8[sk8.length-1]||'';
+      const sini8 = sk8[0]||'';
+      const plLiq = tab8.reduce((s,r)=>s+(parseFloat(r[sfin8])||0),0);
 
-        mesesComDados.forEach(({mes,ano,lbl},gi)=>{
-          const gx  = bX0 + gi*(groupW+3);
-          const mvV = getV(mvT2,mes,ano);
-          const cvV = getV(curvaT2,mes,ano);
+      const il8   = t.il_tab8||[];
+      const skilL = il8[0]?Object.keys(il8[0]).filter(k=>/saldo bruto/i.test(k)).pop():'';
+      const plIl  = il8.reduce((s,r)=>s+(parseFloat(r[skilL])||0),0);
 
-          // Barra MV
-          if(mvV!==null){
-            const bh = Math.max(Math.abs(mvV)*scale, 1);
-            const by = mvV>=0 ? baseY-bh : baseY;
-            pdf.setFillColor(...C.teal);
-            pdf.rect(gx, by, bW, bh, 'F');
-            // Label só se barra alta o suficiente
-            if(bh>6){
-              pdf.setFont('helvetica','bold'); pdf.setFontSize(5); pdf.setTextColor(...C.abyss);
-              txt((mvV>=0?'+':'')+mvV.toFixed(2)+'%', gx+bW/2, by-1.5, {align:'center'});
-            }
-          }
-          // Barra Curva
-          if(cvV!==null){
-            const bh = Math.max(Math.abs(cvV)*scale, 1);
-            const by = cvV>=0 ? baseY-bh : baseY;
-            pdf.setFillColor(...C.gold);
-            pdf.rect(gx+bW+bPad, by, bW, bh, 'F');
-            if(bh>6){
-              pdf.setFont('helvetica','normal'); pdf.setFontSize(5); pdf.setTextColor(...C.muted);
-              txt((cvV>=0?'+':'')+cvV.toFixed(2)+'%', gx+bW+bPad+bW/2, by-1.5, {align:'center'});
-            }
-          }
-          // Label mês (abaixo das barras)
-          pdf.setFont('helvetica','normal'); pdf.setFontSize(5.5); pdf.setTextColor(...C.muted);
-          txt(lbl, gx+bW+bPad/2, baseY+5, {align:'center'});
-        });
+      const mvT8  = t.mv_tab8||[];
+      const sprev = mvT8[0]?Object.keys(mvT8[0]).filter(k=>/saldo bruto/i.test(k)).pop():'';
+      const plPrev= mvT8.reduce((s,r)=>s+(parseFloat(r[sprev])||0),0);
 
-        // Legenda
-        const legY = yPR+chartH-7;
-        pdf.setFillColor(...C.teal); pdf.rect(chartX+4, legY, 5, 3, 'F');
-        pdf.setFont('helvetica','normal'); pdf.setFontSize(5.5); pdf.setTextColor(...C.muted);
-        txt('Mercado (MV)', chartX+11, legY+2.8);
-        pdf.setFillColor(...C.gold); pdf.rect(chartX+50, legY, 5, 3, 'F');
-        txt('Curva', chartX+57, legY+2.8);
-      } else {
-        pdf.setFont('helvetica','normal'); pdf.setFontSize(7); pdf.setTextColor(...C.muted);
-        txt('Sem dados disponíveis', chartX+chartW/2, yPR+12, {align:'center'});
-      }
+      const plTotal = plLiq+plIl; // offshore TBD
 
-      yPR = yPR+chartH+5;
-
-      // Métricas 12m + YTM
-      const met12 = [
-        ['12m Mercado',  getEl('home-prev-mv-12m')  ],
-        ['12m Curva',    getEl('home-prev-curva-12m')],
-        ['CDI 12m',      getEl('home-prev-cdi-12m')  ],
-        ['YTM Médio',    getEl('home-prev-ytm')      ],
+      const cols5 = [
+        {l:'Total Onshore',    v:fmtR(plTotal),   s:'100%',                          hi:true},
+        {l:'Carteira Líquida', v:fmtR(plLiq),     s:plTotal>0?(plLiq/plTotal*100).toFixed(1)+'% do total':'—'},
+        {l:'Ilíquidos',        v:fmtR(plIl),      s:plTotal>0?(plIl/plTotal*100).toFixed(1)+'% do total':'—'},
+        {l:'Offshore (USD)',   v:'Em configuração',s:''},
+        {l:'Previdência',      v:fmtR(plPrev),    s:'Flexprev Rio Bonito'},
       ];
-      const mW = (colRW-9)/4;
-      met12.forEach(([lbl,val],i)=>{
-        const x=colR+i*(mW+3);
-        pdf.setFillColor(...C.paper);
-        pdf.roundedRect(x,yPR,mW,14,2,2,'F');
-        pdf.setFont('helvetica','bold'); pdf.setFontSize(5.5); pdf.setTextColor(...C.muted);
-        txt(lbl.toUpperCase(), x+mW/2, yPR+5, {align:'center', charSpace:0.3});
-        pdf.setFont('helvetica','bold'); pdf.setFontSize(9);
-        const isPos = val.startsWith('+');
-        const isNeg = val.startsWith('-')||val.startsWith('−');
-        pdf.setTextColor(...(isPos?C.verde:isNeg?C.red:C.abyss));
-        txt(val, x+mW/2, yPR+11.5, {align:'center'});
+      const cw5=(W-28)/5;
+      cols5.forEach(({l,v,s,hi},i)=>{
+        const sx=14+i*cw5;
+        if(i>0){pdf.setDrawColor(42,80,92);pdf.setLineWidth(0.15);pdf.line(sx,stripY+5,sx,stripY+stripH-4);}
+        pdf.setFont('helvetica',hi?'bold':'normal'); pdf.setFontSize(5.5);
+        pdf.setTextColor(hi?SAND[0]:160, hi?SAND[1]:195, hi?SAND[2]:200);
+        T(l.toUpperCase(),sx+4,stripY+9,{charSpace:0.5});
+        pdf.setFont('helvetica','bold'); pdf.setFontSize(hi?12:9);
+        pdf.setTextColor(...(hi?SAND:WHITE));
+        T(v,sx+4,stripY+20);
+        if(s){pdf.setFont('helvetica','normal');pdf.setFontSize(6);pdf.setTextColor(...TEAL);T(s,sx+4,stripY+26);}
       });
 
-      // Nº página 2
-      pdf.setFont('helvetica','normal'); pdf.setFontSize(7); pdf.setTextColor(...C.muted);
-      txt('2', W/2, H-4, {align:'center'});
+      // ── Corpo: col esquerda 57% | col direita 43% ───────────────
+      const bodyY=50, CL=14, CR=175, CLW=155, CRW=108;
 
-      // ══════════════════════════════════════════════════════════════
-      // PÁGINA 3 — OFFSHORE (PLACEHOLDER)
-      // ══════════════════════════════════════════════════════════════
-      setP(75,'Página 3 — Offshore...');
-      pdf.addPage();
-      drawHeader();
+      // ─ Esquerda: Custodiante ────────────────────────────────────
+      let yL=bodyY;
+      label('Posição por Custodiante',CL,yL); yL+=5;
+
+      const custR=[];
+      tab8.filter(r=>r['Ativo']&&(parseFloat(r[sfin8])||0)>0).forEach(r=>{
+        const pct=(parseFloat(r['%'])||0).toFixed(1)+'%';
+        const rend=parseFloat(r['Rendimento Bruto'])||0;
+        custR.push([
+          String(r['Ativo']).trim(),
+          fmtR(parseFloat(r[sfin8])||0),
+          (rend>=0?'+':'')+fmtR(Math.abs(rend)),
+          pct
+        ]);
+      });
+      yL=table(['Custodiante','Saldo Final','Rendimento','%'],custR,CL,yL,[72,32,32,19]);
+      yL+=5;
+
+      // ─ Esquerda: Alocação ────────────────────────────────────────
+      label('Alocação por Classe de Ativo',CL,yL); yL+=5;
+
+      const tab7=t.tab7||[];
+      const sk7=tab7[0]?Object.keys(tab7[0]).filter(k=>/saldo bruto/i.test(k)):[];
+      const sf7=sk7[sk7.length-1]||'', si7=sk7[0]||'';
+      const tab9=t.tab9||[];
+      const provK=tab9[0]?Object.keys(tab9[0]).find(k=>/provis|ir\+/i.test(k)):'';
+      const sliqK=tab9[0]?Object.keys(tab9[0]).find(k=>/saldo l[íi]q/i.test(k)):'';
+      const t9m={};
+      tab9.forEach(r=>{t9m[String(r['Ativo']||'').trim()]={prov:parseFloat(r[provK]||0)||0,sliq:parseFloat(r[sliqK]||0)||0};});
+
+      const allocR=[];
+      tab7.filter(r=>r['Ativo']&&!/genérico|generico/i.test(String(r['Ativo']))).forEach(r=>{
+        const nome=String(r['Ativo']).trim();
+        const sf=parseFloat(r[sf7]||0)||0; if(sf<=0)return;
+        const si=parseFloat(r[si7]||0)||0;
+        const rd=parseFloat(r['Rendimento Bruto']||0)||0;
+        const pc=parseFloat(r['%']||0)||0;
+        const t9=t9m[nome]||{prov:0,sliq:0};
+        const pv=t9.prov!==0?(t9.prov<0?'−':'-')+fmtR(Math.abs(t9.prov)):'—';
+        const sl=t9.sliq>0?fmtR(t9.sliq):fmtR(sf);
+        allocR.push([nome.substring(0,26),fmtR(si),(rd>=0?'+':'')+fmtR(Math.abs(rd)),fmtR(sf),pv,sl,pc.toFixed(1)+'%']);
+      });
+      yL=table(['Classe','S. Inicial','Rendim.','S. Final','Prov. IR','S. Líquido','%'],allocR,CL,yL,[38,22,22,22,19,22,10]);
+
+      // ─ Direita: KPIs ─────────────────────────────────────────────
+      let yR=bodyY;
+      label('Rentabilidade',CR,yR); yR+=5;
+
+      const tab0=t.tab0||[];
+      const vRow=tab0[1]||{}, cRow=tab0[2]||{};
+      const k0=Object.keys(vRow);
+      const mesK=k0.find(k=>/m[eê]s/i.test(k)&&k.length<=5)||k0[0];
+      const m12K=k0.find(k=>k.includes('12'))||k0[2];
+
+      const rMes=parseFloat(vRow[mesK]), cMes=parseFloat(cRow[mesK]);
+      const r12m=parseFloat(vRow[m12K]), c12m=parseFloat(cRow[m12K]);
+      const rMesCol=!isNaN(rMes)&&rMes>=0?VERDE:RED;
+      const r12mCol=!isNaN(r12m)&&r12m>=0?VERDE:RED;
+
+      const kw2=(CRW-3)/2;
+      kpi(CR,     yR,kw2,22,'Rentab. no Mês',  fmtPct(rMes), !isNaN(cMes)?'CDI: '+fmtPct(cMes):'', TEAL, rMesCol);
+      kpi(CR+kw2+3,yR,kw2,22,'Rentab. 12 Meses',fmtPct(r12m),!isNaN(c12m)?'CDI 12m: '+fmtPct(c12m):'',TEAL,r12mCol);
+      yR+=26;
+
+      const tab5=t.tab5||[];
+      const shV=tab5[4]?parseFloat(tab5[4]['Carteira']):NaN;
+      kpi(CR,     yR,kw2,22,'PL Final',getEl('home-pl'),getEl('home-pl-sub'),NAVY,NAVY);
+      kpi(CR+kw2+3,yR,kw2,22,'Rentab. no Período',fmtPct(tab5[0]?parseFloat(tab5[0]['Carteira']):NaN),'Desde o início',NAVY,!isNaN(shV)&&parseFloat(tab5[0]?.Carteira)>=0?VERDE:RED);
+      yR+=28;
+
+      hr(yR,CR,CR+CRW); yR+=4;
+      label('Performance vs CDI',CR,yR); yR+=5;
+
+      const pLbls=['No período','Últimos 6m','Últimos 12m'];
+      const pRows=pLbls.map((l,i)=>{
+        const cv=tab5[i]?parseFloat(tab5[i]['Carteira']):NaN;
+        const dv=tab5[i]?parseFloat(tab5[i]['CDI']):NaN;
+        const d=(!isNaN(cv)&&!isNaN(dv))?cv-dv:NaN;
+        const f=v=>isNaN(v)?'—':fmtPct(v);
+        return[l,f(cv),f(dv),isNaN(d)?'—':fmtPct(d)];
+      });
+      yR=table(['Indicador','Carteira','CDI','Δ CDI'],pRows,CR,yR,[42,22,22,22]);
+
+      // Número da página
+      pdf.setFont('helvetica','normal');pdf.setFontSize(7);pdf.setTextColor(...MUTED);
+      T('1',W/2,H-4,{align:'center'});
+
+      // ════════════════════════════════════════════════════════════
+      // PÁGINA 2 — FLUXO + ILÍQUIDOS + PREVIDÊNCIA
+      // ════════════════════════════════════════════════════════════
+      setP(40,'Construindo página 2...');
+      pdf.addPage(); header();
 
       // Faixa contexto
-      pdf.setFillColor(...C.deep);
-      pdf.rect(0,14,W,12,'F');
-      pdf.setFont('helvetica','bold'); pdf.setFontSize(8); pdf.setTextColor(...C.sand);
-      txt('Offshore', 14, 22);
-      pdf.setFont('helvetica','normal'); pdf.setFontSize(7); pdf.setTextColor(...C.teal);
-      txt('Carteiras Administradas & Fundos Internacionais', W-14, 22, {align:'right'});
+      pdf.setFillColor(18,45,55); pdf.rect(0,13,W,10,'F');
+      pdf.setFont('helvetica','bold');pdf.setFontSize(8);pdf.setTextColor(...SAND);
+      T('Fluxo de Caixa & Ilíquidos & Previdência',14,20);
+      pdf.setFont('helvetica','normal');pdf.setFontSize(7);pdf.setTextColor(...TEAL);
+      T('Total recebido '+getEl('home-fluxo-periodo')+': '+getEl('home-fluxo-total'),W-14,20,{align:'right'});
 
-      // Placeholder elegante
-      const phY = H/2 - 24;
-      pdf.setFillColor(...C.paper);
-      pdf.roundedRect(W/2-60, phY, 120, 48, 4, 4, 'F');
-      pdf.setDrawColor(...C.teal); pdf.setLineWidth(0.3);
-      pdf.roundedRect(W/2-60, phY, 120, 48, 4, 4, 'S');
+      const b2Y=28, CL2=14, CR2=175, CLW2=155, CRW2=108;
 
-      // Ícone globo (SVG-like em PDF)
-      pdf.setFont('helvetica','normal'); pdf.setFontSize(22); pdf.setTextColor(...C.teal);
-      txt('⊕', W/2, phY+18, {align:'center'});
+      // ─ Esquerda: KPIs fluxo ──────────────────────────────────────
+      let yL2=b2Y;
+      label('Movimentações do Mês — '+getEl('home-fluxo-periodo'),CL2,yL2); yL2+=5;
 
-      pdf.setFont('helvetica','bold'); pdf.setFontSize(11); pdf.setTextColor(...C.deep);
-      txt('Offshore em configuração', W/2, phY+30, {align:'center'});
-      pdf.setFont('helvetica','normal'); pdf.setFontSize(8); pdf.setTextColor(...C.muted);
-      txt('Os dados das carteiras offshore serão integrados em breve.', W/2, phY+39, {align:'center'});
+      const _tipo=ev=>{const e=String(ev||'').toLowerCase();
+        if(/\bjuro|cupom/.test(e))return'juros';
+        if(/amort/.test(e))return'amort';
+        if(/divid|rend|cotiz/.test(e))return'div';
+        if(/resgate|venda/.test(e))return'resgate';
+        return'outro';};
 
-      // Nº página 3
-      pdf.setFont('helvetica','normal'); pdf.setFontSize(7); pdf.setTextColor(...C.muted);
-      txt('3', W/2, H-4, {align:'center'});
+      let refM=null,refA=null;
+      if(sfin8){const pm=sfin8.match(/(\d{2})\/(\d{2})\/(\d{2,4})/);
+        if(pm){refM=parseInt(pm[2]);refA=pm[3].length===2?2000+parseInt(pm[3]):parseInt(pm[3]);}}
+      const movMes=refM?mov.filter(r=>{
+        const m=String(r['Data']||'').match(/(\d{2})\/(\d{2})\/(\d{4})/);
+        return m&&+m[2]===refM&&+m[3]===refA&&parseFloat(r['Valor Bruto']||0)>0;
+      }):[];
+
+      let totJ=0,totA=0,totD=0;
+      movMes.forEach(r=>{const v=parseFloat(r['Valor Bruto']||0);const tp=_tipo(r['Evento']);
+        if(tp==='juros')totJ+=v;else if(tp==='amort')totA+=v;else if(tp==='div')totD+=v;});
+
+      const fkW=(CLW2-6)/3;
+      const fkDraw=(x,y,lbl,val,ac)=>{
+        pdf.setFillColor(...PAPER);pdf.roundedRect(x,y,fkW,16,1.5,1.5,'F');
+        pdf.setFillColor(...ac);pdf.rect(x,y,fkW,1.2,'F');
+        pdf.setFont('helvetica','bold');pdf.setFontSize(5.5);pdf.setTextColor(...MUTED);
+        T(lbl.toUpperCase(),x+fkW/2,y+6.5,{align:'center',charSpace:0.4});
+        pdf.setFont('helvetica','bold');pdf.setFontSize(11);pdf.setTextColor(...ac);
+        T(val,x+fkW/2,y+13.5,{align:'center'});
+      };
+      fkDraw(CL2,          yL2,'Juros Recebidos',totJ>0?fmtR(totJ):'—',VERDE);
+      fkDraw(CL2+fkW+3,    yL2,'Amortizações',   totA>0?fmtR(totA):'—',GOLD);
+      fkDraw(CL2+2*(fkW+3),yL2,'Dividendos/Rend.',totD>0?fmtR(totD):'—',TEAL);
+      yL2+=20;
+
+      // ─ Tabela de eventos ─────────────────────────────────────────
+      label('Detalhamento dos Eventos',CL2,yL2); yL2+=5;
+      const evRows=[...movMes]
+        .sort((a,b)=>parseFloat(b['Valor Bruto']||0)-parseFloat(a['Valor Bruto']||0))
+        .slice(0,10)
+        .map(r=>{
+          const v=parseFloat(r['Valor Bruto']||0);
+          const tp=_tipo(r['Evento']);
+          const tpLbl={juros:'Juros',amort:'Amort.',div:'Dividendo',resgate:'Resgate',outro:'Outro'}[tp];
+          return[String(r['Data']||'').substring(0,10),String(r['Ativo']||'').substring(0,30),tpLbl,'+'+fmtR(v),String(r['Status Evento']||'—').substring(0,10)];
+        });
+      yL2=table(['Data','Ativo','Tipo','Valor','Status'],evRows,CL2,yL2,[22,62,18,24,18]);
+      yL2+=5;
+
+      // ─ Ilíquidos ─────────────────────────────────────────────────
+      if(yL2<H-40){
+        label('Carteira de Ilíquidos — Métricas por Fundo',CL2,yL2); yL2+=5;
+        const ilBody=document.getElementById('il-metricas-tabela');
+        const ilRows=[];
+        if(ilBody){
+          ilBody.querySelectorAll('tr').forEach(tr=>{
+            const c=[...tr.querySelectorAll('td')].map(td=>td.textContent.trim());
+            if(c.length>=6&&c[0]&&!/total|média|carregando|moviment/i.test(c[0]))
+              ilRows.push([c[0].substring(0,36),c[3]||'—',c[4]||'—',c[5]||'—',c[10]||'—']);
+          });
+        }
+        if(ilRows.length>0)
+          yL2=table(['Fundo / Ativo','NAV Atual','TIR a.a.','MOIC','Status'],ilRows,CL2,yL2,[70,22,18,16,18]);
+        else{
+          pdf.setFont('helvetica','italic');pdf.setFontSize(7);pdf.setTextColor(...MUTED);
+          T('Navegue até a página Ilíquidos antes de exportar para incluir as métricas.',CL2,yL2);
+          yL2+=8;
+        }
+      }
+
+      // ─ Direita: Previdência ───────────────────────────────────────
+      let yR2=b2Y;
+      label('Previdência — Itaú Flexprev Rio Bonito',CR2,yR2); yR2+=5;
+
+      const mvPL=getEl('home-prev-pl');
+      const mvMes2=getEl('home-prev-mv-mes');
+      const cvMes2=getEl('home-prev-curva-mes');
+      const durM=getEl('home-prev-duration');
+      const pkW=(CRW2-3)/2;
+
+      const prevKpiColor=v=>{const n=parseFloat(v);return isNaN(n)?NAVY:n>=0?VERDE:RED;};
+      kpi(CR2,      yR2,pkW,19,'PL (Mercado)',mvPL,'',NAVY,NAVY);
+      kpi(CR2+pkW+3,yR2,pkW,19,'Rentab. Mês MV',mvMes2,'',TEAL,prevKpiColor(mvMes2.replace(/[+%]/g,'')));
+      yR2+=23;
+      kpi(CR2,      yR2,pkW,19,'Rentab. Mês Curva',cvMes2,'',GOLD,prevKpiColor(cvMes2.replace(/[+%]/g,'')));
+      kpi(CR2+pkW+3,yR2,pkW,19,'Duration Médio',durM,'',NAVY,NAVY);
+      yR2+=25;
+
+      hr(yR2,CR2,CR2+CRW2); yR2+=4;
+      label('Rentabilidade Mensal — Curva vs Mercado',CR2,yR2); yR2+=5;
+
+      // Gráfico barras
+      const mvT2=t.mv_tab2||[],curvaT2=t.curva_tab2||[];
+      const nmP=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+      const hoje=new Date();
+      const ult6=[];
+      for(let i=5;i>=0;i--){const d=new Date(hoje.getFullYear(),hoje.getMonth()-i,1);ult6.push({m:d.getMonth()+1,a:d.getFullYear(),l:nmP[d.getMonth()]});}
+      const getV=(tab,m,a)=>{const nG=Math.floor(tab.length/3);const aI=new Date().getFullYear()-nG+1;for(let i=0;i<tab.length;i+=3){if(aI+Math.floor(i/3)===a){const v=parseFloat((tab[i]||{})[nmP[m-1]]);return isNaN(v)?null:v*100;}}return null;};
+      const comDados=ult6.filter(({m,a})=>getV(mvT2,m,a)!==null||getV(curvaT2,m,a)!==null);
+
+      const chX=CR2,chW=CRW2,chH=46;
+      pdf.setFillColor(...PAPER); pdf.roundedRect(chX,yR2,chW,chH,1.5,1.5,'F');
+
+      if(comDados.length>0){
+        let maxV=0.01;
+        comDados.forEach(({m,a})=>{[getV(mvT2,m,a),getV(curvaT2,m,a)].forEach(v=>{if(v!==null&&Math.abs(v)>maxV)maxV=Math.abs(v);});});
+        const plotH=chH-16,baseY=yR2+chH-10;
+        const bW=6,bG=2,grW=bW*2+bG+3;
+        const totW=comDados.length*grW-(3);
+        const bX0=chX+(chW-totW)/2;
+        comDados.forEach(({m,a,l},gi)=>{
+          const gx=bX0+gi*grW;
+          const mv=getV(mvT2,m,a),cv=getV(curvaT2,m,a);
+          // MV bar
+          if(mv!==null){
+            const bh=Math.max(Math.abs(mv)/maxV*plotH,0.8);
+            const by=mv>=0?baseY-bh:baseY;
+            pdf.setFillColor(...TEAL); pdf.rect(gx,by,bW,bh,'F');
+            if(bh>5){pdf.setFont('helvetica','bold');pdf.setFontSize(4.8);pdf.setTextColor(...NAVY);T(fmtPct(mv),gx+bW/2,by-1.5,{align:'center'});}
+          }
+          // Curva bar
+          if(cv!==null){
+            const bh=Math.max(Math.abs(cv)/maxV*plotH,0.8);
+            const by=cv>=0?baseY-bh:baseY;
+            pdf.setFillColor(...GOLD); pdf.rect(gx+bW+bG,by,bW,bh,'F');
+            if(bh>5){pdf.setFont('helvetica','normal');pdf.setFontSize(4.8);pdf.setTextColor(...MUTED);T(fmtPct(cv),gx+bW+bG+bW/2,by-1.5,{align:'center'});}
+          }
+          pdf.setFont('helvetica','normal');pdf.setFontSize(5.8);pdf.setTextColor(...MUTED);
+          T(l,gx+bW+bG/2,baseY+4.5,{align:'center'});
+        });
+        // Legenda
+        const lgY=yR2+chH-5.5;
+        pdf.setFillColor(...TEAL);pdf.rect(chX+4,lgY,4,2.5,'F');
+        pdf.setFont('helvetica','normal');pdf.setFontSize(5.5);pdf.setTextColor(...MUTED);
+        T('Mercado (MV)',chX+10,lgY+2.2);
+        pdf.setFillColor(...GOLD);pdf.rect(chX+46,lgY,4,2.5,'F');
+        T('Curva',chX+52,lgY+2.2);
+      } else {
+        pdf.setFont('helvetica','italic');pdf.setFontSize(7);pdf.setTextColor(...MUTED);
+        T('Sem dados disponíveis',chX+chW/2,yR2+chH/2,{align:'center'});
+      }
+      yR2+=chH+4;
+
+      // 4 métricas rodapé previdência
+      const m4=[['12m Mercado',getEl('home-prev-mv-12m')],['12m Curva',getEl('home-prev-curva-12m')],['CDI 12m',getEl('home-prev-cdi-12m')],['YTM Médio',getEl('home-prev-ytm')]];
+      const m4W=(CRW2-9)/4;
+      m4.forEach(([l,v],i)=>{
+        const x=CR2+i*(m4W+3);
+        pdf.setFillColor(...PAPER);pdf.roundedRect(x,yR2,m4W,13,1.5,1.5,'F');
+        pdf.setFont('helvetica','bold');pdf.setFontSize(5);pdf.setTextColor(...MUTED);
+        T(l.toUpperCase(),x+m4W/2,yR2+5,{align:'center',charSpace:0.3});
+        const nc=prevKpiColor(String(v).replace(/[+%IPCA]/g,'').replace(/,/g,'.'));
+        pdf.setFont('helvetica','bold');pdf.setFontSize(8.5);pdf.setTextColor(...nc);
+        T(v,x+m4W/2,yR2+11,{align:'center'});
+      });
+
+      pdf.setFont('helvetica','normal');pdf.setFontSize(7);pdf.setTextColor(...MUTED);
+      T('2',W/2,H-4,{align:'center'});
+
+      // ════════════════════════════════════════════════════════════
+      // PÁGINA 3 — OFFSHORE PLACEHOLDER
+      // ════════════════════════════════════════════════════════════
+      setP(88,'Construindo página 3...');
+      pdf.addPage(); header();
+      pdf.setFillColor(18,45,55);pdf.rect(0,13,W,10,'F');
+      pdf.setFont('helvetica','bold');pdf.setFontSize(8);pdf.setTextColor(...SAND);
+      T('Offshore',14,20);
+      pdf.setFont('helvetica','normal');pdf.setFontSize(7);pdf.setTextColor(...TEAL);
+      T('Carteiras Administradas & Fundos Internacionais',W-14,20,{align:'right'});
+
+      const phY=H/2-22;
+      pdf.setFillColor(...PAPER);pdf.roundedRect(W/2-55,phY,110,44,3,3,'F');
+      pdf.setDrawColor(...TEAL);pdf.setLineWidth(0.25);pdf.roundedRect(W/2-55,phY,110,44,3,3,'S');
+      pdf.setFont('helvetica','bold');pdf.setFontSize(10);pdf.setTextColor(...NAVY);
+      T('Offshore em configuração',W/2,phY+18,{align:'center'});
+      pdf.setFont('helvetica','normal');pdf.setFontSize(7.5);pdf.setTextColor(...MUTED);
+      T('Os dados das carteiras offshore serão integrados em breve.',W/2,phY+28,{align:'center'});
+      pdf.setFont('helvetica','italic');pdf.setFontSize(6.5);pdf.setTextColor(...TEAL);
+      T('Carteiras Administradas · Fundos Internacionais · Contas no Exterior',W/2,phY+38,{align:'center'});
+
+      pdf.setFont('helvetica','normal');pdf.setFontSize(7);pdf.setTextColor(...MUTED);
+      T('3',W/2,H-4,{align:'center'});
 
       // ── Rodapé em todas as páginas ────────────────────────────────
-      setP(92,'Finalizando...');
-      const nPags = pdf.getNumberOfPages();
-      for(let p=1;p<=nPags;p++){
+      setP(96,'Finalizando...');
+      const np=pdf.getNumberOfPages();
+      for(let p=1;p<=np;p++){
         pdf.setPage(p);
-        pdf.setFillColor(...C.shell);
-        pdf.rect(0,H-8,W,8,'F');
-        pdf.setDrawColor(...C.teal); pdf.setLineWidth(0.2);
-        pdf.line(0,H-8,W,H-8);
-        pdf.setFont('helvetica','normal'); pdf.setFontSize(6.5); pdf.setTextColor(...C.muted);
-        txt(gestor, 14, H-2.5);
-        txt('Documento confidencial. Uso restrito ao cliente.', W/2, H-2.5, {align:'center'});
-        txt(`Pág. ${p} / ${nPags}`, W-14, H-2.5, {align:'right'});
+        pdf.setFillColor(...SHELL);pdf.rect(0,H-8,W,8,'F');
+        pdf.setDrawColor(...LINE);pdf.setLineWidth(0.2);pdf.line(0,H-8,W,H-8);
+        pdf.setFont('helvetica','normal');pdf.setFontSize(6.5);pdf.setTextColor(...MUTED);
+        T(gestor,14,H-2.8);
+        T('Documento confidencial. Uso restrito ao cliente.',W/2,H-2.8,{align:'center'});
+        T(`Pág. ${p} / ${np}`,W-14,H-2.8,{align:'right'});
       }
 
       setP(100,'Concluído!');
-      const nome = `Relatorio_${cliente.replace(/\s+/g,'_')}_${periodo.replace(/[\s\/]/g,'-')}.pdf`;
-      pdf.save(nome);
-      setTimeout(()=>fecharModalPDF(), 1200);
+      pdf.save(`Relatorio_${cliente.replace(/\s+/g,'_')}_${periodo.replace(/[\s\/]/g,'-')}.pdf`);
+      setTimeout(()=>fecharModalPDF(),1200);
 
     } catch(err) {
-      console.error('PDF error:', err);
-      document.getElementById('pdf-status').textContent = '❌ Erro: '+err.message;
-      btn.disabled = false;
-      btn.textContent = 'Tentar novamente';
+      console.error('PDF error:',err);
+      document.getElementById('pdf-status').textContent='❌ Erro: '+err.message;
+      btn.disabled=false; btn.textContent='Tentar novamente';
     }
   }
   window.gerarPDF = gerarPDF;
+
 
 
 
