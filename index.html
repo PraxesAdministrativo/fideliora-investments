@@ -5345,7 +5345,7 @@
       const allocR=[];
       tab7.filter(r=>r['Ativo']&&!/genérico|generico/i.test(String(r['Ativo']))).forEach(r=>{
         const nome=String(r['Ativo']).trim();
-        const sf=parseFloat(r[sf7]||0)||0; if(sf<=0)return;
+        const sf=parseFloat(r[sf7]||0)||0; const si_v=parseFloat(r[si7]||0)||0; if(sf<=0)return; if(si_v<=0&&sf<50000)return; // oculta posições minúsculas sem histórico
         const si=parseFloat(r[si7]||0)||0;
         const rd=parseFloat(r['Rendimento Bruto']||0)||0;
         const pc=(parseFloat(r['%']||0)||0).toFixed(1)+'%';
@@ -5367,7 +5367,7 @@
         const d=(!isNaN(cv)&&!isNaN(dv))?cv-dv:NaN;
         return[l, isNaN(cv)?'—':fmtPct(cv), isNaN(dv)?'—':fmtPct(dv), isNaN(d)?'—':fmtPct(d)];
       });
-      y=cleanTable(['Indicador','Carteira','CDI','Δ CDI'], pRows, ML, y, [90,28,28,28]);
+      y=cleanTable(['Indicador','Carteira','CDI','Dif. CDI'], pRows, ML, y, [90,28,28,28]);
 
       footer(2, 5);
 
@@ -5399,13 +5399,13 @@
           const tpL={juros:'Juros',amort:'Amortização',div:'Dividendo',resgate:'Resgate',outro:'Outro'}[tp];
           return[
             String(r['Data']||'').substring(0,10),
-            String(r['Ativo']||'').substring(0,44),
+            String(r['Ativo']||'').substring(0,50),
             tpL,
             '+'+fmtR(v),
             String(r['Status Evento']||'—').substring(0,12)
           ];
         });
-      y=cleanTable(['Data','Ativo','Tipo','Valor','Status'], evRows, ML, y, [24,76,22,28,24]);
+      y=cleanTable(['Data','Ativo','Tipo','Valor','Status'], evRows, ML, y, [22,84,22,26,20]);
 
       footer(3, 5);
 
@@ -5424,7 +5424,21 @@
       // 2 KPIs
       const ikw=(W-ML*2-4)/2;
       kpiCard(ML,       y, ikw, 22, 'PL Total Ilíquidos',  fmtR(plIl),                    sfin8.replace(/saldo bruto /i,'').trim());
-      kpiCard(ML+ikw+4, y, ikw, 22, 'TIR Média Ponderada', getEl('home-il-tir'),           getEl('home-il-tir-sub'));
+      kpiCard(ML+ikw+4, y, ikw, 22, 'TIR Média Ponderada', (()=>{
+          // Calcula TIR média do DOM (mais preciso que home-il-tir)
+          const rows=[];
+          const bod=document.getElementById('il-metricas-tabela');
+          if(bod) bod.querySelectorAll('tr').forEach(tr=>{
+            const c=[...tr.querySelectorAll('td')].map(td=>td.textContent.trim());
+            if(c.length>=5&&c[4]&&c[4]!=='—'&&!/total|média/i.test(c[0]||'')){
+              const v=parseFloat(c[4].replace(/[+%]/g,'').replace(',','.'));
+              if(!isNaN(v)&&v>0) rows.push(v);
+            }
+          });
+          if(rows.length===0) return getEl('home-il-tir');
+          const avg=rows.reduce((a,b)=>a+b,0)/rows.length;
+          return (avg>=0?'+':'')+avg.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'% a.a.';
+        })(), ilRows.length+' fundo(s)');
       y+=30;
 
       const ilBody=document.getElementById('il-metricas-tabela');
@@ -5439,7 +5453,7 @@
       if(ilRows.length>0){
         eyebrow('Métricas por Fundo', ML, y); y+=5;
         y=cleanTable(['Fundo / Ativo','Cap. Chamado','NAV Atual','TIR a.a.','MOIC','Status'],
-          ilRows, ML, y, [72,24,22,18,16,22]);
+          ilRows, ML, y, [76,24,20,18,16,20]);
       } else {
         pdf.setFont('helvetica','italic'); pdf.setFontSize(8); pdf.setTextColor(...MUTED);
         T('Navegue até a página Ilíquidos antes de exportar para incluir as métricas.', ML, y);
@@ -5485,7 +5499,8 @@
       const hoje=new Date();
       const ult8=[];
       for(let i=7;i>=0;i--){const d=new Date(hoje.getFullYear(),hoje.getMonth()-i,1);ult8.push({m:d.getMonth()+1,a:d.getFullYear(),l:nmP[d.getMonth()]});}
-      const getV=(tab,m,a)=>{const nG=Math.floor(tab.length/3);const aI=new Date().getFullYear()-nG+1;for(let i=0;i<tab.length;i+=3){if(aI+Math.floor(i/3)===a){const v=parseFloat((tab[i]||{})[nmP[m-1]]);return isNaN(v)?null:v*100;}}return null;};
+      const getV=(tab,m,a)=>{const nG=Math.floor(tab.length/3);const aI=new Date().getFullYear()-nG+1;for(let i=0;i<tab.length;i+=3){if(aI+Math.floor(i/3)===a){const raw=parseFloat((tab[i]||{})[nmP[m-1]]);if(isNaN(raw))return null;// valores podem ser decimais (0.0195) ou já em % (1.95) — normaliza
+const v=Math.abs(raw)>10?raw/100:raw;return v*100;}}return null;};
       const comDados=ult8.filter(({m,a})=>getV(mvT2,m,a)!==null||getV(curvaT2,m,a)!==null);
 
       if(comDados.length>0){
