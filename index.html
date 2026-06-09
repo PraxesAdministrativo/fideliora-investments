@@ -5369,7 +5369,7 @@
       });
       y=cleanTable(['Indicador','Carteira','CDI','Dif. CDI'], pRows, ML, y, [90,28,28,28]);
 
-      footer(2, 5);
+      footer(2, 6);
 
       // ════════════════════════════════════════════════════════════
       // PÁG 3 — FLUXO DE CAIXA
@@ -5407,7 +5407,7 @@
         });
       y=cleanTable(['Data','Ativo','Tipo','Valor','Status'], evRows, ML, y, [22,84,22,26,20]);
 
-      footer(3, 5);
+      footer(3, 6);
 
       // ════════════════════════════════════════════════════════════
       // PÁG 4 — ILÍQUIDOS + PREVIDÊNCIA
@@ -5460,8 +5460,10 @@
       }
       y+=14;
 
-      // ── Previdência ──────────────────────────────────────────────
-      rule(y, ML, W-MR, 0.4); y+=12;
+      // ── Previdência — nova página ────────────────────────────────
+      footer(4, 6);
+      pdf.addPage(); pageHeader();
+      y=MT+14;
       eyebrow('Previdência Privada', ML, y); y+=6;
       sectionTitle('Itaú Flexprev Rio Bonito', ML, y); y+=5;
       rule(y); y+=12;
@@ -5541,12 +5543,11 @@ const v=Math.abs(raw)>10?raw/100:raw;return v*100;}}return null;};
         y+=chH+6;
       }
 
-      footer(4, 5);
-
       // ════════════════════════════════════════════════════════════
       // PÁG 5 — OFFSHORE PLACEHOLDER
       // ════════════════════════════════════════════════════════════
-      setP(88,'Página 5 — Offshore...');
+      footer(5, 6);
+      setP(92,'Página 6 — Offshore...');
       pdf.addPage(); pageHeader();
       y=MT+14;
 
@@ -5565,7 +5566,7 @@ const v=Math.abs(raw)>10?raw/100:raw;return v*100;}}return null;};
       pdf.setFont('helvetica','italic');pdf.setFontSize(7);pdf.setTextColor(...TEAL_L);
       T('Carteiras Administradas · Fundos Internacionais · Contas no Exterior',phX+phW/2,y+40,{align:'center'});
 
-      footer(5, 5);
+      footer(6, 6);
 
       // ── Salva ────────────────────────────────────────────────────
       setP(100,'Concluído!');
