@@ -5425,7 +5425,6 @@
       const ikw=(W-ML*2-4)/2;
       kpiCard(ML,       y, ikw, 22, 'PL Total Ilíquidos',  fmtR(plIl),                    sfin8.replace(/saldo bruto /i,'').trim());
       kpiCard(ML+ikw+4, y, ikw, 22, 'TIR Média Ponderada', (()=>{
-          // Calcula TIR média do DOM (mais preciso que home-il-tir)
           const rows=[];
           const bod=document.getElementById('il-metricas-tabela');
           if(bod) bod.querySelectorAll('tr').forEach(tr=>{
@@ -5438,7 +5437,7 @@
           if(rows.length===0) return getEl('home-il-tir');
           const avg=rows.reduce((a,b)=>a+b,0)/rows.length;
           return (avg>=0?'+':'')+avg.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'% a.a.';
-        })(), ilRows.length+' fundo(s)');
+        })(), (()=>{ const b=document.getElementById('il-metricas-tabela'); return b?b.querySelectorAll('tr').length+' fundo(s)':''; })());
       y+=30;
 
       const ilBody=document.getElementById('il-metricas-tabela');
