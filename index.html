@@ -519,8 +519,10 @@
       border-bottom: 1px solid var(--line-strong);
       background: var(--praxes-shell);
       font-family: var(--font-body);
+      white-space: nowrap;
     }
     .data-table th:first-child { padding-left: 0; }
+    .data-table th.td-num { text-align: right; }
     .data-table td {
       padding: 11px 12px; border-bottom: 1px solid var(--line);
       color: var(--fg-2); vertical-align: middle;
@@ -529,6 +531,8 @@
     .data-table tr:last-child td { border-bottom: none; }
     .data-table tr:hover td { background: rgba(4,25,36,0.02); }
     .td-num { text-align: right; font-variant-numeric: tabular-nums; }
+    /* Overflow wrapper for wide tables */
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
     /* gestao table uses same pattern */
     .gestao-table { width:100%; border-collapse:collapse; }
@@ -538,6 +542,7 @@
       color: var(--fg-mute); text-transform: uppercase;
       letter-spacing: 0.10em; font-family: var(--font-body);
     }
+    .gestao-table th.td-num { text-align: right; }
     .gestao-table td {
       padding: 11px 12px; border-bottom: 1px solid var(--line);
       font-size: 13px; color: var(--fg-1);
@@ -1291,7 +1296,7 @@
                 </div>
               </div>
             </div>
-            <div style="overflow-x:auto">
+            <div class="table-wrap">
               <table class="data-table" style="font-size:11.5px;min-width:700px;table-layout:fixed">
                 <colgroup>
                   <col style="width:32%">
@@ -1422,6 +1427,7 @@
             <div class="kpi-label">Rentab. no Período</div>
             <div class="kpi-val" id="ont-rent-periodo">+14,90%</div>
             <div class="kpi-change pos" id="ont-rent-periodo-sub">CDI: +18,21%</div>
+            <div style="font-size:10px;color:var(--fg-mute);margin-top:4px" id="ont-rent-periodo-datas">Início: — · Fim: —</div>
           </div>
           <div class="kpi-card">
             <div class="kpi-label">Rentab. 12 meses</div>
@@ -1447,11 +1453,11 @@
             <table class="data-table" id="ont-tab7-table">
               <thead>
                 <tr>
-                  <th>Classe</th>
-                  <th class="td-num">Saldo Inicial</th>
+                  <th>Classe de Ativo</th>
+                  <th class="td-num" id="ont-th-saldo-ini">S. Inicial</th>
                   <th class="td-num">Movimentação</th>
                   <th class="td-num">Rendimento</th>
-                  <th class="td-num">Saldo Final</th>
+                  <th class="td-num" id="ont-th-saldo-fim">S. Final</th>
                   <th class="td-num">%</th>
                   <th style="width:80px"></th>
                 </tr>
@@ -2503,9 +2509,9 @@
         <!-- ── KPIs ── -->
         <div class="kpi-grid kpi-grid-4" style="margin-bottom:20px">
           <div class="kpi-card">
-            <div class="kpi-label">PL do Fundo</div>
+            <div class="kpi-label">Participação do Cliente</div>
             <div class="kpi-val" id="prev-pl">—</div>
-            <div class="kpi-change" id="prev-pl-sub">Posição em 31/03/2026</div>
+            <div class="kpi-change" id="prev-pl-sub" style="color:var(--fg-mute);font-size:10px">50% do fundo · 2 cotistas</div>
           </div>
           <div class="kpi-card accent">
             <div class="kpi-label">Rentab. no Mês</div>
@@ -3680,6 +3686,25 @@
 
     setText('ont-pl',            pl ? fmtBRL(pl) : '—');
     setText('ont-pl-sub',        pl ? (saldoFimKey ? saldoFimKey.replace(/saldo bruto /i,'').trim() : '31/03/2026') : '');
+
+    // Extrai datas início/fim das chaves de saldo
+    const _dataIni7 = tab7.length ? (() => { const k = Object.keys(tab7[0] || {}).find(k => /saldo bruto \d/i.test(k)); return k ? k.replace(/saldo bruto /i,'').trim() : ''; })() : '';
+    const _dataFim7 = tab7.length ? (() => { const ks = Object.keys(tab7[0] || {}).filter(k => /saldo bruto/i.test(k)); return ks[ks.length-1] ? ks[ks.length-1].replace(/saldo bruto /i,'').trim() : ''; })() : '';
+
+    // Atualiza labels das colunas da tabela de alocação com datas reais
+    const thIni = document.getElementById('ont-th-saldo-ini');
+    const thFim = document.getElementById('ont-th-saldo-fim');
+    if (thIni && _dataIni7) thIni.textContent = 'Saldo ' + _dataIni7;
+    if (thFim && _dataFim7) thFim.textContent = 'Saldo ' + _dataFim7;
+
+    // Label "Rentab. no Período" com datas
+    const _perioDatasEl = document.getElementById('ont-rent-periodo-datas');
+    if (_perioDatasEl) {
+      const _ini = _dataIni7 || (saldoIniKey8 ? saldoIniKey8.replace(/saldo bruto /i,'').trim() : '');
+      const _fim = _dataFim7 || (saldoFimKey  ? saldoFimKey.replace(/saldo bruto /i,'').trim() : '');
+      _perioDatasEl.textContent = _ini && _fim ? `De ${_ini} a ${_fim}` : '';
+    }
+
     setText('ont-rent-periodo',  varNom[perK] !== undefined ? fmtPctDireto(varNom[perK]) : '—');
     setText('ont-rent-periodo-sub', cdi[perK] !== undefined ? 'CDI: ' + fmtPctDireto(cdi[perK]) : '');
     setText('ont-rent-12m',      varNom[m12K] !== undefined ? fmtPctDireto(varNom[m12K]) : '—');
@@ -4053,6 +4078,11 @@
   function _set(id, h) { const e = document.getElementById(id); if (e) e.innerHTML = h; }
   function _txt(id, v) { const e = document.getElementById(id); if (e) e.textContent = v; }
 
+  // ── PARTICIPAÇÃO DO CLIENTE NO FUNDO DE PREVIDÊNCIA ─────────────
+  // Davi Correa de Souza é um dos 2 cotistas do Itaú Flexprev Rio Bonito
+  // Atualizar aqui quando a participação mudar (verificar na planilha)
+  const PREV_PARTICIPACAO = 0.5; // 50% — ajustar conforme % real de cotas do Davi
+
   function renderPrevidencia() {
     if (!CD) return;
     const t   = CD.tables || {};
@@ -4061,9 +4091,11 @@
     // ── PL: vem do tab8 (total da instituição) ───────────────────────
     const tab8 = t[pfx + '_tab8'] || [];
     const plRow = tab8.find(r => r['Ativo'] && /itau|total/i.test(String(r['Ativo']))) || tab8[0] || {};
-    const plVal = parseFloat(plRow['Saldo Bruto 31/03/26'] ?? 0) || 0;
+    const plValTotal = parseFloat(plRow['Saldo Bruto 31/03/26'] ?? 0) || 0;
+    // Aplica participação do cotista (Davi detém PREV_PARTICIPACAO do fundo)
+    const plVal = plValTotal * PREV_PARTICIPACAO;
     _txt('prev-pl', plVal ? _fmtM(plVal) : '—');
-    _txt('prev-pl-sub', 'Posição em 31/03/2026');
+    _txt('prev-pl-sub', plValTotal ? `Participação ${(PREV_PARTICIPACAO*100).toFixed(0)}% · PL total: ${_fmtM(plValTotal)}` : 'Posição em 31/03/2026');
 
     // ── tab0: [Rend Nominal R$, Var Nominal %, CDI %, IPCAdp %] ─────
     // Colunas: { Mês, Ano, 12meses, 24meses, Noperíodo }
@@ -4511,10 +4543,12 @@
     if (/divid/.test(e))                return 'div';
     if (/rend|cotiz/.test(e))           return 'rend';
     if (/resgate|venda/.test(e))        return 'resgate';
+    if (/compra|aplica|aporte/.test(e)) return 'compra';
     return 'outros';
   };
-  const _tipoLabel = { juros:'Juros', amort:'Amortização', div:'Dividendo', rend:'Rendimento', resgate:'Resgate', outros:'Outro' };
-  const _tipoCor   = { juros:'var(--verde)', amort:'var(--gold)', div:'var(--navy-mid)', rend:'#1e4a82', resgate:'var(--vermelho)', outros:'var(--text-muted)' };
+  const _tipoLabel = { juros:'Juros', amort:'Amortização', div:'Dividendo', rend:'Rendimento', resgate:'Resgate/Venda', compra:'Compra/Aporte', outros:'Outro' };
+  // Resgate/Venda = saída (vermelho) | Compra/Aporte = entrada positiva mas saída de caixa (azul)
+  const _tipoCor   = { juros:'var(--verde)', amort:'var(--gold)', div:'var(--navy-mid)', rend:'#1e4a82', resgate:'var(--vermelho)', compra:'var(--navy-mid)', outros:'var(--text-muted)' };
 
   const _fmtBRL = v => {
     const n = Math.abs(parseFloat(v) || 0);
@@ -4743,8 +4777,12 @@
     body.innerHTML = sorted.map(r => {
       const v    = parseFloat(r['Valor Bruto'] || 0);
       const tipo = _tipoEvento(r['Evento']);
-      const vs   = v > 0 ? 'color:var(--verde)' : v < 0 ? 'color:var(--vermelho)' : '';
-      const sinal = v > 0 ? '+' : '';
+      // Lógica de sinal: resgate/venda = saída (-), compra/aporte = entrada do investidor mas saída de caixa
+      const isResgate = tipo === 'resgate';
+      const isCompra  = tipo === 'compra';
+      const displayVal = isResgate ? -Math.abs(v) : Math.abs(v);
+      const vs   = isResgate ? 'color:var(--vermelho)' : isCompra ? 'color:var(--navy-mid)' : v > 0 ? 'color:var(--verde)' : v < 0 ? 'color:var(--vermelho)' : '';
+      const sinal = isResgate ? '−' : v > 0 ? '+' : '';
       const status = String(r['Status Evento'] || '');
       const statusBadge = status.toLowerCase().includes('realiz')
         ? `<span class="badge badge-green" style="font-size:9px">✓ Realizado</span>`
@@ -4752,7 +4790,7 @@
       return `<tr>
         <td style="font-size:11.5px;color:var(--text-muted);white-space:nowrap">${r['Data']||'—'}</td>
         <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r['Ativo']||''}">${String(r['Ativo']||'').substring(0,45)}</td>
-        <td><span class="badge badge-gray" style="font-size:9px;color:${_tipoCor[tipo]}">${_tipoLabel[tipo]}</span></td>
+        <td style="text-align:center"><span class="badge badge-gray" style="font-size:9px;color:${_tipoCor[tipo]}">${_tipoLabel[tipo]}</span></td>
         <td class="td-num" style="${vs};font-weight:600">${sinal}${_fmtBRL(Math.abs(v))}</td>
         <td class="td-num">${statusBadge}</td>
       </tr>`;
@@ -5083,9 +5121,10 @@
     const durTab  = t.mv_duration || [];
     const yldTab  = t.curva_yield || [];
 
-    // PL Mercado (mv_tab8)
+    // PL Mercado (mv_tab8) — aplica participação do cotista
     const prevSaldoKey = mvT8[0] ? Object.keys(mvT8[0]).find(k => /saldo bruto.*31/i.test(k)) || Object.keys(mvT8[0]).filter(k=>/saldo bruto/i.test(k)).pop() : null;
-    const prevPL = mvT8.reduce((s,r) => s + (parseFloat(r[prevSaldoKey]||0)||0), 0);
+    const prevPLTotal = mvT8.reduce((s,r) => s + (parseFloat(r[prevSaldoKey]||0)||0), 0);
+    const prevPL = prevPLTotal * PREV_PARTICIPACAO;
     setT('home-prev-pl', prevPL ? fmtM(prevPL) : '—');
 
     // Rentab mês e 12m — mv_tab0 e curva_tab0
