@@ -1338,7 +1338,7 @@
                 <div style="font-size:16px;font-weight:700;color:var(--navy)" id="home-prev-pl">—</div>
               </div>
               <div style="text-align:center;padding:10px;background:var(--surface-sunken,#ebe3d6);border-radius:8px">
-                <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:4px;font-weight:600">Rentab. Mês MV</div>
+                <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:4px;font-weight:600">Rentab. Mês a Mercado</div>
                 <div style="font-size:16px;font-weight:700" id="home-prev-mv-mes">—</div>
               </div>
               <div style="text-align:center;padding:10px;background:var(--surface-sunken,#ebe3d6);border-radius:8px">
@@ -5685,7 +5685,7 @@
       // 4 KPIs prev
       const pkw=(W-ML*2-6)/4;
       kpiCard(ML,          y, pkw, 22, 'PL (Mercado)',       getEl('home-prev-pl'),        '');
-      kpiCard(ML+pkw+2,    y, pkw, 22, 'Rentab. Mês MV',     getEl('home-prev-mv-mes'),    '', colorOf(getEl('home-prev-mv-mes')));
+      kpiCard(ML+pkw+2,    y, pkw, 22, 'Rentab. Mês a Mercado',     getEl('home-prev-mv-mes'),    '', colorOf(getEl('home-prev-mv-mes')));
       kpiCard(ML+2*pkw+4,  y, pkw, 22, 'Rentab. Mês Curva',  getEl('home-prev-curva-mes'), '', colorOf(getEl('home-prev-curva-mes')));
       kpiCard(ML+3*pkw+6,  y, pkw, 22, 'Duration Médio',     getEl('home-prev-duration'),  '');
       y+=30;
