@@ -1086,7 +1086,7 @@
     <div class="sidebar-client-badge">
       <div class="scb-label">Cliente</div>
       <div class="scb-name">Davi Correa de Souza</div>
-      <div class="scb-pat">R$ 1,23 bi · Atualizado mai/25</div>
+      <div class="scb-pat">Atualizado Mai/26</div>
     </div>
 
     <nav class="sidebar-nav">
@@ -1465,26 +1465,6 @@
         </div>
       </div>
       <div class="content-wrapper">
-
-        <!-- ── KPIs tab0 + tab6 ── -->
-        <div class="kpi-grid kpi-grid-4 mb-20">
-          <div class="kpi-card">
-            <div class="kpi-label">PL Final do Período</div>
-            <div class="kpi-val" id="ont-pl">R$ 46.786.471</div>
-            <div class="kpi-change" id="ont-pl-sub" style="color:var(--text-muted)">31/03/2026</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Rentab. no Período</div>
-            <div class="kpi-val" id="ont-rent-periodo">+14,90%</div>
-            <div class="kpi-change pos" id="ont-rent-periodo-sub">CDI: +18,21%</div>
-            <div style="font-size:10px;color:var(--fg-mute);margin-top:4px" id="ont-rent-periodo-datas">Início: — · Fim: —</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Rentab. 12 meses</div>
-            <div class="kpi-val" id="ont-rent-12m">+11,75%</div>
-            <div class="kpi-change pos" id="ont-rent-12m-sub">CDI 12m: +14,73%</div>
-          </div>
-        </div>
 
         <!-- ── LINHA 2: Alocação por Classe (tab7) + Estatísticas (tab5+6) ── -->
         <div class="col-3-2 mb-20">
@@ -4007,6 +3987,16 @@
     // ── tab3: Fluxo de Caixa ───────────────────────────────────
     const tab3 = t.tab3 || [];
     let htmlTab3 = '';
+    // Usa formatação compacta (mi/bi) para evitar números enormes por extenso
+    const fmtC = v => {
+      const n = parseFloat(String(v).replace(',','.'));
+      if (isNaN(n) || n === 0) return '—';
+      const a = Math.abs(n), s = n < 0 ? '−' : '';
+      if (a >= 1e9) return s + 'R$ ' + (a/1e9).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' bi';
+      if (a >= 1e6) return s + 'R$ ' + (a/1e6).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' mi';
+      if (a >= 1e3) return s + 'R$ ' + Math.round(a/1e3).toLocaleString('pt-BR') + ' mil';
+      return s + 'R$ ' + Math.round(a).toLocaleString('pt-BR');
+    };
     tab3.forEach((row, i) => {
       const cols    = Object.keys(row);
       const periodo = row[cols[0]];
@@ -4017,16 +4007,21 @@
       const movim   = parseFloat(row[cols[5]]) || 0;
       const rend    = parseFloat(row[cols[6]]) || 0;
       const sldFim  = parseFloat(row[cols[7]]) || 0;
-      const bg      = i === 0 ? 'background:rgba(15,61,87,0.03)' : (i === tab3.length-1 ? 'background:rgba(15,61,87,0.04);font-weight:600' : '');
+      const isTotal = i === tab3.length - 1;
+      const isFirst = i === 0;
+      const bg = isFirst ? 'background:rgba(15,61,87,0.03)' : isTotal ? 'background:rgba(15,61,87,0.04);font-weight:600' : '';
+      // Resgates: negativo = saída (vermelho), Aplicações: positivo = entrada (verde)
+      const resgStyle = resg < 0 ? 'color:var(--vermelho)' : resg > 0 ? 'color:var(--verde)' : '';
+      const aplicStyle = aplic > 0 ? 'color:var(--verde)' : '';
       htmlTab3 += `<tr style="${bg}">
         <td style="font-weight:500">${periodo}</td>
-        <td class="td-num">${fmtBRL(sldIni)}</td>
-        <td class="td-num" style="${cor(aplic)}">${fmtBRL(aplic)}</td>
-        <td class="td-num" style="${cor(resg)}">${fmtBRL(resg)}</td>
-        <td class="td-num" style="${cor(-impost)}">${fmtBRL(impost)}</td>
-        <td class="td-num" style="${cor(movim)}">${fmtBRL(movim)}</td>
-        <td class="td-num" style="${cor(rend)}">${fmtBRL(rend)}</td>
-        <td class="td-num"><strong>${fmtBRL(sldFim)}</strong></td>
+        <td class="td-num">${fmtC(sldIni)}</td>
+        <td class="td-num" style="${aplicStyle}">${aplic ? fmtC(aplic) : '—'}</td>
+        <td class="td-num" style="${resgStyle}">${resg ? fmtC(resg) : '—'}</td>
+        <td class="td-num" style="${impost ? 'color:var(--vermelho)' : ''}">${impost ? fmtC(impost) : '—'}</td>
+        <td class="td-num" style="${cor(movim)}">${movim ? fmtC(movim) : '—'}</td>
+        <td class="td-num" style="${cor(rend)}">${rend ? fmtC(rend) : '—'}</td>
+        <td class="td-num"><strong>${fmtC(sldFim)}</strong></td>
       </tr>`;
     });
     set('ont-tab3-body', htmlTab3);
