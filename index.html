@@ -1226,7 +1226,7 @@
                 </div>
               </div>
             </div>
-            <div style="height:210px;margin-top:12px"><canvas id="chart-attribution"></canvas></div>
+            <div style="height:240px;margin-top:12px"><canvas id="chart-attribution"></canvas></div>
           </div>
 
           <!-- Fluxo do mês -->
@@ -5105,22 +5105,29 @@
     }
 
     // ── Attribution Waterfall Chart (tab7 — Rendimento Bruto) ─────
-    // Guarda dados para o toggle R$ / %
+    // saldoIni = soma dos saldos iniciais de todas as classes (PL base)
+    const _sk7ini = _sk7home[0] || null; // primeiro saldo bruto = saldo inicial
+    const _attrSaldoIniTotal = filtered7.reduce((s, r) => {
+      const v = parseFloat(r[_sk7ini] || Object.values(r)[1] || 0) || 0;
+      return s + Math.abs(v);
+    }, 0);
+
     const _attrRaw = filtered7
       .map(row => ({
-        nome: String(row['Ativo']).trim(),
-        rend: parseFloat(row['Rendimento Bruto']||0)||0,
-        saldoF: parseFloat(row[saldoFimK7]||row['Saldo Bruto 31/03/26']||0)||0
+        nome:    String(row['Ativo']).trim(),
+        rend:    parseFloat(row['Rendimento Bruto']||0)||0,
+        saldoIni: parseFloat(row[_sk7ini] || Object.values(row)[1] || 0)||0
       }))
       .filter(d => d.nome && d.rend !== 0)
       .sort((a,b) => b.rend - a.rend);
 
-    // Totais para %
-    const _attrTotRend = _attrRaw.reduce((s,d) => s + d.rend, 0);
+    // pp = rendimento da classe / PL inicial total × 100
+    // ex: Inflação Soberano rendeu R$4mi, PL inicial total era R$44mi → contribuiu +9.09pp
+    const _attrSaldoBase = _attrSaldoIniTotal || tot7; // fallback: usa saldo final se sem inicial
 
-    window._attrData     = _attrRaw;
-    window._attrTotRend  = _attrTotRend;
-    window._attrMode     = window._attrMode || 'rs';
+    window._attrData      = _attrRaw;
+    window._attrSaldoBase = _attrSaldoBase;
+    window._attrMode      = window._attrMode || 'rs';
 
     // Periodo label
     const _attrPer = document.getElementById('home-attr-periodo');
@@ -5403,59 +5410,57 @@
   }
 
   // ── WATERFALL ATTRIBUTION CHART ──────────────────────────────────
-  // Implementação manual de waterfall sobre Chart.js tipo 'bar':
-  //   Dataset 0 = barra invisível (offset/base)  — serve de "andaime"
-  //   Dataset 1 = barra visível (valor da classe)
-  //   Dataset 2 = barra TOTAL no final
-
   function renderAttrChart() {
     const ctxAttr = document.getElementById('chart-attribution');
     if (!ctxAttr || !window._attrData || !window._attrData.length) return;
 
-    const _existAttr = Chart.getChart('chart-attribution');
-    if (_existAttr) _existAttr.destroy();
+    const _exist = Chart.getChart('chart-attribution');
+    if (_exist) _exist.destroy();
 
-    const mode = window._attrMode || 'rs';
-    const data = window._attrData;
-    const tot  = window._attrTotRend || 0;
+    const mode      = window._attrMode || 'rs';
+    const data      = window._attrData;
+    const saldoBase = window._attrSaldoBase || 1;
 
-    // Abbreviate names
+    // Abbreviate class names for axis
     const abbrev = s => s
-      .replace(/Inflação\s*/i,'Infl. ')
-      .replace(/Crédito\s*/i,'Créd. ')
-      .replace(/Bancário/i,'Banc.')
-      .replace(/Corporativo/i,'Corp.')
-      .replace(/Soberano/i,'Sob.')
-      .replace(/Estruturado/i,'Estruct.')
+      .replace(/Inflação\s*/i, 'Infl. ')
+      .replace(/Crédito\s*/i,  'Créd. ')
+      .replace(/Bancário/i,    'Banc.')
+      .replace(/Corporativo/i, 'Corp.')
+      .replace(/Soberano/i,    'Sob.')
+      .replace(/Estruturado/i, 'Estruct.')
       .trim();
 
-    // Build waterfall arrays
-    const labels   = [...data.map(d => abbrev(d.nome)), 'Total'];
-    const values   = mode === 'rs'
+    // Values per mode:
+    //   rs  → rendimento em R$ milhões
+    //   pct → contribuição em pontos percentuais (rendimento / PL_inicial_total × 100)
+    const values = mode === 'rs'
       ? data.map(d => +(d.rend / 1e6).toFixed(4))
-      : data.map(d => tot !== 0 ? +(d.rend / tot * 100).toFixed(3) : 0);
-    const totVal   = mode === 'rs' ? +(tot / 1e6).toFixed(4) : 100;
+      : data.map(d => +(d.rend / saldoBase * 100).toFixed(4));
 
-    // Cumulative base (offset) for each bar — classic waterfall
+    const totVal = values.reduce((s, v) => s + v, 0);
+
+    // Waterfall bases (cumulative offset from zero)
     const bases = [];
     let running = 0;
     values.forEach(v => {
       bases.push(v >= 0 ? running : running + v);
       running += v;
     });
-    bases.push(0); // Total bar starts from 0
+    bases.push(0); // Total bar always from zero
 
-    const barVals = [...values.map(v => Math.abs(v)), Math.abs(totVal)];
+    const labels   = [...data.map(d => abbrev(d.nome)), 'Total'];
+    const barVals  = [...values.map(v => Math.abs(v)), Math.abs(totVal)];
     const isModeRs = mode === 'rs';
 
-    // Colors
-    const TEAL   = 'rgba(42,90,102,0.80)';
-    const RED    = 'rgba(192,57,43,0.72)';
-    const DARK   = 'rgba(4,25,36,0.88)';
-    const barColors = [
-      ...values.map(v => v >= 0 ? TEAL : RED),
-      DARK  // total
-    ];
+    const TEAL   = 'rgba(42,90,102,0.82)';
+    const RED    = 'rgba(192,57,43,0.75)';
+    const DARK   = 'rgba(4,25,36,0.90)';
+    const barColors = [...values.map(v => v >= 0 ? TEAL : RED), DARK];
+
+    // Dynamic bar thickness: wider when fewer bars
+    const nBars      = labels.length;
+    const barThick   = Math.max(14, Math.min(40, Math.floor(480 / nBars) - 8));
 
     new Chart(ctxAttr, {
       type: 'bar',
@@ -5463,50 +5468,48 @@
         labels,
         datasets: [
           {
-            // Invisible offset bar (the "andaime")
-            data: bases,
-            backgroundColor: 'transparent',
-            borderColor: 'transparent',
+            // Invisible offset "scaffold"
+            data: [...bases],
+            backgroundColor: 'rgba(0,0,0,0)',
+            borderColor: 'rgba(0,0,0,0)',
             borderWidth: 0,
-            barThickness: 26,
+            barThickness: barThick,
             stack: 'wf',
           },
           {
-            // Visible bar
+            // Visible bars
             data: barVals,
             backgroundColor: barColors,
-            borderRadius: { topLeft: 3, topRight: 3, bottomLeft: 0, bottomRight: 0 },
-            borderSkipped: false,
-            barThickness: 26,
+            borderRadius: { topLeft: 3, topRight: 3 },
+            borderSkipped: 'bottom',
+            barThickness: barThick,
             stack: 'wf',
-            // Connector lines drawn via afterDraw plugin
           }
         ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        layout: { padding: { top: 24, right: 8, bottom: 0, left: 0 } },
         plugins: {
           legend: { display: false },
           tooltip: {
             backgroundColor: '#041924',
-            titleColor: 'rgba(242,221,198,0.75)',
+            titleColor: 'rgba(242,221,198,0.80)',
             bodyColor: '#fff',
             padding: 10,
             cornerRadius: 6,
             callbacks: {
               title: ctx => ctx[0].label,
               label: ctx => {
-                if (ctx.datasetIndex === 0) return null; // skip offset
-                const idx  = ctx.dataIndex;
+                if (ctx.datasetIndex === 0) return null;
+                const idx     = ctx.dataIndex;
                 const isTotal = idx === labels.length - 1;
-                const rawVal  = isTotal ? totVal : values[idx];
-                const sign    = rawVal >= 0 ? '+' : '−';
-                if (isModeRs) {
-                  return `${sign}R$ ${Math.abs(rawVal).toFixed(2)} mi`;
-                } else {
-                  return `${sign}${Math.abs(rawVal).toFixed(2)}% do rendimento total`;
-                }
+                const raw     = isTotal ? totVal : values[idx];
+                const sign    = raw >= 0 ? '+' : '−';
+                return isModeRs
+                  ? `${sign}R$ ${Math.abs(raw).toFixed(2)} mi`
+                  : `${sign}${Math.abs(raw).toFixed(2)} p.p.`;
               },
               filter: item => item.datasetIndex !== 0
             }
@@ -5516,53 +5519,57 @@
           x: {
             stacked: true,
             grid: { display: false },
-            ticks: {
-              color: '#5b818b',
-              font: { size: 9.5, family: 'Urbanist' },
-              maxRotation: 0,
-              autoSkip: false
-            },
-            border: { display: false }
-          },
-          y: {
-            stacked: true,
-            grid: { color: 'rgba(4,25,36,0.045)', drawTicks: false },
             border: { display: false },
             ticks: {
               color: '#5b818b',
-              font: { size: 9.5 },
+              font: { size: 10, family: 'Urbanist, sans-serif' },
+              maxRotation: 0,
+              autoSkip: false
+            }
+          },
+          y: {
+            stacked: true,
+            min: 0,
+            grid: { color: 'rgba(4,25,36,0.05)', drawTicks: false },
+            border: { display: false },
+            ticks: {
+              color: '#5b818b',
+              font: { size: 10 },
               padding: 6,
               callback: v => isModeRs
-                ? 'R$' + (v >= 0 ? '' : ' ') + v.toFixed(1) + 'mi'
-                : v.toFixed(1) + '%'
+                ? 'R$' + v.toFixed(1) + 'mi'
+                : v.toFixed(1) + 'pp'
             }
           }
         }
       },
       plugins: [{
-        // Draw connector lines between bars (classic waterfall style)
         id: 'waterfallConnectors',
         afterDraw(chart) {
           const ctx2 = chart.ctx;
           const ds1  = chart.getDatasetMeta(1); // visible bars
           if (!ds1 || !ds1.data.length) return;
 
+          // ── Connector lines ───────────────────────────────────────
           ctx2.save();
-          ctx2.strokeStyle = 'rgba(4,25,36,0.18)';
+          ctx2.strokeStyle = 'rgba(4,25,36,0.15)';
           ctx2.lineWidth   = 1;
           ctx2.setLineDash([3, 3]);
 
-          // Connector from right edge of bar i to left edge of bar i+1
-          for (let i = 0; i < ds1.data.length - 2; i++) { // skip last (Total)
-            const bar     = ds1.data[i];
-            const nextBar = ds1.data[i + 1];
-            if (!bar || !nextBar) continue;
-            const x1 = bar.x + bar.width / 2;
-            const x2 = nextBar.x - nextBar.width / 2;
-            // y = top of current bar = base + value
-            const rawVal  = values[i];
-            const baseVal = bases[i];
-            const topY    = chart.scales.y.getPixelForValue(baseVal + (rawVal >= 0 ? Math.abs(rawVal) : 0));
+          for (let i = 0; i < ds1.data.length - 2; i++) { // exclude Total
+            const bar  = ds1.data[i];
+            const next = ds1.data[i + 1];
+            if (!bar || !next) continue;
+
+            const base = bases[i];
+            const val  = values[i];
+            // Top of bar = base + abs(val) if positive, else base
+            const topY = chart.scales.y.getPixelForValue(
+              val >= 0 ? base + Math.abs(val) : base
+            );
+            const x1 = bar.x  + bar.width  / 2 + 1;
+            const x2 = next.x - next.width / 2 - 1;
+
             ctx2.beginPath();
             ctx2.moveTo(x1, topY);
             ctx2.lineTo(x2, topY);
@@ -5570,23 +5577,26 @@
           }
           ctx2.restore();
 
-          // Draw value labels on top of each visible bar
+          // ── Value labels on top of bars ───────────────────────────
           ctx2.save();
-          ctx2.font = '600 9.5px Urbanist, sans-serif';
-          ctx2.textAlign = 'center';
+          ctx2.font         = '600 9.5px Urbanist, sans-serif';
+          ctx2.textAlign    = 'center';
           ctx2.textBaseline = 'bottom';
+
           for (let i = 0; i < ds1.data.length; i++) {
-            const bar = ds1.data[i];
+            const bar     = ds1.data[i];
             if (!bar) continue;
             const isTotal = i === ds1.data.length - 1;
-            const rawVal  = isTotal ? totVal : values[i];
-            const sign    = rawVal >= 0 ? '+' : '−';
+            const raw     = isTotal ? totVal : values[i];
+            const sign    = raw >= 0 ? '+' : '−';
             const txt     = isModeRs
-              ? sign + 'R$' + Math.abs(rawVal).toFixed(2) + 'mi'
-              : sign + Math.abs(rawVal).toFixed(1) + '%';
-            ctx2.fillStyle = rawVal >= 0 ? '#1a6645' : '#c0392b';
-            if (isTotal) ctx2.fillStyle = '#041924';
-            ctx2.fillText(txt, bar.x, bar.y - 2);
+              ? sign + 'R$' + Math.abs(raw).toFixed(2) + 'mi'
+              : sign + Math.abs(raw).toFixed(2) + 'pp';
+
+            ctx2.fillStyle = raw >= 0
+              ? (isTotal ? '#041924' : '#1a5c3a')
+              : '#a0291f';
+            ctx2.fillText(txt, bar.x, bar.y - 3);
           }
           ctx2.restore();
         }
@@ -5598,11 +5608,15 @@
     window._attrMode = mode;
     const btnRs  = document.getElementById('attr-btn-rs');
     const btnPct = document.getElementById('attr-btn-pct');
-    if (btnRs && btnPct) {
-      const active   = 'background:var(--praxes-deep);color:var(--praxes-sand);font-weight:500';
-      const inactive = 'background:transparent;color:var(--fg-mute);font-weight:400';
-      btnRs.setAttribute('style',  btnRs.getAttribute('style').replace(/background[^;]+;color[^;]+;font-weight[^;]+/, mode==='rs'  ? active : inactive));
-      btnPct.setAttribute('style', btnPct.getAttribute('style').replace(/background[^;]+;color[^;]+;font-weight[^;]+/, mode==='pct' ? active : inactive));
+    if (btnRs) {
+      btnRs.style.background  = mode === 'rs'  ? 'var(--praxes-deep)' : 'transparent';
+      btnRs.style.color       = mode === 'rs'  ? 'var(--praxes-sand)' : 'var(--fg-mute)';
+      btnRs.style.fontWeight  = mode === 'rs'  ? '500' : '400';
+    }
+    if (btnPct) {
+      btnPct.style.background = mode === 'pct' ? 'var(--praxes-deep)' : 'transparent';
+      btnPct.style.color      = mode === 'pct' ? 'var(--praxes-sand)' : 'var(--fg-mute)';
+      btnPct.style.fontWeight = mode === 'pct' ? '500' : '400';
     }
     renderAttrChart();
   }
