@@ -1804,9 +1804,6 @@
               </tbody>
             </table>
           </div>
-          <div style="margin-top:10px;font-size:11px;color:var(--text-muted)">
-            ⚠️ Valores de Resgates acumulados no período podem incluir reinvestimentos internos ao fundo — conferir com o custodiante.
-          </div>
         </div>
 
         <!-- ── LINHA 5: Gráfico rentabilidade mensal ── -->
@@ -2547,12 +2544,6 @@
       </div>
 
       <div class="content-wrapper" id="prev-content">
-
-        <!-- MODO BANNER -->
-        <div class="mode-banner mercado" id="prev-mode-banner">
-          <span class="mode-banner-icon">📊</span>
-          <span><strong>Visão a Mercado (MV)</strong> — rentabilidade reflete marcação a mercado das NTN-Bs. Mais volátil, impacta resultado mensal.</span>
-        </div>
 
         <!-- ── KPIs ── -->
         <div class="kpi-grid kpi-grid-4" style="margin-bottom:20px">
@@ -4109,17 +4100,6 @@
     document.getElementById('btn-mv').classList.toggle('active', mode === 'mv');
     document.getElementById('btn-curva').classList.toggle('active', mode === 'curva');
 
-    const banner = document.getElementById('prev-mode-banner');
-    if (banner) {
-      if (mode === 'mv') {
-        banner.className = 'mode-banner mercado';
-        banner.innerHTML = '<span class="mode-banner-icon">📊</span><span><strong>Visão a Mercado (MV)</strong> — rentabilidade reflete marcação a mercado das NTN-Bs. Mais volátil, impacta o resultado mensal.</span>';
-      } else {
-        banner.className = 'mode-banner curva';
-        banner.innerHTML = '<span class="mode-banner-icon">📈</span><span><strong>Visão na Curva</strong> — rentabilidade pela taxa de contratação de cada título. Estável, sem efeito de marcação a mercado.</span>';
-      }
-    }
-
     const pc = document.getElementById('prev-content');
     if (pc) pc.classList.toggle('mode-curva', mode === 'curva');
 
@@ -5105,11 +5085,16 @@
     }
 
     // ── Attribution Waterfall Chart (tab7 — Rendimento Bruto) ─────
-    // saldoIni = soma dos saldos iniciais de todas as classes (PL base)
-    const _sk7ini = _sk7home[0] || null; // primeiro saldo bruto = saldo inicial
-    const _attrSaldoIniTotal = filtered7.reduce((s, r) => {
-      const v = parseFloat(r[_sk7ini] || Object.values(r)[1] || 0) || 0;
-      return s + Math.abs(v);
+    // Base para p.p. = Saldo Inicial TOTAL (tab8, coluna 0 = saldo de início do período)
+    // Assim a soma dos pp bate exatamente com a rentabilidade total da carteira
+    const _sk7ini = _sk7home[0] || null;
+    const _saldoIniK8 = saldoIniK8; // já detectado acima no bloco do PL
+    const _plBase = _saldoIniK8
+      ? tab8.reduce((s, r) => s + (Math.abs(parseFloat(r[_saldoIniK8]||0))||0), 0)
+      : 0;
+    // Fallback: soma dos saldos iniciais do tab7
+    const _attrSaldoIniTotal = _plBase || filtered7.reduce((s, r) => {
+      return s + Math.abs(parseFloat(r[_sk7ini] || Object.values(r)[1] || 0)||0);
     }, 0);
 
     const _attrRaw = filtered7
@@ -5121,9 +5106,7 @@
       .filter(d => d.nome && d.rend !== 0)
       .sort((a,b) => b.rend - a.rend);
 
-    // pp = rendimento da classe / PL inicial total × 100
-    // ex: Inflação Soberano rendeu R$4mi, PL inicial total era R$44mi → contribuiu +9.09pp
-    const _attrSaldoBase = _attrSaldoIniTotal || tot7; // fallback: usa saldo final se sem inicial
+    const _attrSaldoBase = _attrSaldoIniTotal || tot7;
 
     window._attrData      = _attrRaw;
     window._attrSaldoBase = _attrSaldoBase;
