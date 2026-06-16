@@ -1229,26 +1229,33 @@
           </div>
         </div>
 
-        <!-- ── LINHA 2: Fluxo + Performance ──────────────────────── -->
-        <div class="col-3-2 mb-20">
+        <!-- ── LINHA 2: Fluxo de Caixa (full width) ──────────────── -->
+        <div class="mb-20">
           <div class="card">
-            <div class="card-title">Fluxo de Caixa do Mês <span class="card-title-label" id="home-fluxo-periodo"></span></div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-              <div style="padding:11px 14px;background:var(--verde-bg);border-radius:var(--r-md);border:1px solid rgba(26,102,69,.10)">
-                <div style="font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--success);margin-bottom:3px;font-weight:600">Juros</div>
-                <div style="font-size:17px;font-weight:600;color:var(--success)" id="home-fluxo-juros">—</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+              <div style="font-family:var(--font-display);font-size:15px;font-weight:500;color:var(--fg-1)">Fluxo de Caixa do Mês</div>
+              <div style="font-size:12px;color:var(--fg-mute);font-weight:500" id="home-fluxo-periodo"></div>
+            </div>
+            <!-- KPI mini chips + eventos lado a lado -->
+            <div style="display:grid;grid-template-columns:220px 220px 220px 1fr;gap:14px;align-items:start">
+              <div style="padding:14px 18px;background:var(--verde-bg);border-radius:var(--r-md);border:1px solid rgba(26,102,69,.10)">
+                <div style="font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--success);margin-bottom:4px;font-weight:600">Juros</div>
+                <div style="font-size:20px;font-weight:600;color:var(--success)" id="home-fluxo-juros">—</div>
               </div>
-              <div style="padding:11px 14px;background:var(--praxes-shell);border-radius:var(--r-md);border:1px solid rgba(196,145,58,.15)">
-                <div style="font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:#7a5c1e;margin-bottom:3px;font-weight:600">Amortização</div>
-                <div style="font-size:17px;font-weight:600;color:#7a5c1e" id="home-fluxo-amort">—</div>
+              <div style="padding:14px 18px;background:var(--praxes-shell);border-radius:var(--r-md);border:1px solid rgba(196,145,58,.15)">
+                <div style="font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:#7a5c1e;margin-bottom:4px;font-weight:600">Amortização</div>
+                <div style="font-size:20px;font-weight:600;color:#7a5c1e" id="home-fluxo-amort">—</div>
               </div>
-              <div style="padding:11px 14px;background:var(--praxes-mist);border-radius:var(--r-md);border:1px solid rgba(42,90,102,.12);grid-column:1/-1">
-                <div style="font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--praxes-teal);margin-bottom:3px;font-weight:600">Div. / Rendimento</div>
-                <div style="font-size:17px;font-weight:600;color:var(--praxes-teal)" id="home-fluxo-div">—</div>
+              <div style="padding:14px 18px;background:var(--praxes-mist);border-radius:var(--r-md);border:1px solid rgba(42,90,102,.12)">
+                <div style="font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--praxes-teal);margin-bottom:4px;font-weight:600">Div. / Rendimento</div>
+                <div style="font-size:20px;font-weight:600;color:var(--praxes-teal)" id="home-fluxo-div">—</div>
+              </div>
+              <!-- Principais eventos inline -->
+              <div style="border-left:1px solid var(--line);padding-left:18px">
+                <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--fg-mute);margin-bottom:8px;font-weight:600">Principais Eventos</div>
+                <div id="home-fluxo-eventos" style="font-size:12px"></div>
               </div>
             </div>
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--fg-mute);margin-bottom:8px;font-weight:600">Principais Eventos</div>
-            <div id="home-fluxo-eventos" style="font-size:12px"></div>
           </div>
         </div>
 
@@ -1458,12 +1465,6 @@
         </div>
       </div>
       <div class="content-wrapper">
-
-        <!-- ── FAIXA DE FONTE ── -->
-        <div id="ont-fonte-aviso" style="display:none;background:var(--gold-pale);border:1px solid rgba(184,146,74,0.25);border-radius:8px;padding:10px 16px;margin-bottom:18px;font-size:12px;color:#7a5c1e;display:flex;align-items:center;gap:8px">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <span id="ont-fonte-txt">Dados carregados do Comdinheiro via Apps Script · Planilha: <strong>FI0001</strong></span>
-        </div>
 
         <!-- ── KPIs tab0 + tab6 ── -->
         <div class="kpi-grid kpi-grid-4 mb-20">
@@ -3055,12 +3056,18 @@
     console.log("Colunas detectadas:", {kData, kAtivo, kEvento, kStatus, kValor});
 
     // NAV atual por ativo — vem da tab9
+    // Detecta a chave de saldo mais recente dinamicamente (não hardcoda a data)
     const navPorAtivo = {};
     tab9.forEach(row => {
-      const v    = Object.values(row);
-      const nome = String(row['Ativo'] ?? v[0] ?? '').trim();
-      const nav  = parseFloat(row['Saldo Líquido 31/03/26'] ?? v[7]) || 0;
-      if (nome && nome !== 'Total' && nav > 0) navPorAtivo[nome] = nav;
+      const nome = String(row['Ativo'] ?? Object.values(row)[0] ?? '').trim();
+      if (!nome || nome === 'Total') return;
+      // Pega a última coluna "Saldo Líquido" ou "Saldo Bruto" (= posição mais recente)
+      const allKeys = Object.keys(row);
+      const saldoKey = allKeys.filter(k => /saldo l[íi]quido/i.test(k)).pop()
+                    || allKeys.filter(k => /saldo bruto/i.test(k)).pop()
+                    || null;
+      const nav = saldoKey ? (parseFloat(row[saldoKey]) || 0) : 0;
+      if (nav > 0) navPorAtivo[nome] = nav;
     });
 
     const porAtivo = {}; // { nomeAtivo: { fluxos: [], chamado, distribuido, nav } }
@@ -3341,14 +3348,19 @@
 
     // tab9: posição por ativo
     const tab9 = t.il_tab9 || [];
+    // Detecta chaves de saldo dinamicamente (sem hardcodar data)
+    const _tab9saldoKeys = tab9[0] ? Object.keys(tab9[0]).filter(k => /saldo bruto/i.test(k)) : [];
+    const _tab9sfKey = _tab9saldoKeys[_tab9saldoKeys.length - 1] || 'Saldo Bruto 29/05/26';
+    const _tab9slKeys = tab9[0] ? Object.keys(tab9[0]).filter(k => /saldo l[íi]quido/i.test(k)) : [];
+    const _tab9slKey  = _tab9slKeys[_tab9slKeys.length - 1] || 'Saldo Líquido 29/05/26';
     let h9='';
     tab9.forEach(row=>{
       const v=Object.values(row);
       const nome=String(row['Ativo'] ?? v[0] ?? ''). trim(); if(!nome) return;
-      const sf=parseFloat(row['Saldo Bruto 31/03/26'] ?? v[4])||0;
+      const sf=parseFloat(row[_tab9sfKey] ?? v[4])||0;
       const pct=parseFloat(row['%'] ?? v[5])||0;
       const ir=parseFloat(row['Provisão de IR+IOF'] ?? v[6])||0;
-      const sl=parseFloat(row['Saldo Líquido 31/03/26'] ?? v[7])||0;
+      const sl=parseFloat(row[_tab9slKey] ?? v[7])||0;
       const liq=String(row['Liquidez'] ?? v[8] ?? ''). trim();
       if(nome==='Total'){ h9+=`<tr style="background:rgba(15,61,87,0.04);font-weight:600"><td>Total</td><td class="td-num">${fmtB(sf)}</td><td class="td-num" style="color:var(--vermelho)">${ir>0?fmtB(ir):'—'}</td><td class="td-num" style="color:var(--verde)">${fmtB(sl)}</td><td class="td-num">${fmtN(pct)}%</td><td>—</td></tr>`; return; }
       const isClasse = sf===0&&pct===0&&liq==='';
@@ -3729,6 +3741,10 @@
 
     const perK = _perK(varNom) || _perK(cdi) || Object.keys(varNom).at(-1) || '';
     const m12K = _12mK(varNom) || _12mK(cdi) || '';
+
+    console.log('renderOnshoreTotal DEBUG tab0 keys:', Object.keys(varNom));
+    console.log('renderOnshoreTotal perK:', perK, '→', varNom[perK]);
+    console.log('renderOnshoreTotal m12K:', m12K, '→', varNom[m12K]);
 
     // KPI — PL: tab6 está vazia → soma tab8 (todas as instituições)
     const tab8inst = t.tab8 || [];
