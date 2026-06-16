@@ -1201,15 +1201,14 @@
           </div>
           <div class="hero-divider"></div>
           <div class="hero-kpi">
-            <div class="hero-kpi-label">Rentabilidade 12 Meses</div>
+            <div class="hero-kpi-label">Rentabilidade 12 Meses — Onshore</div>
             <div class="hero-kpi-val pos" id="home-rent-12m">—</div>
             <div class="hero-kpi-sub" id="home-rent-12m-sub"></div>
           </div>
         </div>
 
-        <!-- ── LINHA 1: Performance Attribution + Fluxo ──────────── -->
-        <div class="col-3-2 mb-20">
-
+        <!-- ── LINHA 1: Performance Attribution (full width) ─────── -->
+        <div class="mb-20">
           <!-- Performance Attribution por Classe (tab7 — Rendimento) -->
           <div class="card" style="padding:22px 24px 18px">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px">
@@ -1226,10 +1225,12 @@
                 </div>
               </div>
             </div>
-            <div style="height:240px;margin-top:12px"><canvas id="chart-attribution"></canvas></div>
+            <div style="height:300px;margin-top:14px"><canvas id="chart-attribution"></canvas></div>
           </div>
+        </div>
 
-          <!-- Fluxo do mês -->
+        <!-- ── LINHA 2: Fluxo + Performance ──────────────────────── -->
+        <div class="col-3-2 mb-20">
           <div class="card">
             <div class="card-title">Fluxo de Caixa do Mês <span class="card-title-label" id="home-fluxo-periodo"></span></div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
@@ -1386,7 +1387,7 @@
                 <div style="font-size:16px;font-weight:700;color:var(--navy)" id="home-prev-pl">—</div>
               </div>
               <div style="text-align:center;padding:10px;background:var(--surface-sunken,#ebe3d6);border-radius:8px">
-                <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:4px;font-weight:600">Rentab. Mês MV</div>
+                <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:4px;font-weight:600">Rentab. Mês a Mercado</div>
                 <div style="font-size:16px;font-weight:700" id="home-prev-mv-mes">—</div>
               </div>
               <div style="text-align:center;padding:10px;background:var(--surface-sunken,#ebe3d6);border-radius:8px">
@@ -1481,11 +1482,6 @@
             <div class="kpi-label">Rentab. 12 meses</div>
             <div class="kpi-val" id="ont-rent-12m">+11,75%</div>
             <div class="kpi-change pos" id="ont-rent-12m-sub">CDI 12m: +14,73%</div>
-          </div>
-          <div class="kpi-card green">
-            <div class="kpi-label">Sharpe no Período</div>
-            <div class="kpi-val" id="ont-sharpe">−1,19</div>
-            <div class="kpi-change" id="ont-sharpe-sub" style="color:var(--text-muted)">Volatilidade: 2,17%</div>
           </div>
         </div>
 
@@ -1810,13 +1806,13 @@
         <div class="two-col">
           <div class="card">
             <div class="card-title">Rentabilidade Mensal — 2025 <span class="card-title-label">Carteira vs CDI</span></div>
-            <div class="chart-container" style="height:200px">
+            <div class="chart-container" style="height:280px">
               <canvas id="chart-onshore-rentmensal"></canvas>
             </div>
           </div>
           <div class="card">
             <div class="card-title">Alocação por Classe <span class="card-title-label">% Saldo Final</span></div>
-            <div class="chart-container" style="height:200px">
+            <div class="chart-container" style="height:280px">
               <canvas id="chart-onshore-donut"></canvas>
             </div>
           </div>
@@ -4138,7 +4134,7 @@
   // ── PARTICIPAÇÃO DO CLIENTE NO FUNDO DE PREVIDÊNCIA ─────────────
   // Davi Correa de Souza é um dos 2 cotistas do Itaú Flexprev Rio Bonito
   // Atualizar aqui quando a participação mudar (verificar na planilha)
-  const PREV_PARTICIPACAO = 0.32838875270363617; // ajustar conforme % real de cotas do Davi
+  const PREV_PARTICIPACAO = 0.32838875270363617;// 50% — ajustar conforme % real de cotas do Davi
 
   function renderPrevidencia() {
     if (!CD) return;
@@ -4166,26 +4162,26 @@
     const m12K = t0keys.find(k => k.includes('12')) || t0keys[2];
     const perK = t0keys.find(k => /per|nop/i.test(k)) || t0keys[t0keys.length - 1];
 
-    // Rentab mês (valores já em % — ex: 0.144603 = 0,14%)
+    // Rentab mês — valores já em % (ex: 0.2047 = 0,20%, NÃO 20,47%)
     const rentMes = varRow[mesK];
     const cdiMes  = cdiRow[mesK];
     const elMes = document.getElementById('prev-rent-mes');
-    if (elMes) { elMes.textContent = _fmtPct(rentMes); elMes.style.color = parseFloat(rentMes) >= 0 ? 'var(--verde)' : 'var(--vermelho)'; }
-    _txt('prev-cdi-mes', cdiMes != null && cdiMes !== '' ? 'CDI: ' + _fmtPct(cdiMes) : '');
+    if (elMes) { elMes.textContent = _fmtPct(rentMes, true); elMes.style.color = parseFloat(rentMes) >= 0 ? 'var(--verde)' : 'var(--vermelho)'; }
+    _txt('prev-cdi-mes', cdiMes != null && cdiMes !== '' ? 'CDI: ' + _fmtPct(cdiMes, true) : '');
 
     // Rentab 12m
     const rent12 = varRow[m12K];
     const cdi12  = cdiRow[m12K];
     const el12 = document.getElementById('prev-rent-12m');
-    if (el12) { el12.textContent = _fmtPct(rent12); el12.style.color = parseFloat(rent12) >= 0 ? 'var(--verde)' : 'var(--vermelho)'; }
-    _txt('prev-cdi-12m', cdi12 != null && cdi12 !== '' ? 'CDI 12m: ' + _fmtPct(cdi12) : '');
+    if (el12) { el12.textContent = _fmtPct(rent12, true); el12.style.color = parseFloat(rent12) >= 0 ? 'var(--verde)' : 'var(--vermelho)'; }
+    _txt('prev-cdi-12m', cdi12 != null && cdi12 !== '' ? 'CDI 12m: ' + _fmtPct(cdi12, true) : '');
 
     // Rentab período
     const rentPer = varRow[perK];
     const cdiPer  = cdiRow[perK];
     const elPer = document.getElementById('prev-rent-periodo');
-    if (elPer) { elPer.textContent = _fmtPct(rentPer); elPer.style.color = parseFloat(rentPer) >= 0 ? 'var(--verde)' : 'var(--vermelho)'; }
-    _txt('prev-cdi-periodo', cdiPer != null && cdiPer !== '' ? 'CDI período: ' + _fmtPct(cdiPer) : '');
+    if (elPer) { elPer.textContent = _fmtPct(rentPer, true); elPer.style.color = parseFloat(rentPer) >= 0 ? 'var(--verde)' : 'var(--vermelho)'; }
+    _txt('prev-cdi-periodo', cdiPer != null && cdiPer !== '' ? 'CDI período: ' + _fmtPct(cdiPer, true) : '');
 
     // ── tab5: performance comparativa ───────────────────────────────
     // Estrutura: array de objetos { Carteira: val, CDI: val }
@@ -4196,22 +4192,27 @@
     tab5.forEach((row, i) => {
       const cartV = row['Carteira'];
       const cdiV  = row['CDI'];
-      const isMeta = i >= 3; // Volatilidade e Sharpe: não colorir como positivo/negativo
+      const isMeta = i >= 3; // Volatilidade (i=3) e Sharpe (i=4): não são %
+      const isSharpe = i === 4;
       const cartStyle = !isMeta ? _cor(cartV) : '';
-      const cartTxt = cartV != null && cartV !== '' ? _fmtPct(cartV) : '—';
-      const cdiTxt  = cdiV  != null && cdiV  !== '' ? _fmtPct(cdiV)  : '—';
-      // IPCA+ do tab0 na mesma posição (linha 3 = IPCAdp)
+      // Sharpe é um número puro (ex: -0.88), não percentual
+      const cartTxt = cartV != null && cartV !== ''
+        ? (isSharpe ? parseFloat(cartV).toFixed(2) : _fmtPct(cartV, true))
+        : '—';
+      const cdiTxt = cdiV != null && cdiV !== ''
+        ? (isSharpe ? parseFloat(cdiV).toFixed(2) : _fmtPct(cdiV, true))
+        : '—';
       const ipcaRow = tab0[3] || {};
       let ipcaTxt = '—';
-      if (i === 0) ipcaTxt = ipcaRow[perK] != null ? _fmtPct(ipcaRow[perK]) : '—';
-      else if (i === 2) ipcaTxt = ipcaRow[m12K] != null ? _fmtPct(ipcaRow[m12K]) : '—';
+      if (i === 0) ipcaTxt = ipcaRow[perK] != null ? _fmtPct(ipcaRow[perK], true) : '—';
+      else if (i === 2) ipcaTxt = ipcaRow[m12K] != null ? _fmtPct(ipcaRow[m12K], true) : '—';
       h5 += `<tr>
         <td>${lbls5[i]}</td>
         <td class="td-num" style="${cartStyle}">${cartTxt}</td>
         <td class="td-num" style="color:var(--text-muted)">${cdiTxt}</td>
         <td class="td-num" style="color:var(--text-muted)">${ipcaTxt}</td>
       </tr>`;
-      if (i === 4 && cartV != null) {
+      if (isSharpe && cartV != null) {
         const el = document.getElementById('prev-sharpe');
         if (el) { const n = parseFloat(cartV); el.textContent = isNaN(n) ? '—' : n.toFixed(2); el.style.color = n >= 0 ? 'var(--verde)' : 'var(--vermelho)'; }
       }
@@ -5248,22 +5249,28 @@
           const isTotal = /total|média/i.test(c[0]);
           const tir = parseFloat(c[4].replace(/[+%]/g,'').replace(',','.'));
           if (!isTotal && !isNaN(tir) && tir > 0) { tirSum += tir; tirCount++; }
-          const boldStyle = isTotal ? 'font-weight:700;border-top:2px solid var(--border-strong)' : '';
-          const tCol = c[4]&&c[4].startsWith('+')?'color:var(--verde)':c[4]&&c[4].startsWith('-')?'color:var(--vermelho)':'';
-          rows.push('<tr style="'+boldStyle+'">'
-            +'<td style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:0" title="'+c[0]+'">'+c[0]+'</td>'
-            +'<td class="td-num" style="font-size:11px">'+(c[1]||'—')+'</td>'
-            +'<td class="td-num" style="font-size:11px">'+(c[2]||'—')+'</td>'
-            +'<td class="td-num" style="font-size:11px">'+(c[3]||'—')+'</td>'
-            +'<td class="td-num" style="font-size:11px;'+tCol+'">'+(c[4]||'—')+'</td>'
-            +'<td class="td-num" style="font-size:11px">'+(c[5]||'—')+'</td>'
-            +'<td class="td-num" style="font-size:11px">'+(c[10]||'—')+'</td>'
-            +'</tr>');
+          const rowStyle  = isTotal ? 'font-weight:700;background:var(--praxes-shell);border-top:2px solid var(--line-strong)' : '';
+          const tirColor  = c[4]?.startsWith('+') ? 'color:var(--success);font-weight:600' : c[4]?.startsWith('-') ? 'color:var(--danger);font-weight:600' : 'font-weight:600';
+          const moicN     = parseFloat((c[5]||'').replace('×','').replace(',','.'));
+          const moicColor = !isNaN(moicN) ? (moicN >= 1 ? 'color:var(--success)' : 'color:var(--danger)') : '';
+          // status badge
+          const statusTxt = c[10] || c[c.length-1] || '—';
+          const isClosed  = /encerr|encerra/i.test(statusTxt);
+          const statusBg  = isClosed ? 'background:var(--praxes-shell);color:var(--fg-mute)' : 'background:var(--success-bg);color:var(--success)';
+          rows.push(`<tr style="${rowStyle}">
+            <td style="font-size:12px;font-weight:500;max-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:16px" title="${c[0]}">${c[0]}</td>
+            <td class="td-num" style="font-size:12px">${c[1]||'—'}</td>
+            <td class="td-num" style="font-size:12px;color:var(--success)">${c[2]||'—'}</td>
+            <td class="td-num" style="font-size:12px">${c[3]||'—'}</td>
+            <td class="td-num" style="font-size:12px;${tirColor}">${c[4]||'—'}</td>
+            <td class="td-num" style="font-size:12px;${moicColor}">${c[5]||'—'}</td>
+            <td style="font-size:11px;padding-right:16px"><span style="padding:2px 8px;border-radius:4px;font-size:10px;font-weight:500;${statusBg}">${statusTxt}</span></td>
+          </tr>`);
         }
       });
       ilDest.innerHTML = rows.length > 0
         ? rows.join('')
-        : '<tr><td colspan="7" style="text-align:center;padding:16px;color:var(--text-muted)">Navegue até Ilíquidos para carregar os dados</td></tr>';
+        : '<tr><td colspan="7" style="text-align:center;padding:16px;color:var(--fg-mute)">Navegue até Ilíquidos para carregar os dados</td></tr>';
       const tirMedia = tirCount > 0 ? tirSum / tirCount : null;
       setT('home-il-tir',     tirMedia !== null ? '+' + tirMedia.toFixed(1) + '% a.a.' : '—');
       setT('home-il-tir-sub', tirCount + ' fundo(s)');
@@ -5441,9 +5448,9 @@
     const DARK   = 'rgba(4,25,36,0.90)';
     const barColors = [...values.map(v => v >= 0 ? TEAL : RED), DARK];
 
-    // Dynamic bar thickness: wider when fewer bars
-    const nBars      = labels.length;
-    const barThick   = Math.max(14, Math.min(40, Math.floor(480 / nBars) - 8));
+    // Dynamic bar thickness — full width chart, generous spacing
+    const nBars    = labels.length;
+    const barThick = Math.max(24, Math.min(70, Math.floor(900 / nBars) - 12));
 
     new Chart(ctxAttr, {
       type: 'bar',
@@ -6060,7 +6067,7 @@
       // 4 KPIs prev
       const pkw=(W-ML*2-6)/4;
       kpiCard(ML,          y, pkw, 22, 'PL (Mercado)',       getEl('home-prev-pl'),        '');
-      kpiCard(ML+pkw+2,    y, pkw, 22, 'Rentab. Mês MV',     getEl('home-prev-mv-mes'),    '', colorOf(getEl('home-prev-mv-mes')));
+      kpiCard(ML+pkw+2,    y, pkw, 22, 'Rentab. Mês a Mercado',     getEl('home-prev-mv-mes'),    '', colorOf(getEl('home-prev-mv-mes')));
       kpiCard(ML+2*pkw+4,  y, pkw, 22, 'Rentab. Mês Curva',  getEl('home-prev-curva-mes'), '', colorOf(getEl('home-prev-curva-mes')));
       kpiCard(ML+3*pkw+6,  y, pkw, 22, 'Duration Médio',     getEl('home-prev-duration'),  '');
       y+=30;
