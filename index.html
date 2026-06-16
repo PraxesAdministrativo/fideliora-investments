@@ -1189,7 +1189,7 @@
         <!-- ── HERO STRIP ─────────────────────────────────────────── -->
         <div class="hero-strip mb-20" id="home-hero">
           <div class="hero-kpi">
-            <div class="hero-kpi-label">PL Final do Período</div>
+            <div class="hero-kpi-label">PL Final</div>
             <div class="hero-kpi-val" id="home-pl">—</div>
             <div class="hero-kpi-sub" id="home-pl-sub"></div>
           </div>
@@ -1207,58 +1207,46 @@
           </div>
         </div>
 
-        <!-- ── LINHA 1: Fluxo breakdown + Performance ──────────────── -->
-        <div class="two-col mb-20">
+        <!-- ── LINHA 1: Performance Attribution + Fluxo ──────────── -->
+        <div class="col-3-2 mb-20">
+
+          <!-- Performance Attribution por Classe (tab7 — Rendimento) -->
+          <div class="card" style="padding:22px 24px 18px">
+            <div class="card-title" style="border-bottom:none;padding-bottom:4px;margin-bottom:4px">
+              Performance Attribution por Classe
+              <span class="card-title-label" id="home-attr-periodo">Rendimento no período</span>
+            </div>
+            <div style="height:220px"><canvas id="chart-attribution"></canvas></div>
+          </div>
 
           <!-- Fluxo do mês -->
           <div class="card">
             <div class="card-title">Fluxo de Caixa do Mês <span class="card-title-label" id="home-fluxo-periodo"></span></div>
-            <div class="kpi-grid kpi-grid-3" style="margin-bottom:16px">
-              <div style="text-align:center;padding:12px;background:var(--verde-bg);border-radius:8px;border:1px solid rgba(26,102,69,.12)">
-                <div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--verde);margin-bottom:4px;font-weight:600">Juros</div>
-                <div style="font-size:20px;font-weight:700;color:var(--verde)" id="home-fluxo-juros">—</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+              <div style="padding:11px 14px;background:var(--verde-bg);border-radius:var(--r-md);border:1px solid rgba(26,102,69,.10)">
+                <div style="font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--success);margin-bottom:3px;font-weight:600">Juros</div>
+                <div style="font-size:17px;font-weight:600;color:var(--success)" id="home-fluxo-juros">—</div>
               </div>
-              <div style="text-align:center;padding:12px;background:var(--gold-pale);border-radius:8px;border:1px solid rgba(196,145,58,.15)">
-                <div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:4px;font-weight:600">Amortização</div>
-                <div style="font-size:20px;font-weight:700;color:var(--gold)" id="home-fluxo-amort">—</div>
+              <div style="padding:11px 14px;background:var(--praxes-shell);border-radius:var(--r-md);border:1px solid rgba(196,145,58,.15)">
+                <div style="font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:#7a5c1e;margin-bottom:3px;font-weight:600">Amortização</div>
+                <div style="font-size:17px;font-weight:600;color:#7a5c1e" id="home-fluxo-amort">—</div>
               </div>
-              <div style="text-align:center;padding:12px;background:rgba(42,90,102,.06);border-radius:8px;border:1px solid rgba(42,90,102,.12)">
-                <div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--navy-mid);margin-bottom:4px;font-weight:600">Div./Rend.</div>
-                <div style="font-size:20px;font-weight:700;color:var(--navy-mid)" id="home-fluxo-div">—</div>
+              <div style="padding:11px 14px;background:var(--praxes-mist);border-radius:var(--r-md);border:1px solid rgba(42,90,102,.12);grid-column:1/-1">
+                <div style="font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--praxes-teal);margin-bottom:3px;font-weight:600">Div. / Rendimento</div>
+                <div style="font-size:17px;font-weight:600;color:var(--praxes-teal)" id="home-fluxo-div">—</div>
               </div>
             </div>
-            <!-- Top 5 eventos -->
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:8px;font-weight:600">Principais Eventos</div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--fg-mute);margin-bottom:8px;font-weight:600">Principais Eventos</div>
             <div id="home-fluxo-eventos" style="font-size:12px"></div>
-          </div>
-
-          <!-- Performance comparativa -->
-          <div class="card">
-            <div class="card-title">Performance Comparativa <span class="card-title-label">Carteira vs CDI</span></div>
-            <table class="data-table">
-              <thead><tr>
-                <th>Indicador</th>
-                <th class="td-num">Carteira</th>
-                <th class="td-num">CDI</th>
-                <th class="td-num">Δ CDI</th>
-              </tr></thead>
-              <tbody id="home-perf-body">
-                <tr><td colspan="4" style="text-align:center;padding:16px;color:var(--text-muted)">—</td></tr>
-              </tbody>
-            </table>
-            <div id="home-sharpe" style="display:none"></div>
-            <div id="home-sharpe-sub" style="display:none"></div>
-            <div id="home-fluxo-total" style="display:none"></div>
-            <div id="home-fluxo-sub" style="display:none"></div>
           </div>
         </div>
 
-        <!-- ── LINHA 2: Alocação por classe + Top holdings ─────────── -->
-        <div class="mb-20">
+        <!-- ── LINHA 2: Alocação + Composição Previdência + Câmbio ── -->
+        <div class="three-col mb-20">
 
           <!-- Alocação por classe -->
           <div class="card">
-            <div class="card-title">Alocação por Classe <span class="card-title-label">Saldo bruto 31/03/26</span></div>
+            <div class="card-title">Alocação por Classe <span class="card-title-label" id="home-alloc-periodo">Saldo final</span></div>
             <table class="data-table">
               <thead><tr>
                 <th>Classe</th>
@@ -1272,27 +1260,58 @@
             </table>
           </div>
 
+          <!-- Composição Itaú Rio Bonito (composicao_carteira) -->
+          <div class="card">
+            <div class="card-title">
+              Itaú Flexprev Rio Bonito
+              <span class="card-title-label">Composição da carteira</span>
+            </div>
+            <div id="home-prev-composicao">
+              <div style="color:var(--fg-mute);text-align:center;padding:20px;font-size:13px">Carregando…</div>
+            </div>
+          </div>
+
+          <!-- Câmbio no ano -->
+          <div class="card">
+            <div class="card-title">
+              Operações de Câmbio
+              <span class="card-title-label" id="home-cambio-ano">2026</span>
+            </div>
+            <div id="home-cambio-body">
+              <div style="
+                display:flex;flex-direction:column;align-items:center;justify-content:center;
+                padding:28px 16px;text-align:center;gap:10px;
+              ">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--fg-mute)" stroke-width="1.4" style="opacity:0.45">
+                  <circle cx="12" cy="12" r="9"/>
+                  <path d="M9 9c.38-1.2 1.64-2 3-2 1.5 0 2.75 1 2.75 2.25S13.5 11.25 12 12v2"/>
+                  <circle cx="12" cy="17" r=".5" fill="currentColor"/>
+                </svg>
+                <div style="font-size:13px;color:var(--fg-2);font-weight:500">Sem operações registradas</div>
+                <div style="font-size:11px;color:var(--fg-mute);line-height:1.6">Não foram efetuados câmbios no ano.<br>Quando houver, as operações aparecerão aqui.</div>
+              </div>
+            </div>
+          </div>
 
         </div>
 
-        <!-- ── LINHA 3: Ilíquidos + Previdência ──────────────────────── -->
-        <!-- Ilíquidos — tabela full width -->
-        <div class="mb-20">
+        <!-- ── LINHA 3: Performance + Ilíquidos ──────────────────── -->
+        <div class="col-3-2 mb-20">
 
-          <!-- Ilíquidos card — tabela completa -->
+          <!-- Ilíquidos — tabela resumida -->
           <div class="card" style="padding:0;overflow:hidden">
             <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px 10px">
-              <div class="card-title" style="margin:0">Ilíquidos <span class="card-title-label">Private Equity / Fundos</span></div>
+              <div class="card-title" style="margin:0;border:none;padding:0">Ilíquidos <span class="card-title-label">Private Equity / Fundos</span></div>
               <div style="display:flex;gap:20px">
                 <div style="text-align:right">
-                  <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);font-weight:600">PL Atual</div>
-                  <div style="font-size:14px;font-weight:700;color:var(--navy)" id="home-il-pl">—</div>
-                  <div style="font-size:10px;color:var(--text-muted)" id="home-il-pl-sub"></div>
+                  <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--fg-mute);font-weight:600">PL Atual</div>
+                  <div style="font-size:14px;font-weight:700;color:var(--fg-1)" id="home-il-pl">—</div>
+                  <div style="font-size:10px;color:var(--fg-mute)" id="home-il-pl-sub"></div>
                 </div>
                 <div style="text-align:right">
-                  <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);font-weight:600">TIR Média</div>
-                  <div style="font-size:14px;font-weight:700;color:var(--verde)" id="home-il-tir">—</div>
-                  <div style="font-size:10px;color:var(--text-muted)" id="home-il-tir-sub"></div>
+                  <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--fg-mute);font-weight:600">TIR Média</div>
+                  <div style="font-size:14px;font-weight:700;color:var(--success)" id="home-il-tir">—</div>
+                  <div style="font-size:10px;color:var(--fg-mute)" id="home-il-tir-sub"></div>
                 </div>
               </div>
             </div>
@@ -1319,16 +1338,35 @@
                   </tr>
                 </thead>
                 <tbody id="home-il-metricas">
-                  <tr><td colspan="7" style="text-align:center;padding:16px;color:var(--text-muted)">Carregando...</td></tr>
+                  <tr><td colspan="7" style="text-align:center;padding:16px;color:var(--fg-mute)">Carregando...</td></tr>
                 </tbody>
               </table>
             </div>
             <div id="home-il-fundos" style="display:none"></div>
           </div>
 
+          <!-- Performance comparativa -->
+          <div class="card">
+            <div class="card-title">Performance Comparativa <span class="card-title-label">Carteira vs CDI</span></div>
+            <table class="data-table">
+              <thead><tr>
+                <th>Indicador</th>
+                <th class="td-num">Carteira</th>
+                <th class="td-num">CDI</th>
+                <th class="td-num">Δ CDI</th>
+              </tr></thead>
+              <tbody id="home-perf-body">
+                <tr><td colspan="4" style="text-align:center;padding:16px;color:var(--text-muted)">—</td></tr>
+              </tbody>
+            </table>
+            <div id="home-sharpe" style="display:none"></div>
+            <div id="home-sharpe-sub" style="display:none"></div>
+            <div id="home-fluxo-total" style="display:none"></div>
+            <div id="home-fluxo-sub" style="display:none"></div>
+          </div>
         </div>
 
-        <!-- Rio Bonito (Previdência) -->
+        <!-- ── LINHA 4: Previdência Rio Bonito ────────────────────── -->
         <div class="mb-20">
           <div class="card">
             <div class="card-title">Previdência — Rio Bonito <span class="card-title-label">Itaú Flexprev</span></div>
@@ -1338,7 +1376,7 @@
                 <div style="font-size:16px;font-weight:700;color:var(--navy)" id="home-prev-pl">—</div>
               </div>
               <div style="text-align:center;padding:10px;background:var(--surface-sunken,#ebe3d6);border-radius:8px">
-                <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:4px;font-weight:600">Rentab. Mês a Mercado</div>
+                <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:4px;font-weight:600">Rentab. Mês MV</div>
                 <div style="font-size:16px;font-weight:700" id="home-prev-mv-mes">—</div>
               </div>
               <div style="text-align:center;padding:10px;background:var(--surface-sunken,#ebe3d6);border-radius:8px">
@@ -2690,6 +2728,17 @@
       // Garante que movimentacoes onshore está acessível em CD
       if (principal.movimentacoes) CD.movimentacoes = principal.movimentacoes;
       console.log("✅ Principal carregado:", Object.keys(CD.tables));
+
+      // Normaliza chave composicao_carteira (pode ter variação de nome)
+      const _compKey = Object.keys(CD.tables).find(k => k.toLowerCase().replace(/[çc]/g,'c').replace(/[ãa]/g,'a').includes('composic'));
+      if (_compKey && _compKey !== 'composicao_carteira') {
+        CD.tables['composicao_carteira'] = CD.tables[_compKey];
+        console.log("✅ composicao_carteira mapeada de:", _compKey, "→", CD.tables['composicao_carteira'].length, "rows");
+      } else if (CD.tables['composicao_carteira']) {
+        console.log("✅ composicao_carteira:", CD.tables['composicao_carteira'].length, "rows", Object.keys(CD.tables['composicao_carteira'][0]||{}));
+      } else {
+        console.warn("⚠️ composicao_carteira não encontrada nas tabelas. Abas disponíveis:", Object.keys(CD.tables));
+      }
 
 
       // DEBUG estrutura das tabelas problemáticas
@@ -4081,7 +4130,7 @@
   // ── PARTICIPAÇÃO DO CLIENTE NO FUNDO DE PREVIDÊNCIA ─────────────
   // Davi Correa de Souza é um dos 2 cotistas do Itaú Flexprev Rio Bonito
   // Atualizar aqui quando a participação mudar (verificar na planilha)
-  const PREV_PARTICIPACAO = 0.32876860650699327168126211365048; // 50% — ajustar conforme % real de cotas do Davi
+  const PREV_PARTICIPACAO = 0.5; // 50% — ajustar conforme % real de cotas do Davi
 
   function renderPrevidencia() {
     if (!CD) return;
@@ -4855,8 +4904,13 @@
       : '—';
     setT('home-periodo-label', 'Período de referência: ' + saldoFimK8.replace(/saldo bruto /i,'').trim());
 
+    // PL — label inclui data de referência
+    const _plDataRef = saldoFimK8 ? saldoFimK8.replace(/saldo bruto /i,'').trim() : '';
+    const _plLabel = document.getElementById('home-pl')?.closest('.hero-kpi')?.querySelector('.hero-kpi-label');
+    if (_plLabel && _plDataRef) _plLabel.textContent = 'PL Final — ' + _plDataRef;
+
     setT('home-pl', pl ? fmtM(pl) : '—');
-    setT('home-pl-sub', saldoFimK8 ? saldoFimK8.replace(/saldo bruto /i,'').trim() : '');
+    setT('home-pl-sub', _plDataRef || '');
 
     const rentMes = varRow[mesK];
     const cdiMes  = cdiRow[mesK];
@@ -5016,7 +5070,139 @@
     });
     setH('home-alloc-body', h7 || '<tr><td colspan="4" style="text-align:center;padding:12px;color:var(--text-muted)">—</td></tr>');
 
-    // Top Holdings removido
+    // Update alloc period label
+    if (saldoFimK7) {
+      const _allocPer = document.getElementById('home-alloc-periodo');
+      if (_allocPer) _allocPer.textContent = saldoFimK7.replace(/saldo bruto /i,'').trim();
+    }
+
+    // ── Attribution Chart (tab7 — Rendimento por Classe) ──────────
+    const attrData = filtered7
+      .map(row => ({
+        nome: String(row['Ativo']).trim(),
+        rend: parseFloat(row['Rendimento Bruto']||0)||0
+      }))
+      .filter(d => d.nome && !isNaN(d.rend))
+      .sort((a,b) => b.rend - a.rend);
+
+    const ctxAttr = document.getElementById('chart-attribution');
+    if (ctxAttr && attrData.length > 0) {
+      const _existAttr = Chart.getChart('chart-attribution');
+      if (_existAttr) _existAttr.destroy();
+
+      // Periodo label
+      const _attrPer = document.getElementById('home-attr-periodo');
+      if (_attrPer && saldoFimK7) {
+        const _iniKey7 = tab7[0] ? Object.keys(tab7[0]).find(k => /saldo bruto \d/i.test(k)) : null;
+        const _iniDate = _iniKey7 ? _iniKey7.replace(/saldo bruto /i,'').trim() : '';
+        const _fimDate = saldoFimK7.replace(/saldo bruto /i,'').trim();
+        _attrPer.textContent = _iniDate && _fimDate ? `${_iniDate} → ${_fimDate}` : 'Rendimento no período';
+      }
+
+      const maxR = Math.max(...attrData.map(d => Math.abs(d.rend)));
+      new Chart(ctxAttr, {
+        type: 'bar',
+        data: {
+          labels: attrData.map(d => d.nome.replace(/Inflação\s+/i,'Infl. ').replace(/Crédito\s+/i,'Créd. ').replace(/Bancário/i,'Banc.').replace(/Corporativo/i,'Corp.').replace(/Soberano/i,'Sob.')),
+          datasets: [{
+            data: attrData.map(d => +(d.rend/1e6).toFixed(3)),
+            backgroundColor: attrData.map(d => d.rend >= 0 ? 'rgba(42,90,102,0.75)' : 'rgba(192,57,43,0.65)'),
+            borderRadius: 4,
+            borderSkipped: false,
+            barThickness: 28,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#041924',
+              titleColor: 'rgba(242,221,198,0.8)',
+              bodyColor: '#fff',
+              padding: 10,
+              cornerRadius: 6,
+              callbacks: {
+                label: ctx => {
+                  const v = ctx.raw;
+                  const sign = v >= 0 ? '+' : '';
+                  return `Rendimento: ${sign}R$ ${(Math.abs(v)).toFixed(2)} mi`;
+                }
+              }
+            },
+            datalabels: { display: false }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: '#5b818b', font: { size: 10, family: 'Urbanist' }, maxRotation: 0 }
+            },
+            y: {
+              grid: { color: 'rgba(4,25,36,0.05)' },
+              ticks: {
+                color: '#5b818b', font: { size: 10 },
+                callback: v => 'R$ ' + v.toFixed(1) + 'mi'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // ── Composição Itaú Rio Bonito (composicao_carteira) ───────────
+    const compTab = t['composicao_carteira'] || [];
+    const compEl  = document.getElementById('home-prev-composicao');
+    if (compEl) {
+      if (compTab.length === 0) {
+        compEl.innerHTML = `<div style="text-align:center;padding:16px;font-size:12px;color:var(--fg-mute)">
+          Aba <code style="background:var(--praxes-shell);padding:1px 6px;border-radius:3px">composicao_carteira</code> não encontrada no Web App.
+        </div>`;
+      } else {
+        // Renderiza a tabela de composição
+        const keys = Object.keys(compTab[0] || {});
+        // Tenta detectar colunas: Ativo/Classificação, Valor, Risco/%
+        const kAtivo   = keys.find(k => /ativo|nome|descri/i.test(k)) || keys[0];
+        const kClassif = keys.find(k => /classif|tipo/i.test(k)) || keys[1];
+        const kValor   = keys.find(k => /valor|saldo/i.test(k)) || keys[2];
+        const kRisco   = keys.find(k => /risco|classe/i.test(k)) || keys[3];
+
+        let compTotal = 0;
+        compTab.forEach(r => { const v = parseFloat(r[kValor]||0); if (v > 0) compTotal += v; });
+
+        let compHTML = '';
+        compTab.forEach(row => {
+          const ativo   = String(row[kAtivo]  || '').trim();
+          const classif = String(row[kClassif]|| '').trim();
+          const valor   = parseFloat(row[kValor]||0);
+          const risco   = String(row[kRisco]  || '').trim();
+          if (!ativo || valor === 0) return;
+          const neg = valor < 0;
+          const pct = compTotal > 0 ? (Math.abs(valor)/compTotal*100).toFixed(1) : '—';
+          const fmtV = v => {
+            const a = Math.abs(v);
+            if (a >= 1e6) return (neg?'−':'') + 'R$ ' + (a/1e6).toFixed(2) + ' mi';
+            if (a >= 1e3) return (neg?'−':'') + 'R$ ' + Math.round(a/1e3).toLocaleString('pt-BR') + ' mil';
+            return (neg?'−':'') + 'R$ ' + Math.round(a).toLocaleString('pt-BR');
+          };
+          const isNeg = valor < 0;
+          compHTML += `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line)">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:11.5px;font-weight:500;color:var(--fg-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${ativo}">${ativo.length > 42 ? ativo.substring(0,40)+'…' : ativo}</div>
+              ${classif ? `<div style="font-size:10px;color:var(--fg-mute);margin-top:1px">${classif}</div>` : ''}
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-size:12px;font-weight:600;color:${isNeg?'var(--danger)':'var(--fg-1)'}">${fmtV(valor)}</div>
+              ${!isNeg&&pct!=='—' ? `<div style="font-size:10px;color:var(--fg-mute)">${pct}%</div>` : ''}
+            </div>
+          </div>`;
+        });
+        compEl.innerHTML = compHTML || '<div style="text-align:center;padding:12px;color:var(--fg-mute)">—</div>';
+      }
+    }
+
+    // Ano de câmbio
+    const _cambioAnoEl = document.getElementById('home-cambio-ano');
+    if (_cambioAnoEl) _cambioAnoEl.textContent = new Date().getFullYear();
 
     // ── Rentabilidade mensal histórica (tab2) ─────────────────────
     const tab2 = t.tab2 || [];
@@ -5685,7 +5871,7 @@
       // 4 KPIs prev
       const pkw=(W-ML*2-6)/4;
       kpiCard(ML,          y, pkw, 22, 'PL (Mercado)',       getEl('home-prev-pl'),        '');
-      kpiCard(ML+pkw+2,    y, pkw, 22, 'Rentab. Mês a Mercado',     getEl('home-prev-mv-mes'),    '', colorOf(getEl('home-prev-mv-mes')));
+      kpiCard(ML+pkw+2,    y, pkw, 22, 'Rentab. Mês MV',     getEl('home-prev-mv-mes'),    '', colorOf(getEl('home-prev-mv-mes')));
       kpiCard(ML+2*pkw+4,  y, pkw, 22, 'Rentab. Mês Curva',  getEl('home-prev-curva-mes'), '', colorOf(getEl('home-prev-curva-mes')));
       kpiCard(ML+3*pkw+6,  y, pkw, 22, 'Duration Médio',     getEl('home-prev-duration'),  '');
       y+=30;
