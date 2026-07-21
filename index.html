@@ -1067,90 +1067,17 @@
     .filter-btn.active { background: var(--praxes-deep); color: var(--praxes-sand); font-weight: 500; }
 
     /* ═══════════════════════════════════════════════════════════
-       ORGANOGRAMA — Estrutura Societária & Patrimonial
+       ORGANOGRAMA — Estrutura Societária (SVG auto-escalável)
     ═══════════════════════════════════════════════════════════ */
     .org-export-block { margin-bottom: 28px; }
-    .org-scroll-hint {
-      font-size: 11px; color: var(--fg-mute); margin-bottom: 14px;
-      display: flex; align-items: center; gap: 6px;
-    }
-    .org-scroll-wrap {
-      overflow-x: auto; padding: 30px 24px 40px; background: var(--praxes-paper);
+    #org-chart-mount {
+      background: var(--praxes-paper);
       border-radius: var(--r-md);
+      padding: 18px 14px 10px;
     }
-
-    .orgtree, .orgtree ul {
-      padding-top: 24px; position: relative;
-      display: flex; justify-content: center;
-    }
-    .orgtree ul { padding-top: 24px; }
-    .orgtree li {
-      display: flex; flex-direction: column; align-items: center;
-      list-style-type: none; position: relative;
-      padding: 24px 10px 0 10px;
-    }
-    .orgtree li::before, .orgtree li::after {
-      content: ''; position: absolute; top: 0; right: 50%;
-      border-top: 2px solid var(--line-strong);
-      width: 50%; height: 24px;
-    }
-    .orgtree li::after { right: auto; left: 50%; border-left: 2px solid var(--line-strong); }
-    .orgtree li:only-child::after, .orgtree li:only-child::before { display: none; }
-    .orgtree li:only-child { padding-top: 0; }
-    .orgtree li:first-child::before, .orgtree li:last-child::after { border: 0 none; }
-    .orgtree li:last-child::before { border-right: 2px solid var(--line-strong); border-radius: 0 6px 0 0; }
-    .orgtree li:first-child::after { border-radius: 6px 0 0 0; }
-    .orgtree ul::before {
-      content: ''; position: absolute; top: 0; left: 50%;
-      border-left: 2px solid var(--line-strong); width: 0; height: 24px;
-    }
-    .orgtree > li { padding-top: 0; }
-    .orgtree > li::before, .orgtree > li::after { display: none; }
-
-    .org-box {
-      position: relative;
-      display: inline-block;
-      min-width: 118px;
-      padding: 10px 14px;
-      border-radius: var(--r-md);
-      font-family: var(--font-body);
-      font-size: 12.5px; font-weight: 500;
-      line-height: 1.35; color: var(--fg-1);
-      background: var(--surface);
-      border: 1px solid var(--line-strong);
-      box-shadow: var(--shadow-1);
-      white-space: nowrap;
-    }
-    .org-box small { display:block; font-weight:400; color: var(--fg-mute); font-size: 10.5px; margin-top: 2px; white-space: normal; max-width: 180px; }
-
-    .org-box--person {
-      background: var(--praxes-abyss); color: var(--praxes-sand);
-      border: none; font-family: var(--font-display); font-size: 14px;
-      padding: 12px 22px;
-    }
-    .org-box--group {
-      background: var(--praxes-shell); border: 1px dashed var(--line-strong);
-      color: var(--fg-2); font-weight: 500; font-size: 11.5px;
-    }
-    .org-box--leaf-sand { background: var(--praxes-sand); border-color: var(--gold-light); }
-    .org-box--leaf-peach { background: var(--gold-light); border-color: var(--gold); }
-    .org-box--link a {
-      color: var(--praxes-teal); text-decoration: none; font-weight: 600;
-      border-bottom: 1px dashed var(--praxes-teal-40);
-    }
-    .org-box--link a:hover { color: var(--praxes-abyss); border-bottom-color: var(--praxes-abyss); }
-
-    .org-pct {
-      position: absolute; top: -10px; right: -10px;
-      background: var(--praxes-teal); color: #fff;
-      font-size: 10px; font-weight: 600;
-      padding: 2px 7px; border-radius: var(--r-pill);
-      box-shadow: var(--shadow-1);
-      white-space: nowrap;
-    }
-    .org-box--person .org-pct { display: none; }
-
-    .org-legend { display:flex; gap:18px; flex-wrap:wrap; margin-top: 4px; }
+    #org-chart-mount svg { width: 100%; height: auto; display: block; }
+    #org-chart-mount svg a:hover text { fill: var(--praxes-abyss); }
+    .org-legend { display:flex; gap:18px; flex-wrap:wrap; margin-top: 14px; }
     .org-legend-item { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--fg-mute); }
     .org-legend-swatch { width:12px; height:12px; border-radius:3px; display:inline-block; border:1px solid var(--line-strong); }
   </style>
@@ -2424,51 +2351,10 @@
             Estrutura Societária &amp; Patrimonial
             <span class="card-title-label">Veículos, participações e patrimônio financeiro</span>
           </div>
-          <div class="org-scroll-hint">↔ arraste horizontalmente para ver a árvore completa</div>
-          <div class="org-scroll-wrap">
-            <ul class="orgtree">
-              <li>
-                <div class="org-box org-box--person">👤 Davi</div>
-                <ul>
-                  <li>
-                    <div class="org-box org-box--entity"><span class="org-pct">100%</span>Rio Bonito</div>
-                    <ul>
-                      <li>
-                        <div class="org-box org-box--entity org-box--link">
-                          <span class="org-pct">98,1%</span>
-                          <a href="https://docs.google.com/spreadsheets/d/1qv6SUX0EQXuRHBztTvuvlWaLqVVuimGU/edit?usp=drive_link&ouid=111958873406993773155&rtpof=true&sd=true" target="_blank" rel="noopener">Alínea Urbanismo ↗</a>
-                        </div>
-                        <ul>
-                          <li><div class="org-box org-box--leaf-sand">56 Investimentos<br><small>em SPEs</small></div></li>
-                        </ul>
-                      </li>
-                      <li><div class="org-box org-box--entity"><span class="org-pct">100%</span>JA Urbanismo</div></li>
-                      <li><div class="org-box org-box--entity"><span class="org-pct">100%</span>Ideal Park</div></li>
-                    </ul>
-                  </li>
-                  <li><div class="org-box org-box--entity"><span class="org-pct">5%</span>JA Locações</div></li>
-                  <li>
-                    <div class="org-box org-box--group">🏠 Onshore</div>
-                    <ul>
-                      <li><div class="org-box org-box--entity"><span class="org-pct">33,25%</span>Itaú Flexprev<br><small>Rio Bonito</small></div></li>
-                      <li><div class="org-box org-box--entity"><span class="org-pct">25%</span>JA Invest FIM</div></li>
-                      <li><div class="org-box org-box--entity"><span class="org-pct">100%</span>Carteira Itaú<br><small>Investimentos</small></div></li>
-                    </ul>
-                  </li>
-                  <li>
-                    <div class="org-box org-box--group">🌐 Offshore</div>
-                    <ul>
-                      <li><div class="org-box org-box--entity"><span class="org-pct">100%</span>Itaú Miami</div></li>
-                      <li><div class="org-box org-box--entity"><span class="org-pct">100%</span>Goldman Sachs</div></li>
-                    </ul>
-                  </li>
-                </ul>
-              </li>
-            </ul>
-          </div>
+          <div id="org-chart-mount"></div>
           <div class="org-legend">
             <div class="org-legend-item"><span class="org-legend-swatch" style="background:var(--praxes-abyss)"></span>Pessoa física</div>
-            <div class="org-legend-item"><span class="org-legend-swatch" style="background:var(--surface)"></span>Empresa / veículo</div>
+            <div class="org-legend-item"><span class="org-legend-swatch" style="background:#ffffff"></span>Empresa / veículo</div>
             <div class="org-legend-item"><span class="org-legend-swatch" style="background:var(--praxes-shell)"></span>Agrupamento</div>
             <div class="org-legend-item"><span class="org-legend-swatch" style="background:var(--praxes-sand)"></span>SPE / participações</div>
           </div>
@@ -4235,74 +4121,248 @@
 
   // Init: open both groups + carrega dados da planilha
   // Expõe todas as funções usadas fora do IIFE
-  /* ────── EXPORTAR ORGANOGRAMA EM PDF ────── */
-  async function exportOrganogramaPDF() {
+  /* ═══════════════════════════════════════════════════════════════
+     ORGANOGRAMA — motor SVG (dados → layout → render)
+     Para editar a estrutura, altere apenas ORG_DATA abaixo.
+     type: 'person' | 'entity' | 'group' | 'leaf'
+  ═══════════════════════════════════════════════════════════════ */
+  const ORG_DATA = {
+    label: 'Davi', type: 'person',
+    children: [
+      {
+        label: 'Rio Bonito', pct: '100%', type: 'entity',
+        children: [
+          {
+            label: 'Alínea Urbanismo', pct: '98,1%', type: 'entity',
+            href: 'https://docs.google.com/spreadsheets/d/1qv6SUX0EQXuRHBztTvuvlWaLqVVuimGU/edit?usp=drive_link&ouid=111958873406993773155&rtpof=true&sd=true',
+            children: [
+              { label: '56 Investimentos', sub: 'em SPEs', type: 'leaf' }
+            ]
+          },
+          { label: 'JA Urbanismo', pct: '100%', type: 'entity' },
+          { label: 'Ideal Park', pct: '100%', type: 'entity' }
+        ]
+      },
+      { label: 'JA Locações', pct: '5%', type: 'entity' },
+      {
+        label: 'Onshore', type: 'group',
+        children: [
+          { label: 'Itaú Flexprev', sub: 'Rio Bonito', pct: '33,25%', type: 'entity' },
+          { label: 'JA Invest FIM', pct: '25%', type: 'entity' },
+          { label: 'Carteira Itaú', sub: 'Investimentos', pct: '100%', type: 'entity' }
+        ]
+      },
+      {
+        label: 'Offshore', type: 'group',
+        children: [
+          { label: 'Itaú Miami', pct: '100%', type: 'entity' },
+          { label: 'Goldman Sachs', pct: '100%', type: 'entity' }
+        ]
+      }
+    ]
+  };
+
+  const ORG_CFG = { BOX_H:46, BOX_H_SUB:60, ROW_GAP:58, SIB_GAP:28, PAD_X:22, CHAR_W:8.0, CHAR_W_SUB:6.2, MIN_W:112 };
+  const ORG_C = {
+    abyss:'#041924', deep:'#03313e', teal:'#2a5a66',
+    sand:'#f2ddc6', shell:'#ebe3d6', paper:'#faf6f0', white:'#ffffff',
+    line:'rgba(4,25,36,0.22)', ink:'#0a2433', mute:'#5b818b'
+  };
+
+  function orgEsc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function orgBoxW(n){
+    const wMain = n.label.length*ORG_CFG.CHAR_W + ORG_CFG.PAD_X*2 + (n.href?14:0);
+    const wSub  = n.sub ? n.sub.length*ORG_CFG.CHAR_W_SUB + ORG_CFG.PAD_X*2 : 0;
+    return Math.max(ORG_CFG.MIN_W, wMain, wSub);
+  }
+  function orgLayoutPass(n, depth){
+    n.depth = depth; n.w = orgBoxW(n); n.h = n.sub ? ORG_CFG.BOX_H_SUB : ORG_CFG.BOX_H;
+    if(!n.children || !n.children.length){ n.subW = n.w; return n.subW; }
+    let sum = 0;
+    n.children.forEach((c,i)=>{ sum += orgLayoutPass(c, depth+1); if(i>0) sum += ORG_CFG.SIB_GAP; });
+    n.subW = Math.max(n.w, sum);
+    return n.subW;
+  }
+  function orgAssignX(n, x0){
+    n.cx = x0 + n.subW/2;
+    if(n.children && n.children.length){
+      const cw = n.children.reduce((a,c)=>a+c.subW,0) + ORG_CFG.SIB_GAP*(n.children.length-1);
+      let cur = x0 + (n.subW - cw)/2;
+      n.children.forEach(c=>{ orgAssignX(c, cur); cur += c.subW + ORG_CFG.SIB_GAP; });
+    }
+  }
+  function orgFlatten(n, arr){ arr = arr||[]; arr.push(n); (n.children||[]).forEach(c=>orgFlatten(c,arr)); return arr; }
+
+  function orgBuildLayout(data){
+    orgLayoutPass(data, 0);
+    orgAssignX(data, 0);
+    const rowH = {};
+    orgFlatten(data).forEach(n=>{ rowH[n.depth] = Math.max(rowH[n.depth]||0, n.h); });
+    const rowY = {}; let y = 0;
+    Object.keys(rowH).map(Number).sort((a,b)=>a-b).forEach(d=>{ rowY[d] = y + rowH[d]/2; y += rowH[d] + ORG_CFG.ROW_GAP; });
+    const all = orgFlatten(data);
+    all.forEach(n=>{ n.cy = rowY[n.depth]; });
+    return { all, totalW: data.subW, totalH: y - ORG_CFG.ROW_GAP, root: data };
+  }
+
+  function orgRenderNode(n){
+    const x = n.cx - n.w/2, y = n.cy - n.h/2;
+    let rect, mainFill;
+    if(n.type==='person'){
+      rect = `<rect x="${x}" y="${y}" width="${n.w}" height="${n.h}" rx="10" fill="${ORG_C.abyss}" filter="url(#orgShadow)"/>`;
+      mainFill = ORG_C.sand;
+    } else if(n.type==='group'){
+      rect = `<rect x="${x}" y="${y}" width="${n.w}" height="${n.h}" rx="${n.h/2}" fill="${ORG_C.shell}" stroke="${ORG_C.line}" stroke-dasharray="4 3"/>`;
+      mainFill = ORG_C.deep;
+    } else if(n.type==='leaf'){
+      rect = `<rect x="${x}" y="${y}" width="${n.w}" height="${n.h}" rx="9" fill="${ORG_C.sand}" stroke="rgba(4,25,36,0.14)" filter="url(#orgShadow)"/>`;
+      mainFill = ORG_C.ink;
+    } else {
+      rect = `<rect x="${x}" y="${y}" width="${n.w}" height="${n.h}" rx="9" fill="${ORG_C.white}" stroke="${ORG_C.line}" filter="url(#orgShadow)"/>
+              <rect x="${x+8}" y="${y}" width="${n.w-16}" height="3" rx="1.5" fill="${ORG_C.sand}"/>`;
+      mainFill = ORG_C.ink;
+    }
+    const fw = n.type==='person'?600:(n.type==='group'?600:500);
+    const fs = n.type==='person'?15:13.5;
+    const mainY = n.sub ? n.cy - 5 : n.cy;
+    const label = n.href ? orgEsc(n.label)+' ↗' : orgEsc(n.label);
+    let text = `<text x="${n.cx}" y="${mainY}" text-anchor="middle" dominant-baseline="central" font-family="Urbanist, Helvetica, Arial, sans-serif" font-size="${fs}" font-weight="${fw}" fill="${n.href?ORG_C.teal:mainFill}"${n.href?' text-decoration="underline"':''}>${label}</text>`;
+    if(n.sub) text += `<text x="${n.cx}" y="${n.cy+13}" text-anchor="middle" dominant-baseline="central" font-family="Urbanist, Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="${ORG_C.mute}">${orgEsc(n.sub)}</text>`;
+    let badge = '';
+    if(n.pct){
+      const bw = n.pct.length*6.4+16, bh = 17, bx = n.cx-bw/2, by = y-bh/2-1;
+      badge = `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="${bh/2}" fill="${ORG_C.teal}"/>
+        <text x="${n.cx}" y="${by+bh/2+0.5}" text-anchor="middle" dominant-baseline="central" font-family="Urbanist, Helvetica, Arial, sans-serif" font-size="10" font-weight="600" fill="#ffffff">${orgEsc(n.pct)}</text>`;
+    }
+    const inner = rect + text + badge;
+    return n.href
+      ? `<a href="${orgEsc(n.href)}" target="_blank" rel="noopener" style="cursor:pointer">${inner}</a>`
+      : `<g>${inner}</g>`;
+  }
+
+  function orgRenderConnectors(n){
+    if(!n.children || !n.children.length) return '';
+    const pBot = n.cy + n.h/2;
+    const midY = pBot + (n.children[0].cy - n.children[0].h/2 - pBot)/2;
+    let d = `M ${n.cx} ${pBot} V ${midY}`;
+    const xs = n.children.map(c=>c.cx);
+    const minX = Math.min(...xs, n.cx), maxX = Math.max(...xs, n.cx);
+    if(minX !== maxX) d += ` M ${minX} ${midY} H ${maxX}`;
+    n.children.forEach(c=>{ d += ` M ${c.cx} ${midY} V ${c.cy - c.h/2 - (c.pct?9:0)}`; });
+    let out = `<path d="${d}" fill="none" stroke="${ORG_C.line}" stroke-width="1.6" stroke-linecap="round"/>`;
+    n.children.forEach(c=>{ out += orgRenderConnectors(c); });
+    return out;
+  }
+
+  function renderOrganograma(){
+    const mount = document.getElementById('org-chart-mount');
+    if(!mount) return;
+    const data = JSON.parse(JSON.stringify(ORG_DATA));
+    const L = orgBuildLayout(data);
+    const pad = 26;
+    const w = L.totalW + pad*2, h = L.totalH + pad*2 + 10;
+    let body = `<defs><filter id="orgShadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="2" flood-color="#041924" flood-opacity="0.10"/>
+    </filter></defs>`;
+    body += `<g transform="translate(${pad},${pad+10})">` + orgRenderConnectors(L.root);
+    L.all.forEach(n=>{ body += orgRenderNode(n); });
+    body += '</g>';
+    mount.innerHTML = `<svg id="org-svg" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">${body}</svg>`;
+  }
+
+  /* ────── EXPORTAR ORGANOGRAMA EM PDF (vetorial → PNG hi-res) ────── */
+  async function orgFetchFontCSS(){
+    // Embute Urbanist no SVG para o raster manter a tipografia
+    try {
+      const cssResp = await fetch('https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600&display=swap');
+      let css = await cssResp.text();
+      const urls = [...css.matchAll(/url\((https:[^)]+\.woff2)\)/g)].map(m=>m[1]);
+      const uniq = [...new Set(urls)].slice(0, 6);
+      for(const u of uniq){
+        const buf = await (await fetch(u)).arrayBuffer();
+        let bin=''; const bytes=new Uint8Array(buf);
+        for(let i=0;i<bytes.length;i+=0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i,i+0x8000));
+        css = css.split(u).join('data:font/woff2;base64,'+btoa(bin));
+      }
+      return css;
+    } catch(e){ console.warn('Fonte não embutida no export (fallback Helvetica):', e); return ''; }
+  }
+
+  async function exportOrganogramaPDF(){
     const btn = document.getElementById('btn-export-organograma');
     const original = btn.textContent;
-    btn.textContent = 'Gerando PDF…';
-    btn.disabled = true;
+    btn.textContent = 'Gerando PDF…'; btn.disabled = true;
     try {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ orientation: 'l', unit: 'mm', format: 'a4' });
-      const pageW = doc.internal.pageSize.getWidth();
-      const pageH = doc.internal.pageSize.getHeight();
-      const margin = 12;
-      const blocks = document.querySelectorAll('#page-organograma .org-export-block');
+      const svgEl = document.getElementById('org-svg');
+      if(!svgEl) throw new Error('Organograma não renderizado');
+      const clone = svgEl.cloneNode(true);
+      const vb = svgEl.viewBox.baseVal;
+      clone.setAttribute('width', vb.width);
+      clone.setAttribute('height', vb.height);
 
-      for (let i = 0; i < blocks.length; i++) {
-        const block = blocks[i];
-
-        // Temporariamente remove o corte por overflow para capturar a árvore inteira
-        const scrollWraps = block.querySelectorAll('.org-scroll-wrap');
-        const contentWrapper = document.querySelector('#page-organograma .content-wrapper');
-        const restoreFns = [];
-        scrollWraps.forEach(el => {
-          restoreFns.push({ el, overflow: el.style.overflow, width: el.style.width });
-          el.style.overflow = 'visible';
-          el.style.width = el.scrollWidth + 'px';
-        });
-        let prevWrapperOverflow = null;
-        if (contentWrapper) {
-          prevWrapperOverflow = contentWrapper.style.overflow;
-          contentWrapper.style.overflow = 'visible';
-        }
-
-        const canvas = await html2canvas(block, {
-          scale: 2,
-          backgroundColor: '#ffffff',
-          windowWidth: document.documentElement.scrollWidth
-        });
-
-        restoreFns.forEach(({ el, overflow, width }) => { el.style.overflow = overflow; el.style.width = width; });
-        if (contentWrapper) contentWrapper.style.overflow = prevWrapperOverflow;
-
-        const imgData = canvas.toDataURL('image/png');
-        const availW = pageW - margin * 2;
-        const availH = pageH - margin * 2 - 8; // reserva rodapé
-        const ratio = Math.min(availW / canvas.width, availH / canvas.height);
-        const w = canvas.width * ratio;
-        const h = canvas.height * ratio;
-
-        if (i > 0) doc.addPage('a4', 'l');
-        doc.addImage(imgData, 'PNG', (pageW - w) / 2, margin, w, h);
-        doc.setFontSize(8);
-        doc.setTextColor(140, 140, 140);
-        doc.text('Praxes Gestão Patrimonial · Confidencial · Davi Correa de Souza', margin, pageH - 6);
-        doc.text(String(i + 1) + ' / ' + blocks.length, pageW - margin - 8, pageH - 6);
+      const fontCSS = await orgFetchFontCSS();
+      if(fontCSS){
+        const styleEl = document.createElementNS('http://www.w3.org/2000/svg','style');
+        styleEl.textContent = fontCSS;
+        clone.insertBefore(styleEl, clone.firstChild);
       }
 
+      const xml = new XMLSerializer().serializeToString(clone);
+      const svgUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml);
+      const img = new Image();
+      await new Promise((res, rej)=>{ img.onload=res; img.onerror=rej; img.src=svgUrl; });
+
+      const SCALE = 3;
+      const canvas = document.createElement('canvas');
+      canvas.width = vb.width*SCALE; canvas.height = vb.height*SCALE;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const imgData = canvas.toDataURL('image/png');
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation:'l', unit:'mm', format:'a4' });
+      const pageW = doc.internal.pageSize.getWidth();
+      const pageH = doc.internal.pageSize.getHeight();
+      const margin = 14;
+      const headerH = 20;
+
+      // Cabeçalho
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(8); doc.setTextColor(91,129,139);
+      doc.text('PRAXES GESTÃO PATRIMONIAL', margin, margin+2, { charSpace: 0.6 });
+      doc.setFontSize(16); doc.setTextColor(4,25,36);
+      doc.text('Estrutura Societária & Patrimonial', margin, margin+9);
+      doc.setFontSize(9); doc.setTextColor(120,130,135);
+      doc.text('Davi Correa de Souza · ' + new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'}), margin, margin+15);
+      doc.setDrawColor(210,215,218); doc.setLineWidth(0.3);
+      doc.line(margin, margin+headerH-2, pageW-margin, margin+headerH-2);
+
+      // Organograma centralizado no espaço restante
+      const availW = pageW - margin*2;
+      const availH = pageH - margin*2 - headerH - 8;
+      const ratio = Math.min(availW/canvas.width, availH/canvas.height);
+      const w = canvas.width*ratio, h = canvas.height*ratio;
+      doc.addImage(imgData, 'PNG', (pageW-w)/2, margin+headerH + (availH-h)/2, w, h);
+
+      // Rodapé
+      doc.setFontSize(7.5); doc.setTextColor(150,155,158);
+      doc.text('Confidencial · Uso exclusivo do cliente', margin, pageH-7);
+      doc.text('Gerado em ' + new Date().toLocaleDateString('pt-BR'), pageW-margin, pageH-7, { align:'right' });
+
       doc.save('Estrutura_Societaria_Davi_Correa_de_Souza.pdf');
-    } catch (err) {
+    } catch(err){
       console.error('Erro ao gerar PDF do organograma:', err);
       alert('Não foi possível gerar o PDF. Veja o console para detalhes.');
     } finally {
-      btn.textContent = original;
-      btn.disabled = false;
+      btn.textContent = original; btn.disabled = false;
     }
   }
 
   window.showPage             = showPage;
   window.exportOrganogramaPDF = exportOrganogramaPDF;
+  window.renderOrganograma    = renderOrganograma;
   window.toggleGroup          = toggleGroup;
   window.renderIliquidos      = renderIliquidos;
   window.renderOnshoreTotal   = renderOnshoreTotal;
@@ -4316,6 +4376,7 @@
       const b = document.getElementById('body-' + g);
       if (b) b.style.maxHeight = b.scrollHeight + 'px';
     });
+    renderOrganograma();
     initChartsForPage('home');
     carregarDados();
   });
