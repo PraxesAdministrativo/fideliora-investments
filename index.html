@@ -4254,6 +4254,8 @@
     return out;
   }
 
+  let orgLastLayout = null; // cache do layout renderizado, usado para posicionar links no PDF
+
   function renderOrganograma(){
     const mount = document.getElementById('org-chart-mount');
     if(!mount) return;
@@ -4268,6 +4270,7 @@
     L.all.forEach(n=>{ body += orgRenderNode(n); });
     body += '</g>';
     mount.innerHTML = `<svg id="org-svg" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">${body}</svg>`;
+    orgLastLayout = { nodes: L.all, pad, vbW: w, vbH: h };
   }
 
   /* ────── EXPORTAR ORGANOGRAMA EM PDF (vetorial → PNG hi-res) ────── */
@@ -4344,7 +4347,22 @@
       const availH = pageH - margin*2 - headerH - 8;
       const ratio = Math.min(availW/canvas.width, availH/canvas.height);
       const w = canvas.width*ratio, h = canvas.height*ratio;
-      doc.addImage(imgData, 'PNG', (pageW-w)/2, margin+headerH + (availH-h)/2, w, h);
+      const imgX = (pageW-w)/2, imgY = margin+headerH + (availH-h)/2;
+      doc.addImage(imgData, 'PNG', imgX, imgY, w, h);
+
+      // Links clicáveis — mesma posição das caixas com href no SVG original
+      if(orgLastLayout){
+        const mmPerUnit = w / orgLastLayout.vbW; // vb.width === orgLastLayout.vbW (mesmo layout)
+        orgLastLayout.nodes.filter(n => n.href).forEach(n => {
+          const absX = n.cx - n.w/2 + orgLastLayout.pad;
+          const absY = n.cy - n.h/2 + orgLastLayout.pad + 10;
+          const linkX = imgX + absX*mmPerUnit;
+          const linkY = imgY + absY*mmPerUnit;
+          const linkW = n.w*mmPerUnit;
+          const linkH = n.h*mmPerUnit;
+          doc.link(linkX, linkY, linkW, linkH, { url: n.href });
+        });
+      }
 
       // Rodapé
       doc.setFontSize(7.5); doc.setTextColor(150,155,158);
